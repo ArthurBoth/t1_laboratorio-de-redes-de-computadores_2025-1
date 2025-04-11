@@ -56,7 +56,12 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.BLACK);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
 
@@ -64,7 +69,12 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.RED);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
 
@@ -72,7 +82,12 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.GREEN);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
     
@@ -80,7 +95,12 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.YELLOW);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
 
@@ -88,7 +108,12 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.BLUE);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
     
@@ -96,7 +121,12 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.PURPLE);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
     
@@ -104,15 +134,25 @@ public class ConsoleLogger {
         if (PRINT_LOGS) {
             System.out.print(Colours.CYAN);
             System.out.print(message);
-            System.out.println(Colours.RESET);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
 
     public static synchronized void logWhite(String message, boolean newLine) {
         if (PRINT_LOGS) {
             System.out.print(Colours.WHITE);
-            System.out.println(message);
-            System.out.print(Colours.RESET);
+            System.out.print(message);
+            
+            if (newLine) {
+                System.out.println(Colours.RESET);
+            } else {
+                System.out.print(Colours.RESET);
+            }
         }
     }
 

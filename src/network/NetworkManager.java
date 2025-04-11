@@ -4,21 +4,25 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+import constants.ConfigConstants;
 import io.IOManager;
-import network.threads.ThreadMessage;
+import network.threads.messages.ThreadMessage;
 
 public class NetworkManager {
     private final String IP_ADDRESS;
 
     private IOManager io;
-    private BlockingQueue<ThreadMessage> messageQueue;
+    private BlockingQueue<ThreadMessage> sendMessages;     // only-send
+    private BlockingQueue<ThreadMessage> receiveMessages;  // only-receive
 
     public NetworkManager() throws UnknownHostException {
         IP_ADDRESS = InetAddress.getLocalHost().getHostAddress();
 
-        io           = new IOManager(messageQueue);
-        messageQueue = new LinkedBlockingQueue<ThreadMessage>();
+        sendMessages    = new LinkedBlockingQueue<ThreadMessage>();
+        receiveMessages = new LinkedBlockingQueue<ThreadMessage>();
+        io              = new IOManager(receiveMessages);
     }
     
     /* TODO: 
@@ -75,14 +79,41 @@ public class NetworkManager {
     */
 
     private void setup() {
-        // TODO
+        new Thread(() -> io.run()).start();
     }
 
     public void start() {
-        try {
-            setup();
-        } catch (InterruptedException e) {
-            io.endExecution();
+        boolean running = true;
+        ThreadMessage message;
+
+        setup();
+        while(running) {
+            try {
+                message = receiveMessages.poll(ConfigConstants.THREAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                if (message != null) {
+                    // Process the message
+                    running = processMessage(message);
+                }
+            } catch (InterruptedException e) {
+                return;
+            }
         }
+    }
+
+
+    private boolean processMessage(ThreadMessage message) {
+        boolean keepRunning = true;
+
+        switch (message.getType()) {
+            // Internal Messages
+            case EXIT -> {keepRunning = false;}
+
+            // External Messages
+            
+            // Default case
+            default -> {throw new IllegalArgumentException("Invalid message type: " + message.getType());}
+        }
+
+        return keepRunning;
     }
 }
