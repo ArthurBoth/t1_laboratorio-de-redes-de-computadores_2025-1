@@ -1,28 +1,31 @@
 package network;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import constants.ConfigConstants;
+import constants.Constants;
 import io.IOManager;
+import network.threads.NetworkNode;
 import network.threads.messages.ThreadMessage;
 
 public class NetworkManager {
     private final String IP_ADDRESS;
 
     private IOManager io;
-    private BlockingQueue<ThreadMessage> sendMessages;     // only-send
-    private BlockingQueue<ThreadMessage> receiveMessages;  // only-receive
+    private BlockingQueue<ThreadMessage> sendMessages;            // only-send
+    private BlockingQueue<ThreadMessage> receiveMessages;         // only-receive
+    private ConcurrentHashMap<NetworkNode, Integer> activeNodes;  // IP:PORT -> seconds since last message
 
     public NetworkManager() throws UnknownHostException {
-        IP_ADDRESS = InetAddress.getLocalHost().getHostAddress();
+        IP_ADDRESS = Constants.Configs.getIpAddress();
 
+        activeNodes    = new ConcurrentHashMap<NetworkNode, Integer>();
         sendMessages    = new LinkedBlockingQueue<ThreadMessage>();
         receiveMessages = new LinkedBlockingQueue<ThreadMessage>();
-        io              = new IOManager(receiveMessages);
+        io              = new IOManager(receiveMessages, activeNodes);
     }
     
     /* TODO: 
@@ -89,7 +92,7 @@ public class NetworkManager {
         setup();
         while(running) {
             try {
-                message = receiveMessages.poll(ConfigConstants.THREAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                message = receiveMessages.poll(Constants.Configs.THREAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 if (message != null) {
                     // Process the message
                     running = processMessage(message);

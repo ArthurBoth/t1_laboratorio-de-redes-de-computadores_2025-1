@@ -1,24 +1,42 @@
 package io.fileIO;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import constants.ConfigConstants;
+import constants.Constants;
+import constants.Constants.Configs.Logs;
 
 public class FileLogger {
-    private final DateTimeFormatter dateTime;
+    private final DateTimeFormatter DATE_TIME_FORMATTER;
 
     public FileLogger() {
-        dateTime = DateTimeFormatter.ofPattern(ConfigConstants.DATE_TIME_LOG_FORMAT);
+        DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(Constants.Strings.DATE_TIME_LOG_FORMAT);
         
-        if (ConfigConstants.CLEAR_PREVIOUS_LOGS) 
-            FileIO.clearFile(ConfigConstants.LOG_FILE_NAME);
+        if (Constants.Configs.CLEAR_PREVIOUS_LOGS) clearLogs();
   
-        FileIO.writeLine(ConfigConstants.LOG_FILE_NAME, "*--".repeat(30) + '*');
+        FileIO.writeLine(Logs.LOG_FOLDER_PATH + Logs.ALL_LOGS_FILE, "*--".repeat(30) + '*');
     } 
 
-    public void log(String message) {
-        String line = String.format("%s: %s", dateTime.format(LocalDateTime.now()), message);
-        FileIO.writeLine(ConfigConstants.LOG_FILE_NAME, line);
+    private void clearLogs() {
+        File folder = new File(Logs.LOG_FOLDER_PATH);
+        
+        if (!folder.exists()) folder.mkdirs();
+
+        FileIO.clearFile(Logs.LOG_FOLDER_PATH + Logs.ALL_LOGS_FILE);
+    }
+
+    public void logReceived(String message) {
+        String line = String.format(Constants.Strings.RECEIVED_MESSAGE_FORMAT, 
+                                    DATE_TIME_FORMATTER.format(LocalDateTime.now()), 
+                                    message);
+        FileIO.writeLine(Logs.LOG_FOLDER_PATH + Logs.ALL_LOGS_FILE, line);
+    }
+    
+    public void logSent(String message) {
+        String line = String.format(Constants.Strings.SENT_MESSAGE_FORMAT, 
+                                    DATE_TIME_FORMATTER.format(LocalDateTime.now()), 
+                                    message);
+        FileIO.writeLine(Logs.LOG_FOLDER_PATH + Logs.ALL_LOGS_FILE, line);
     }
 }

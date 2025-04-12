@@ -1,7 +1,7 @@
 package io.consoleIO;
 
-import static constants.ConfigConstants.PRINT_LOGS;
-import static constants.ConfigConstants.DEFAULT_NEW_LINE_LOGS;
+import static constants.Constants.Configs.PRINT_LOGS;
+import static constants.Constants.Configs.DEFAULT_NEW_LINE_LOGS;
 
 public class ConsoleLogger {
 

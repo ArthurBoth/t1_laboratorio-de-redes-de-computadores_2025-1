@@ -1,23 +1,28 @@
 package io.consoleIO;
 
-import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import constants.ConfigConstants;
+import constants.Constants;
+import network.threads.NetworkNode;
 import network.threads.messages.ThreadMessage;
 
 public class TerminalManager implements Runnable{
     private BlockingQueue<ThreadMessage> messageQueue;  // only-send
     private Scanner scanner;
-    private LinkedList<String> errorMessages;
+    private ConcurrentLinkedQueue<String> errorMessages;
 
     private volatile boolean running;
+    private ConcurrentHashMap<NetworkNode, Integer> activeNodes;
 
-    public TerminalManager(BlockingQueue<ThreadMessage> messageQueue) {
+    public TerminalManager(BlockingQueue<ThreadMessage> messageQueue, 
+                            ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
         this.messageQueue = messageQueue;
         scanner           = new Scanner(System.in);
-        errorMessages     = new LinkedList<String>();
+        errorMessages     = new ConcurrentLinkedQueue<String>();
+        this.activeNodes  = activeNodes;
     }
 
     @Override
@@ -37,11 +42,13 @@ public class TerminalManager implements Runnable{
 
     private void printErrors() {
         if (errorMessages.isEmpty()) return;
+
         ConsoleLogger.logRed("Errors:");
-        for (String error : errorMessages) {
+        while (!errorMessages.isEmpty()) {
+            String error = errorMessages.poll();
+            if (error == null) break;
             ConsoleLogger.logWhite(error);
         }
-        errorMessages.clear();
     }
 
     private void printMenu() {
@@ -68,8 +75,7 @@ public class TerminalManager implements Runnable{
     }
 
     public void errorMessage(String message) {
-        ConsoleLogger.logRed(message);
-        printMenu();
+        errorMessages.add(message);
     }
 
     private void processResponse(int input) {
@@ -87,15 +93,14 @@ public class TerminalManager implements Runnable{
         }
 
         try {
-            if (wait) Thread.sleep(ConfigConstants.THREAD_TIMEOUT_MS);
+            if (wait) Thread.sleep(Constants.Configs.THREAD_TIMEOUT_MS);
         } catch (InterruptedException e) {
             return;
         }
     }
 
     private void exit(boolean systemExit) {
-        if (systemExit) 
-            ConsoleLogger.logRed("Scanner is closed. ", false);
+        if (systemExit) ConsoleLogger.logRed("Scanner is closed. ", false);
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
         messageQueue.add(ThreadMessage.internalMessage().exit());
@@ -108,8 +113,40 @@ public class TerminalManager implements Runnable{
     }
 
     private void processTalk(){
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet.");
+        String[] nodes;
+        int nodeNumber;
+
+        nodes = activeNodes.keySet().stream()
+                .map(NetworkNode::getIpAddress)
+                .toArray(String[]::new);
+
+        printActiveNodes(nodes);
+        ConsoleLogger.logYellow("Enter the node number to send a message to: ", false);
+        nodeNumber = getUserInputChoice();
+        
+        if (nodeNumber >= 0 || nodeNumber < activeNodes.size()) {
+            ConsoleLogger.logRed("Invalid node number. Aborting...");
+            return;
+        }
+
+        ConsoleLogger.logYellow("Enter the message to send: ", false);
+        String message = scanner.nextLine();
+        if (message.isEmpty()) {
+            ConsoleLogger.logRed("Invalid message. Aborting...");
+            return;
+        }
+
+        ConsoleLogger.logWhite("Sending message to node...");
+        messageQueue.add(ThreadMessage.externalMessage()
+                                        .talk(message)
+                                        .toIp(nodes[nodeNumber]));
+    }
+
+    private void printActiveNodes(String[] nodes) {
+        ConsoleLogger.logCyan("Active nodes:");
+        for (int i = 0; i < nodes.length; i++) {
+            ConsoleLogger.logWhite(String.format("[%d] %s", i, nodes[i]));
+        }
     }
 
     private void processSend() {
