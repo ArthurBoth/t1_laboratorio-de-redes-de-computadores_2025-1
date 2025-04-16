@@ -53,7 +53,7 @@ public final class Constants {
 
         public static final String TALK_FORMAT  = "%s%%d %%s".formatted(MessageHeaders.TALK_HEADER);
         public static final String FILE_FORMAT  = "%s%%d %%s %%d".formatted(MessageHeaders.FILE_HEADER);
-        public static final String CHUNK_FORMAT = "%s%%d %%d".formatted(MessageHeaders.CHUNK_HEADER); // TODO add sequence number
+        public static final String CHUNK_FORMAT = "%s%%d %%d ".formatted(MessageHeaders.CHUNK_HEADER);
         public static final String END_FORMAT   = "%s%%d %%s".formatted(MessageHeaders.END_HEADER);
         public static final String ACK_FORMAT   = "%s%%d".formatted(MessageHeaders.ACK_HEADER);
         public static final String NACK_FORMAT  = "%s%%d %%s".formatted(MessageHeaders.NACK_HEADER);

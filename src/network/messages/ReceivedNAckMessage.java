@@ -17,4 +17,9 @@ public class ReceivedNAckMessage extends ReceivedMessage {
     public String getReason() {
         return REASON;
     }
+    
+    @Override
+    public int getId() {
+        throw new UnsupportedOperationException("NAck does not have an internal Id, use getNAckId() to get the Id of the Acknowledged message");
+    }
 }

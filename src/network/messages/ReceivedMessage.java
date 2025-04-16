@@ -3,8 +3,8 @@ package network.messages;
 import java.net.InetAddress;
 
 public class ReceivedMessage extends InternalMessage {
-    private final int MESSAGE_ID;
     private final InetAddress SOUREC_IP;
+    private final int MESSAGE_ID;
 
     protected ReceivedMessage(ReceivedMessageBuilder builder) {
         super(builder);
@@ -12,7 +12,7 @@ public class ReceivedMessage extends InternalMessage {
         MESSAGE_ID = builder.getMessageId();
     }
 
-    public final int getId() {
+    public int getId() {
         return MESSAGE_ID;
     }
     

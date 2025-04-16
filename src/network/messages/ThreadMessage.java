@@ -22,7 +22,6 @@ public abstract class ThreadMessage {
         switch (type) {
             case HEARTBEAT -> {
                 return receivedMessage()
-                        .id(Integer.MIN_VALUE)
                         .heartbeat()
                         .sourceIp(sourceIp);
             }
@@ -46,15 +45,17 @@ public abstract class ThreadMessage {
                         .size(fileSize)
                         .sourceIp(sourceIp);
             }
-            // case CHUNK     -> {
-            //     String[] splitMessage = new String(data, 1, data.length - 1).split(" ");
-            //     int    messageId      = Integer.parseInt(splitMessage[0]);
-            //     int sequenceNumber = Integer.parseInt(splitMessage[1]);
-            //     byte[] data;                
-            //     return receivedMessage()
-            //             .id(messageId)
-            //             .chunk(messageId);
-            // }
+            case CHUNK     -> {
+                String[] splitMessage = new String(data, 1, data.length - 1).split(" ");
+                int    messageId      = Integer.parseInt(splitMessage[0]);
+                int    sequenceNumber = Integer.parseInt(splitMessage[1]);
+                byte  [] chunkData    = splitMessage[2].getBytes();
+                return receivedMessage()
+                        .id(messageId)
+                        .chunk(sequenceNumber)
+                        .data(chunkData)
+                        .sourceIp(sourceIp);
+            }
             case END       -> {
                 String[] splitMessage = new String(data, 1, data.length - 1).split(" ");
                 int    messageId      = Integer.parseInt(splitMessage[0]);
@@ -68,7 +69,6 @@ public abstract class ThreadMessage {
                 String[] splitMessage = new String(data, 1, data.length - 1).split(" ");
                 int    ackId          = Integer.parseInt(splitMessage[0]);
                 return receivedMessage()
-                        .id(Integer.MIN_VALUE)
                         .ack(ackId)
                         .sourceIp(sourceIp);
             }
@@ -77,7 +77,6 @@ public abstract class ThreadMessage {
                 int    nAckId         = Integer.parseInt(splitMessage[0]);
                 String reason         = splitMessage[1];
                 return receivedMessage()
-                        .id(Integer.MIN_VALUE)
                         .nack(nAckId)
                         .reason(reason)
                         .sourceIp(sourceIp);
@@ -102,16 +101,16 @@ public abstract class ThreadMessage {
 
     private interface ReceivedIdSetter {
         ReceivedMessageSelection id(int id);
+        SourceIpSetter heartbeat();
+        SourceIpSetter ack(int ackId);
+        ReceivedReasonSetter nack(int nAckId);
     }
 
     private interface ReceivedMessageSelection {
-        SourceIpSetter heartbeat();
         SourceIpSetter talk(String message);
         ReceivedFileSizeSetter file(String fileName);
         ReceivedByteArraySetter chunk(int sequenceNumber);
         SourceIpSetter end(String hash);
-        SourceIpSetter ack(int ackId);
-        ReceivedReasonSetter nack(int nAckId);
     }
 
     private interface ReceivedFileSizeSetter {

@@ -1,5 +1,6 @@
 package io.consoleIO;
 
+import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -112,7 +113,7 @@ public class TerminalManager implements Runnable{
         return Thread.currentThread();
     }
 
-    private void processTalk(){
+    private void processTalk() {
         String[] nodes;
         int nodeNumber;
 
@@ -137,9 +138,14 @@ public class TerminalManager implements Runnable{
         }
 
         ConsoleLogger.logWhite("Sending message to node...");
-        messageQueue.add(ThreadMessage.externalMessage()
-                                        .talk(message)
-                                        .toIp(nodes[nodeNumber]));
+
+        try {
+            messageQueue.add(ThreadMessage.externalMessage()
+                                            .talk(message)
+                                            .toIp(nodes[nodeNumber]));
+        } catch (UnknownHostException e) {
+            ConsoleLogger.logError("Unable to send, message discarted:", e);
+        }
     }
 
     private void printActiveNodes(String[] nodes) {
