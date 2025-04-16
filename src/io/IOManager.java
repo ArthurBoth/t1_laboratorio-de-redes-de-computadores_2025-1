@@ -8,9 +8,10 @@ import java.util.concurrent.TimeUnit;
 import constants.Constants;
 import io.consoleIO.TerminalManager;
 import io.fileIO.FileLogger;
+import network.messages.ExternalMessage;
+import network.messages.InternalMessage;
+import network.messages.ThreadMessage;
 import network.threads.NetworkNode;
-import network.threads.messages.ExternalMessage;
-import network.threads.messages.ThreadMessage;
 
 public class IOManager implements Runnable{
     private BlockingQueue<ThreadMessage> networkQueue;  // only-send
@@ -54,16 +55,29 @@ public class IOManager implements Runnable{
     }
 
     private void processMessage(ThreadMessage message) {
+        if (message.isExternalMessage()) {
+            processExternalMessage((ExternalMessage) message);
+        } else {
+            processInternalMessage((InternalMessage) message);
+        }
+    }
+
+    private void processInternalMessage(InternalMessage message) {
         switch (message.getType()) {
-            // Internal Messages
             case EXIT      -> {processExit();}
             case SEND_FILE -> {processSendFile();}
-            
-            // External Messages
-            case TALK -> {processTalk((ExternalMessage) message);}
+            default        -> {
+                throw new IllegalArgumentException("Invalid external message type: " + message.getType());
+            }
+        }
+    }
 
-            // Default case
-            default -> {throw new IllegalArgumentException("Invalid message type: " + message.getType());}
+    private void processExternalMessage(ExternalMessage message) {
+        switch (message.getType()) {
+            case TALK -> {processTalk(message);}
+            default   -> {
+                throw new IllegalArgumentException("Invalid external message type: " + message.getType());
+            }
         }
     }
 

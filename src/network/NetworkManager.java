@@ -1,5 +1,6 @@
 package network;
 
+import java.net.DatagramSocket;
 import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,21 +9,23 @@ import java.util.concurrent.TimeUnit;
 
 import constants.Constants;
 import io.IOManager;
+import network.messages.ExternalMessage;
+import network.messages.InternalMessage;
+import network.messages.ThreadMessage;
 import network.threads.NetworkNode;
-import network.threads.messages.ThreadMessage;
 
 public class NetworkManager {
-    private final String IP_ADDRESS;
-
+    // Application variables
     private IOManager io;
     private BlockingQueue<ThreadMessage> sendMessages;            // only-send
     private BlockingQueue<ThreadMessage> receiveMessages;         // only-receive
+
+    // Network variables
     private ConcurrentHashMap<NetworkNode, Integer> activeNodes;  // IP:PORT -> seconds since last message
+    private DatagramSocket socket;                                // Socket for sending and receiving messages
 
-    public NetworkManager() throws UnknownHostException {
-        IP_ADDRESS = Constants.Configs.getIpAddress();
-
-        activeNodes    = new ConcurrentHashMap<NetworkNode, Integer>();
+    public NetworkManager() {        
+        activeNodes     = new ConcurrentHashMap<NetworkNode, Integer>();
         sendMessages    = new LinkedBlockingQueue<ThreadMessage>();
         receiveMessages = new LinkedBlockingQueue<ThreadMessage>();
         io              = new IOManager(receiveMessages, activeNodes);
@@ -82,6 +85,16 @@ public class NetworkManager {
     */
 
     private void setup() {
+        try {
+            socket = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
+            socket.setBroadcast(true);
+
+            // TODO: create threads
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // TODO: initialize threads
         new Thread(() -> io.run()).start();
     }
 
@@ -93,10 +106,7 @@ public class NetworkManager {
         while(running) {
             try {
                 message = receiveMessages.poll(Constants.Configs.THREAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                if (message != null) {
-                    // Process the message
-                    running = processMessage(message);
-                }
+                if (message != null) running = processMessage(message);
             } catch (InterruptedException e) {
                 return;
             }
@@ -105,18 +115,30 @@ public class NetworkManager {
 
 
     private boolean processMessage(ThreadMessage message) {
+        if (message.isExternalMessage()) {
+            return processExternalMessage((ExternalMessage) message);
+        } else {
+            return processInternalMessage((InternalMessage) message);
+        }
+    }
+
+    private boolean processExternalMessage(ExternalMessage message) {
         boolean keepRunning = true;
 
         switch (message.getType()) {
-            // Internal Messages
-            case EXIT -> {keepRunning = false;}
-
-            // External Messages
-            
-            // Default case
-            default -> {throw new IllegalArgumentException("Invalid message type: " + message.getType());}
+            case TALK -> {}
+            default -> {throw new IllegalArgumentException("Invalid external message type: " + message.getType());}
         }
+        return keepRunning;
+    }
 
+    private boolean processInternalMessage(InternalMessage message) {
+        boolean keepRunning = true;
+
+        switch (message.getType()) {
+            case EXIT -> {keepRunning = false;}
+            default   -> {throw new IllegalArgumentException("Invalid internal message type: " + message.getType());}
+        }
         return keepRunning;
     }
 }

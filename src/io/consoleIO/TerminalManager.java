@@ -6,8 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import constants.Constants;
+import network.messages.ThreadMessage;
 import network.threads.NetworkNode;
-import network.threads.messages.ThreadMessage;
 
 public class TerminalManager implements Runnable{
     private BlockingQueue<ThreadMessage> messageQueue;  // only-send

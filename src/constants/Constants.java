@@ -16,17 +16,15 @@ public final class Constants {
         public static final boolean CLEAR_PREVIOUS_LOGS   = true;
         public static final String Strings = null;
 
-        private static String ipAddress;
+        public static final String IP_ADDRESS = getIpAddress();
 
-        public static String getIpAddress() {
-            if (ipAddress == null) {
-                try {
-                    ipAddress = InetAddress.getLocalHost().getHostAddress();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        private static String getIpAddress() {
+            try {
+                return InetAddress.getLocalHost().getHostAddress();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            return String.format("%s:%d", ipAddress, DEFAULT_PORT);
+            return null;
         }
 
         public static final class Logs {
@@ -49,16 +47,32 @@ public final class Constants {
         public static final String SENT_MESSAGE_FORMAT     = "%s: %s";
         
         public static final String BROADCAST_IP      = "255.255.255.255";
-        public static final String HEARTBEAT_MESSAGE = String.format("HEARTBEAT %s", Configs.getIpAddress());
+        public static final String HEARTBEAT_MESSAGE = "%s%s".formatted(
+                                                            MessageHeaders.HEARTBEAT_HEADER, 
+                                                            Configs.IP_ADDRESS);
 
-        public static final String TALK_FORMAT  = "TALK %d %s";
-        public static final String FILE_FORMAT  = "FILE %d %s %d";
-        public static final String CHUNK_FORMAT = "CHUNK %d %d";
-        public static final String END_FORMAT   = "END %d %s";
-        public static final String ACK_FORMAT   = "ACK %d";
-        public static final String NACK_FORMAT  = "NACK %d %s";
+        public static final String TALK_FORMAT  = "%s%%d %%s".formatted(MessageHeaders.TALK_HEADER);
+        public static final String FILE_FORMAT  = "%s%%d %%s %%d".formatted(MessageHeaders.FILE_HEADER);
+        public static final String CHUNK_FORMAT = "%s%%d %%d".formatted(MessageHeaders.CHUNK_HEADER); // TODO add sequence number
+        public static final String END_FORMAT   = "%s%%d %%s".formatted(MessageHeaders.END_HEADER);
+        public static final String ACK_FORMAT   = "%s%%d".formatted(MessageHeaders.ACK_HEADER);
+        public static final String NACK_FORMAT  = "%s%%d %%s".formatted(MessageHeaders.NACK_HEADER);
 
         private Strings() {
+            throw new IllegalStateException("Utility class");
+        }
+    }
+
+    public static final class MessageHeaders {
+        public static final char HEARTBEAT_HEADER = '♥'; // Alt + 3
+        public static final char TALK_HEADER      = '¶'; // Alt + 0182
+        public static final char FILE_HEADER      = '├'; // Alt + 195
+        public static final char CHUNK_HEADER     = '─'; // Alt + 196
+        public static final char END_HEADER       = '┤'; // Alt + 180
+        public static final char ACK_HEADER       = '=';
+        public static final char NACK_HEADER      = '¬'; // Alt + 170
+
+        private MessageHeaders() {
             throw new IllegalStateException("Utility class");
         }
     }

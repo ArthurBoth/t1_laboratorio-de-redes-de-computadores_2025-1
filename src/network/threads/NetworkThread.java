@@ -2,7 +2,6 @@ package network.threads;
 
 import java.net.DatagramSocket;
 
-
 public abstract class NetworkThread implements Runnable{
     protected DatagramSocket socket;
     protected volatile boolean running;

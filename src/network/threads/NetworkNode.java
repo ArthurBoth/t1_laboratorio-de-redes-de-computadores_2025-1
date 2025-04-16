@@ -1,26 +1,26 @@
 package network.threads;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class NetworkNode {
-    private final String IP_ADDRESS;
+    private final InetAddress IP_ADDRESS;
     private final int PORT;
 
-    public NetworkNode(String ipAddress, int port) {
-        this.IP_ADDRESS = ipAddress;
+    public NetworkNode(String ipAddress, int port) throws UnknownHostException {
+        this.IP_ADDRESS = InetAddress.getByName(ipAddress);
         this.PORT       = port;
     }
 
-    public NetworkNode(String addressWithPort) {
-        String[] ipParts = addressWithPort.split(":");
-
-        this.IP_ADDRESS = ipParts[0];
-        this.PORT       = Integer.parseInt(ipParts[1]);
-    }
-
-    public String getIpAddress() {
+    public InetAddress getIpAddress() {
         return IP_ADDRESS;
     }
 
     public int getPort() {
         return PORT;
+    }
+
+    public String getFullAddress() {
+        return String.format("%s:%d", IP_ADDRESS, PORT);
     }
 }
