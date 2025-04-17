@@ -1,31 +1,9 @@
 package network;
 
-import java.net.DatagramSocket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
-import constants.Constants;
-import network.messages.MessageProcessor;
-import network.messages.ThreadMessage;
-import network.threads.NetworkNode;
-import network.threads.NetworkThreadManager;
+public class NetworkListener {
 
-public class NetworkManager {
-    // Application variables
-    private BlockingQueue<ThreadMessage> sendMessages;            // only-send
-    private BlockingQueue<ThreadMessage> receiveMessages;         // only-receive
-
-    // Network variables
-    private ConcurrentHashMap<NetworkNode, Integer> activeNodes;  // IP:PORT -> seconds since last message
-    private DatagramSocket socket;                                // Socket for sending and receiving messages
-    private NetworkThreadManager threadManager;
-
-    public NetworkManager() {        
-        activeNodes     = new ConcurrentHashMap<NetworkNode, Integer>();
-        sendMessages    = new LinkedBlockingQueue<ThreadMessage>();
-        receiveMessages = new LinkedBlockingQueue<ThreadMessage>();
+    public NetworkListener() {
     }
     
     /* TODO: 
@@ -82,37 +60,10 @@ public class NetworkManager {
     */
 
     private void setup() {
-        try {
-            socket = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
-            socket.setBroadcast(true);
-
-            threadManager = new NetworkThreadManager(socket, sendMessages, receiveMessages, activeNodes);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        threadManager.startThreads();
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     public void start() {
-        boolean running = true;
-        ThreadMessage message;
-        MessageProcessor processor;
-
-        setup();
-        while(running) {
-            try {
-                message = receiveMessages.poll(Constants.Configs.THREAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                if (message != null) running = processMessage(message);
-            } catch (InterruptedException e) {
-                return;
-            }
-        }
-    }
-
-
-    private boolean processMessage(ThreadMessage message) {
-        // TODO visitor pattern
         throw new UnsupportedOperationException("Not implemented yet");
     }
 }

@@ -1,48 +1,64 @@
 package io;
 
+import java.io.File;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import constants.Constants;
+import constants.Exceptions.FileSearchException;
 import io.consoleIO.TerminalManager;
-import io.fileIO.FileLogger;
-import network.messages.ExternalMessage;
-import network.messages.InternalMessage;
-import network.messages.ThreadMessage;
+import io.fileIO.FileManager;
+import network.messages.IONetworkMessage;
+import network.messages.NetworkIOMessage;
+import network.messages.TerminalIOMessage;
 import network.threads.NetworkNode;
 
-public class IOManager implements Runnable{
-    private BlockingQueue<ThreadMessage> networkQueue;  // only-send
-    private BlockingQueue<ThreadMessage> receiver;      // only-receive
+public class IOManager implements Runnable {
+    private BlockingQueue<IONetworkMessage> networkSenderQueue;    
+    private BlockingQueue<NetworkIOMessage> networkReceiverQueue;  
+
+    private BlockingQueue<TerminalIOMessage> consoleReceiverQueue;  
     private ConcurrentHashMap<NetworkNode, Integer> activeNodes;
 
-
-
     private TerminalManager terminal;
-    private FileLogger logger;
+    private FileManager fileManager;
     
     private volatile boolean running;
 
-    public IOManager(BlockingQueue<ThreadMessage> networkQueue,
+    public IOManager(BlockingQueue<IONetworkMessage> networkSenderQueue,
+                     BlockingQueue<NetworkIOMessage> networkReceiverQueue,
                      ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
-        this.networkQueue = networkQueue;
-        receiver          = new LinkedBlockingQueue<ThreadMessage>();
-        logger            = new FileLogger();
-        this.activeNodes  = activeNodes;
+        this.networkSenderQueue   = networkSenderQueue;
+        this.networkReceiverQueue = networkReceiverQueue;
+        this.activeNodes          = activeNodes;
+
+        consoleReceiverQueue = new LinkedBlockingQueue<TerminalIOMessage>();
+        fileManager          = new FileManager();
     }
 
     @Override
     public void run() {
-        ThreadMessage message;
+        TerminalIOMessage consoleMessage;
+        NetworkIOMessage networkMessage;
+        int listening = 2;
         running = true;
 
         startConsole();
         while (running) {
             try {
-                message = receiver.poll(Constants.Configs.THREAD_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                if (message != null) processMessage(message);
+                networkMessage = networkReceiverQueue.poll(
+                    (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
+                    TimeUnit.MILLISECONDS
+                    );
+                if (networkMessage != null) processMessage(networkMessage);
+                consoleMessage = consoleReceiverQueue.poll(
+                    (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
+                    TimeUnit.MILLISECONDS
+                    );
+                if (consoleMessage != null) processMessage(consoleMessage);
             } catch (InterruptedException e) {
                 return;
             }
@@ -50,61 +66,77 @@ public class IOManager implements Runnable{
     }
 
     private void startConsole() {
-        terminal = new TerminalManager(receiver, activeNodes);
+        terminal = new TerminalManager(consoleReceiverQueue, activeNodes);
         new Thread(() -> terminal.run()).start();
     }
 
-    private void processMessage(ThreadMessage message) {
-        if (message.isExternalMessage()) {
-            processExternalMessage((ExternalMessage) message);
-        } else {
-            processInternalMessage((InternalMessage) message);
-        }
-    }
-
-    private void processInternalMessage(InternalMessage message) {
+    private void processMessage(TerminalIOMessage message) {
         switch (message.getType()) {
-            case EXIT      -> {processExit();}
-            case SEND_FILE -> {processSendFile();}
-            default        -> {
-                throw new IllegalArgumentException("Invalid external message type: " + message.getType());
-            }
+            case EXIT         -> {processExit();}                
+            case SEND_MESSAGE -> {processSendMessage(message);}
+            case SEND_FILE    -> {processSendFile(message);}
         }
     }
 
-    private void processExternalMessage(ExternalMessage message) {
+    private void processMessage(NetworkIOMessage message) {
         switch (message.getType()) {
             case TALK -> {processTalk(message);}
-            default   -> {
-                throw new IllegalArgumentException("Invalid external message type: " + message.getType());
-            }
+            case FILE -> {processReceivedFile(message);}
         }
     }
 
     private void processExit() {
         Thread terminalThread = terminal.stopConsole();
         terminalThread.interrupt();
-        networkQueue.offer(ThreadMessage.internalMessage().exit());
+        networkSenderQueue.offer(IONetworkMessage.exit());
 
         running = false;
     }
 
-    private void processTalk(ExternalMessage talkMessage) {
-        if (talkMessage.getMessageBytes().length > Constants.Configs.MAX_MESSAGE_SIZE) {
-            terminal.errorMessage("""
-                    Message is too long. 
-                    Maximum message size is %d bytes.
-                    Your message has %d bytes""".formatted(
-                            Constants.Configs.MAX_MESSAGE_SIZE,
-                            talkMessage.getMessageBytes().length));
-            return;
-        }
-
-        networkQueue.offer(talkMessage);
-        logger.logSent(talkMessage.getMessage());
+    private void processSendMessage(TerminalIOMessage message) {
+        networkSenderQueue.offer(
+            IONetworkMessage.talk(message.getStringField())
+        );
     }
 
-    private void processSendFile() {
+    private void processSendFile(TerminalIOMessage message) {
+        File file;
+        String fileName;
+        long fileSize;
+        Queue<byte[]> fullData;
+        byte[] chunkData;
+        String fileHash;
+
+        try {
+            fileName = message.getStringField();
+            file     = fileManager.getFile(Constants.Configs.Paths.INPUT_FOLDER_PATH + fileName);
+            fileSize = file.length();
+            fullData = fileManager.getFileData(file);
+            fileHash = fileManager.getFileHash(file);
+
+            networkSenderQueue.offer(
+                IONetworkMessage.file(fileName).fileSize(fileSize)
+            );
+            for (int i = 0; i < fullData.size(); i++) {
+                chunkData = fullData.poll();
+                networkSenderQueue.offer(
+                    IONetworkMessage.chunk(i).chunkData(chunkData)
+                );
+            }
+            networkSenderQueue.offer(
+                IONetworkMessage.end(fileHash)
+            );
+        } catch (FileSearchException e) {
+            terminal.errorMessage(e.getMessage());
+        }
+    }
+
+    private void processTalk(NetworkIOMessage message) {
+        // TODO
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    private void processReceivedFile(NetworkIOMessage message) {
         // TODO
         throw new UnsupportedOperationException("Not implemented yet.");
     }

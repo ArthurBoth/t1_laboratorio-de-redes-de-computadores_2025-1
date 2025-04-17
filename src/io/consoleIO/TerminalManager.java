@@ -7,23 +7,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import constants.Constants;
-import network.messages.ThreadMessage;
+import network.messages.TerminalIOMessage;
 import network.threads.NetworkNode;
 
 public class TerminalManager implements Runnable{
-    private BlockingQueue<ThreadMessage> messageQueue;  // only-send
+    private BlockingQueue<TerminalIOMessage> messageSenderQueue;
     private Scanner scanner;
     private ConcurrentLinkedQueue<String> errorMessages;
 
     private volatile boolean running;
     private ConcurrentHashMap<NetworkNode, Integer> activeNodes;
 
-    public TerminalManager(BlockingQueue<ThreadMessage> messageQueue, 
+    public TerminalManager(BlockingQueue<TerminalIOMessage> messageSenderQueue, 
                             ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
-        this.messageQueue = messageQueue;
-        scanner           = new Scanner(System.in);
-        errorMessages     = new ConcurrentLinkedQueue<String>();
-        this.activeNodes  = activeNodes;
+        this.messageSenderQueue = messageSenderQueue;
+        scanner                 = new Scanner(System.in);
+        errorMessages           = new ConcurrentLinkedQueue<String>();
+        this.activeNodes        = activeNodes;
     }
 
     @Override
@@ -104,7 +104,7 @@ public class TerminalManager implements Runnable{
         if (systemExit) ConsoleLogger.logRed("Scanner is closed. ", false);
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
-        messageQueue.add(ThreadMessage.internalMessage().exit("I/O exit"));
+        messageSenderQueue.add(TerminalIOMessage.exit());
     }
 
     public Thread stopConsole() {
@@ -151,9 +151,7 @@ public class TerminalManager implements Runnable{
         ConsoleLogger.logWhite("Sending message to node...");
 
         try {
-            messageQueue.add(ThreadMessage.externalMessage()
-                                            .talk(message)
-                                            .toIp(nodes[nodeNumber]));
+            messageSenderQueue.add(TerminalIOMessage.sendMessage(message).toIp(nodes[nodeNumber]));
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);
         }
@@ -190,14 +188,17 @@ public class TerminalManager implements Runnable{
         nodeNumber = getNodeToSend(nodes);
         if (nodeNumber < 0) return;
 
-        ConsoleLogger.logYellow("Enter the File's name to send: ", false);
+        ConsoleLogger.logYellow("Enter the File's name (with extension) to send: ", false);
         fileName = scanner.nextLine();
         if (isValidFileName(fileName)) {
             ConsoleLogger.logRed("Invalid file name. Aborting...");
             return;
         }
 
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet.");
+        try {
+            messageSenderQueue.add(TerminalIOMessage.sendFile(fileName).toIp(nodes[nodeNumber]));
+        } catch (UnknownHostException e) {
+            ConsoleLogger.logError("Unable to send, message discarted:", e);
+        }
     }
 }

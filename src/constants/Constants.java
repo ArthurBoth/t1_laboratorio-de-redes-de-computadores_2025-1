@@ -6,19 +6,25 @@ import java.util.Set;
 public final class Constants {
     public static final class Configs {
         public static final int DEFAULT_PORT       = 9000;
-        public static final int MAX_MESSAGE_SIZE   = 1 << 20; // 1 MB
+        public static final int MAX_MESSAGE_SIZE   = 1 << 17;  // 128 KB
+        public static final int MAX_BUFFER_SIZE    = 1 << 13;  // 8 KB
         public static final int SOCKET_TIMEOUT_MS  = 1000;
         public static final int THREAD_TIMEOUT_MS  = 1000;
         public static final int NODE_TIMEOUT_SEC   = 5;
         public static final int TIMEOUT_MULTIPLYER = 3;
 
+        public static final int MIN_CHUNK_SIZE = (
+            Strings.CHUNK_FORMAT.formatted(Integer.MAX_VALUE, MAX_MESSAGE_SIZE).getBytes().length
+        );
+
         public static final boolean PRINT_LOGS            = true;
         public static final boolean DEFAULT_NEW_LINE_LOGS = true;
         public static final boolean CLEAR_PREVIOUS_LOGS   = true;
-        public static final String Strings = null;
 
         public static final String IP_ADDRESS = getIpAddress();
 
+        public static final long MAX_FILE_SIZE = 1 << 27; // 128 MB
+        
         private static String getIpAddress() {
             try {
                 return InetAddress.getLocalHost().getHostAddress();
@@ -28,11 +34,12 @@ public final class Constants {
             return null;
         }
 
-        public static final class Logs {
-            public static final String LOG_FOLDER_PATH = "./logs/";
-            public static final String ALL_LOGS_FILE   = "all.log";
+        public static final class Paths {
+            public static final String INPUT_FOLDER_PATH = "./input/";
+            public static final String LOG_FOLDER_PATH   = "./logs/";
+            public static final String ALL_LOGS_FILE     = "all.log";
             
-            private Logs() {
+            private Paths() {
                 throw new IllegalStateException("Utility class");
             }
         }
