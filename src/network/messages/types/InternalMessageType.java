@@ -3,7 +3,6 @@ package network.messages.types;
 public enum InternalMessageType {
     // Message types for internal communication
     EXIT, 
-    SEND_MESSAGE,
     SEND_FILE,
 
     // Message types for received messages

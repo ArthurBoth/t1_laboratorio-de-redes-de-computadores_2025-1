@@ -19,16 +19,17 @@ public class ExternalMessage extends ThreadMessage {
         STRING_FIELD   = builder.getStringField();
     }
 
-    public final boolean isExternalMessage() {
-        return true;
-    }
-
     public final ExternalMessageType getType() {
         return TYPE;
     }
 
     public final InetAddress getDestinationIp() {
         return DESTINATION_IP;
+    }
+
+    @Override
+    public boolean accept(ThreadMessageVisitor visitor) {
+        return visitor.process(this);
     }
 
     public byte[] getMessageBytes() {

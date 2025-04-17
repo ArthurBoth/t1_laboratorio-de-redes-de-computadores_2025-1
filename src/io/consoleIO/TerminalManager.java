@@ -104,7 +104,7 @@ public class TerminalManager implements Runnable{
         if (systemExit) ConsoleLogger.logRed("Scanner is closed. ", false);
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
-        messageQueue.add(ThreadMessage.internalMessage().exit());
+        messageQueue.add(ThreadMessage.internalMessage().exit("I/O exit"));
     }
 
     public Thread stopConsole() {
@@ -113,25 +113,36 @@ public class TerminalManager implements Runnable{
         return Thread.currentThread();
     }
 
-    private void processTalk() {
-        String[] nodes;
+    private int getNodeToSend(String[] nodes) {
         int nodeNumber;
 
-        nodes = activeNodes.keySet().stream()
-                .map(NetworkNode::getIpAddress)
-                .toArray(String[]::new);
 
         printActiveNodes(nodes);
-        ConsoleLogger.logYellow("Enter the node number to send a message to: ", false);
+        ConsoleLogger.logYellow("Enter the node number to send to: ", false);
         nodeNumber = getUserInputChoice();
         
         if (nodeNumber >= 0 || nodeNumber < activeNodes.size()) {
             ConsoleLogger.logRed("Invalid node number. Aborting...");
-            return;
+            return -1;
         }
 
+        return nodeNumber;
+    }
+
+    private void processTalk() {
+        String[] nodes;
+        int nodeNumber;
+        String message;
+        
+        nodes = activeNodes.keySet().stream()
+                .map(NetworkNode::getIpAddress)
+                .toArray(String[]::new);
+
+        nodeNumber = getNodeToSend(nodes);
+        if (nodeNumber < 0) return;
+
         ConsoleLogger.logYellow("Enter the message to send: ", false);
-        String message = scanner.nextLine();
+        message = scanner.nextLine();
         if (message.isEmpty()) {
             ConsoleLogger.logRed("Invalid message. Aborting...");
             return;
@@ -155,7 +166,37 @@ public class TerminalManager implements Runnable{
         }
     }
 
+    private boolean isValidFileName(String fileName) {
+        String extensionlessFileName;
+
+        if (!fileName.matches(Constants.ForbiddenFileNames.FORBIDDEN_CHARS_REGEX)) return false;
+        if (fileName.charAt(fileName.length() - 1) == ' ') return false;
+        if (fileName.charAt(fileName.length() - 1) == '.') return false;
+
+        extensionlessFileName = fileName.split(Constants.ForbiddenFileNames.FILE_EXTENSION_REGEX)[0];
+
+        return !(Constants.ForbiddenFileNames.RESERVED_NAMES.contains(extensionlessFileName.toUpperCase()));
+    }
+
     private void processSend() {
+        String[] nodes;
+        int nodeNumber;
+        String fileName;
+
+        nodes = activeNodes.keySet().stream()
+                .map(NetworkNode::getIpAddress)
+                .toArray(String[]::new);
+
+        nodeNumber = getNodeToSend(nodes);
+        if (nodeNumber < 0) return;
+
+        ConsoleLogger.logYellow("Enter the File's name to send: ", false);
+        fileName = scanner.nextLine();
+        if (isValidFileName(fileName)) {
+            ConsoleLogger.logRed("Invalid file name. Aborting...");
+            return;
+        }
+
         // TODO
         throw new UnsupportedOperationException("Not implemented yet.");
     }

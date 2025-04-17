@@ -11,9 +11,7 @@ public abstract class NetworkThread implements Runnable{
         this.socket = socket;
     }
 
-    public Thread stop() {
-        if (!running) return Thread.currentThread();
-        
+    public Thread stop() {        
         running = false;
         return Thread.currentThread();
     }

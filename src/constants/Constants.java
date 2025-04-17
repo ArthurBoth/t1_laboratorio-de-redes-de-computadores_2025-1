@@ -1,6 +1,7 @@
 package constants;
 
 import java.net.InetAddress;
+import java.util.Set;
 
 public final class Constants {
     public static final class Configs {
@@ -73,6 +74,21 @@ public final class Constants {
         public static final char NACK_HEADER      = '¬'; // Alt + 170
 
         private MessageHeaders() {
+            throw new IllegalStateException("Utility class");
+        }
+    }
+
+    public static final class ForbiddenFileNames {
+        public static final String FORBIDDEN_CHARS_REGEX = "^[^<>:\"\\\\/|?*\\n]*$";
+        public static final String FILE_EXTENSION_REGEX = "\\.\\w+$";
+
+        public static final Set<String> RESERVED_NAMES = Set.of(
+            "CON", "PRN", "AUX", "NUL",
+            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+        );
+
+        private ForbiddenFileNames() {
             throw new IllegalStateException("Utility class");
         }
     }

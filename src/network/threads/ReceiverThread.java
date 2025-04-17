@@ -13,9 +13,9 @@ import network.messages.ThreadMessage;
 import static constants.Constants.Configs.PRINT_LOGS;
 
 public class ReceiverThread extends NetworkThread {
-    private BlockingQueue<InternalMessage> messageQueue;
+    private BlockingQueue<ThreadMessage> messageQueue;
     
-    protected ReceiverThread(DatagramSocket socket, BlockingQueue<InternalMessage> messageQueue) {
+    protected ReceiverThread(DatagramSocket socket, BlockingQueue<ThreadMessage> messageQueue) {
         super(socket);
         this.messageQueue = messageQueue;
     }

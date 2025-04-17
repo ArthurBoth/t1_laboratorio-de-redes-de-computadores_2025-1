@@ -12,7 +12,7 @@ public abstract class ThreadMessage {
 
     // **************************************************************************
     // Inheritance
-    public abstract boolean isExternalMessage();
+    public abstract boolean accept(ThreadMessageVisitor visitor);
 
     // **************************************************************************
     // Internal Messages
@@ -95,10 +95,6 @@ public abstract class ThreadMessage {
         return new InternalMessageBuilder();
     }
 
-    public interface InternalMessageSelection {
-        InternalMessage exit();
-    }
-
     private interface ReceivedIdSetter {
         ReceivedMessageSelection id(int id);
         SourceIpSetter heartbeat();
@@ -129,16 +125,34 @@ public abstract class ThreadMessage {
         ReceivedMessage sourceIp(InetAddress ip);
     }
 
+    public interface InternalMessageSelection {
+        InternalMessage exit(String exitMessage);
+        InternalMessage sendFile(String fileName);
+    }
+
     protected static class InternalMessageBuilder implements InternalMessageSelection {
         private InternalMessageType type;
+        private String stringField;
 
         protected InternalMessageType getType() {
             return type;
         }
+        
+        protected String getStringField() {
+            return stringField;
+        }
 
         @Override
-        public InternalMessage exit() {
-            this.type = InternalMessageType.EXIT;
+        public final InternalMessage exit(String exitMessage) {
+            this.type        = InternalMessageType.EXIT;
+            this.stringField = exitMessage;
+            return new InternalMessage(this);
+        }
+        
+        @Override
+        public final InternalMessage sendFile(String fileName) {
+            this.type = InternalMessageType.SEND_FILE;
+            this.stringField = fileName;
             return new InternalMessage(this);
         }
     }

@@ -7,27 +7,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import constants.Constants;
-import io.IOManager;
-import network.messages.ExternalMessage;
-import network.messages.InternalMessage;
+import network.messages.MessageProcessor;
 import network.messages.ThreadMessage;
 import network.threads.NetworkNode;
+import network.threads.NetworkThreadManager;
 
 public class NetworkManager {
     // Application variables
-    private IOManager io;
     private BlockingQueue<ThreadMessage> sendMessages;            // only-send
     private BlockingQueue<ThreadMessage> receiveMessages;         // only-receive
 
     // Network variables
     private ConcurrentHashMap<NetworkNode, Integer> activeNodes;  // IP:PORT -> seconds since last message
     private DatagramSocket socket;                                // Socket for sending and receiving messages
+    private NetworkThreadManager threadManager;
 
     public NetworkManager() {        
         activeNodes     = new ConcurrentHashMap<NetworkNode, Integer>();
         sendMessages    = new LinkedBlockingQueue<ThreadMessage>();
         receiveMessages = new LinkedBlockingQueue<ThreadMessage>();
-        io              = new IOManager(receiveMessages, activeNodes);
     }
     
     /* TODO: 
@@ -88,18 +86,18 @@ public class NetworkManager {
             socket = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
             socket.setBroadcast(true);
 
-            // TODO: create threads
+            threadManager = new NetworkThreadManager(socket, sendMessages, receiveMessages, activeNodes);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // TODO: initialize threads
-        new Thread(() -> io.run()).start();
+        threadManager.startThreads();
     }
 
     public void start() {
         boolean running = true;
         ThreadMessage message;
+        MessageProcessor processor;
 
         setup();
         while(running) {
@@ -114,30 +112,7 @@ public class NetworkManager {
 
 
     private boolean processMessage(ThreadMessage message) {
-        if (message.isExternalMessage()) {
-            return processExternalMessage((ExternalMessage) message);
-        } else {
-            return processInternalMessage((InternalMessage) message);
-        }
-    }
-
-    private boolean processExternalMessage(ExternalMessage message) {
-        boolean keepRunning = true;
-
-        switch (message.getType()) {
-            case TALK -> {}
-            default -> {throw new IllegalArgumentException("Invalid external message type: " + message.getType());}
-        }
-        return keepRunning;
-    }
-
-    private boolean processInternalMessage(InternalMessage message) {
-        boolean keepRunning = true;
-
-        switch (message.getType()) {
-            case EXIT -> {keepRunning = false;}
-            default   -> {throw new IllegalArgumentException("Invalid internal message type: " + message.getType());}
-        }
-        return keepRunning;
+        // TODO visitor pattern
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }

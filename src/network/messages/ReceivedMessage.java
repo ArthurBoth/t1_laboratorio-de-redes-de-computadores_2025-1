@@ -12,6 +12,11 @@ public class ReceivedMessage extends InternalMessage {
         MESSAGE_ID = builder.getMessageId();
     }
 
+    @Override
+    public boolean accept(ThreadMessageVisitor visitor) {
+        return visitor.process(this);
+    }
+
     public int getId() {
         return MESSAGE_ID;
     }

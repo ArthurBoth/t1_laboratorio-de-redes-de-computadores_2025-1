@@ -10,13 +10,14 @@ import java.util.concurrent.TimeUnit;
 import constants.Constants;
 import io.consoleIO.ConsoleLogger;
 import network.messages.ExternalMessage;
+import network.messages.ThreadMessage;
 
 import static constants.Constants.Configs.PRINT_LOGS;
 
 public class SenderThread extends NetworkThread {
-    public BlockingQueue<ExternalMessage> messageQueue;
+    public BlockingQueue<ThreadMessage> messageQueue;
 
-    public SenderThread(DatagramSocket socket, BlockingQueue<ExternalMessage> messageQueue) {
+    public SenderThread(DatagramSocket socket, BlockingQueue<ThreadMessage> messageQueue) {
         super(socket);
         this.messageQueue = messageQueue;
     }
@@ -28,7 +29,7 @@ public class SenderThread extends NetworkThread {
         if (PRINT_LOGS) ConsoleLogger.logBlue("SenderThread started.");
         while (running) {
             try {
-                message = messageQueue.poll(Constants.Configs.SOCKET_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                message = (ExternalMessage) messageQueue.poll(Constants.Configs.SOCKET_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 if (message != null) sendMessage(message);
             } catch (InterruptedException e) {
                 super.running = false;  
