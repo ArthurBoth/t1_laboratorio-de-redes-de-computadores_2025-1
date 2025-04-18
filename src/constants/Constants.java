@@ -20,6 +20,7 @@ public final class Constants {
         public static final boolean PRINT_LOGS            = true;
         public static final boolean DEFAULT_NEW_LINE_LOGS = true;
         public static final boolean CLEAR_PREVIOUS_LOGS   = true;
+        public static final boolean ALLOW_CUSTOM_IPS      = true;
 
         public static final String IP_ADDRESS = getIpAddress();
         public static final String HASHING_ALGORITHM = "SHA-256";
@@ -80,6 +81,8 @@ public final class Constants {
         public static final String NACK_LOG_FORMAT      = "[%s] NACK     : NAckId = %d | \"%s\"";
 
         public static final String DISCARTED_CHUNK_FORMAT = "DISCARTED CHUNK: %d (%d bytes)";
+
+        public static final String IP_ADDRESS_REGEX  = "^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\\.(?!$)|$)){4}$";
 
         private Strings() {
             throw new IllegalStateException("Utility class");

@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import constants.Constants;
+import constants.Constants.Configs;
 import io.fileIO.FileUitls;
 import network.messages.internal.InternalMessage;
 import network.messages.internal.TerminalIOMessage;
@@ -116,7 +117,7 @@ public class TerminalManager implements Runnable{
         return Thread.currentThread();
     }
 
-    private int getNodeToSend(String[] nodes) {
+    private int nodeSelection(String[] nodes) {
         int nodeNumber;
 
 
@@ -132,17 +133,33 @@ public class TerminalManager implements Runnable{
         return nodeNumber;
     }
 
+    private String getNodeToSend(String[] nodes) {
+        if (Configs.ALLOW_CUSTOM_IPS) {
+            ConsoleLogger.logYellow("Enter the node IP address to send to: ", false);
+            String node = scanner.nextLine();
+            if (node.isEmpty() || node.matches(Constants.Strings.IP_ADDRESS_REGEX)) {
+                ConsoleLogger.logRed("Invalid node IP address. Aborting...");
+                return null;
+            }
+            return node;
+        } else {
+            int nodeNumber = nodeSelection(nodes);
+            if (nodeNumber < 0) return null;
+            return nodes[nodeNumber];
+        }
+    }
+
     private void processTalk() {
         String[] nodes;
-        int nodeNumber;
+        String node;
         String message;
         
         nodes = activeNodes.keySet().stream()
                 .map(NetworkNode::getIpAddress)
                 .toArray(String[]::new);
 
-        nodeNumber = getNodeToSend(nodes);
-        if (nodeNumber < 0) return;
+        node = getNodeToSend(nodes);
+        if (node == null) return;
 
         ConsoleLogger.logYellow("Enter the message to send: ", false);
         message = scanner.nextLine();
@@ -157,7 +174,7 @@ public class TerminalManager implements Runnable{
             messageSenderQueue.add(
                 InternalMessage.terminalToIO()
                     .sendMessage(message)
-                    .toIp(nodes[nodeNumber])
+                    .toIp(node)
             );
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);
@@ -173,15 +190,15 @@ public class TerminalManager implements Runnable{
 
     private void processSend() {
         String[] nodes;
-        int nodeNumber;
+        String node;
         String fileName;
 
         nodes = activeNodes.keySet().stream()
                 .map(NetworkNode::getIpAddress)
                 .toArray(String[]::new);
 
-        nodeNumber = getNodeToSend(nodes);
-        if (nodeNumber < 0) return;
+        node = getNodeToSend(nodes);
+        if (node == null) return;
 
         ConsoleLogger.logYellow("Enter the File's name (with extension) to send: ", false);
         fileName = scanner.nextLine();
@@ -194,7 +211,7 @@ public class TerminalManager implements Runnable{
             messageSenderQueue.add(
                 InternalMessage.terminalToIO()
                     .sendFile(fileName)
-                    .toIp(nodes[nodeNumber])
+                    .toIp(node)
             );
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);
