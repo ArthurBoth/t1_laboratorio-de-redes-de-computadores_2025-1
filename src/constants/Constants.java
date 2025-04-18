@@ -22,6 +22,7 @@ public final class Constants {
         public static final boolean CLEAR_PREVIOUS_LOGS   = true;
 
         public static final String IP_ADDRESS = getIpAddress();
+        public static final String HASHING_ALGORITHM = "SHA-256";
 
         public static final long MAX_FILE_SIZE = 1 << 27; // 128 MB
         
@@ -35,9 +36,13 @@ public final class Constants {
         }
 
         public static final class Paths {
-            public static final String INPUT_FOLDER_PATH = "./input/";
-            public static final String LOG_FOLDER_PATH   = "./logs/";
-            public static final String ALL_LOGS_FILE     = "all.log";
+            public static final String SEND_FOLDER_PATH    = "./.SEND/";
+            public static final String RECEIVE_FOLDER_PATH = "./.RECEIVE/";
+            public static final String LOG_FOLDER_PATH     = "./logs/";
+            public static final String PRETTY_LOGS_FILE    = "pretty.log";
+            public static final String ACTUAL_LOGS_FILE    = "regular.log";
+            public static final String INTERNAL_LOGS_FILE  = "internal.log";
+            public static final String TALK_LOGS_FILE      = "talk.log";
             
             private Paths() {
                 throw new IllegalStateException("Utility class");
@@ -50,9 +55,9 @@ public final class Constants {
     }
         
     public static final class Strings {
-        public static final String DATE_TIME_LOG_FORMAT    = "uuuu-MM-dd HH:mm:ss.SSS";
-        public static final String RECEIVED_MESSAGE_FORMAT = "\t\t\t\t\t%s: %s";
-        public static final String SENT_MESSAGE_FORMAT     = "%s: %s";
+        public static final String DATE_TIME_LOG_FORMAT   = "uuuu-MM-dd HH:mm:ss.SSS";
+        public static final String SPACED_MESSAGE_FORMAT  = "\t\t\t\t\t%s: %s";
+        public static final String REGULAR_MESSAGE_FORMAT = "%s: %s";
         
         public static final String BROADCAST_IP      = "255.255.255.255";
         public static final String HEARTBEAT_MESSAGE = "%s%s".formatted(
@@ -65,6 +70,16 @@ public final class Constants {
         public static final String END_FORMAT   = "%s%%d %%s".formatted(MessageHeaders.END_HEADER);
         public static final String ACK_FORMAT   = "%s%%d".formatted(MessageHeaders.ACK_HEADER);
         public static final String NACK_FORMAT  = "%s%%d %%s".formatted(MessageHeaders.NACK_HEADER);
+
+        public static final String HEARTBEAT_LOG_FORMAT = "[%s] HEARTBEAT";
+        public static final String TALK_LOG_FORMAT      = "[%s] TALK(%d) : \"%s\"";
+        public static final String FILE_LOG_FORMAT      = "[%s] FILE(%d) : \"%s\" (%d bytes)";
+        public static final String CHUNK_LOG_FORMAT     = "[%s] CHUNK(%d): (seq %d) {%s} (%d bytes)";
+        public static final String END_LOG_FORMAT       = "[%s] END(%d)  : \"%s\"";
+        public static final String ACK_LOG_FORMAT       = "[%s] ACK      : AckId  = %d";
+        public static final String NACK_LOG_FORMAT      = "[%s] NACK     : NAckId = %d | \"%s\"";
+
+        public static final String DISCARTED_CHUNK_FORMAT = "DISCARTED CHUNK: %d (%d bytes)";
 
         private Strings() {
             throw new IllegalStateException("Utility class");
@@ -86,7 +101,7 @@ public final class Constants {
     }
 
     public static final class ForbiddenFileNames {
-        public static final String FORBIDDEN_CHARS_REGEX = "^[^<>:\"\\\\/|?*\\n]*$";
+        public static final String NO_FORBIDDEN_CHARS_REGEX = "^[^<>:\"\\\\/|?*\\n]*$";
         public static final String FILE_EXTENSION_REGEX = "\\.\\w+$";
 
         public static final Set<String> RESERVED_NAMES = Set.of(

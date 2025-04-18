@@ -7,16 +7,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import constants.Constants;
-import network.messages.TerminalIOMessage;
+import io.fileIO.FileUitls;
+import network.messages.internal.InternalMessage;
+import network.messages.internal.TerminalIOMessage;
 import network.threads.NetworkNode;
 
 public class TerminalManager implements Runnable{
     private BlockingQueue<TerminalIOMessage> messageSenderQueue;
-    private Scanner scanner;
     private ConcurrentLinkedQueue<String> errorMessages;
-
+    
     private volatile boolean running;
     private ConcurrentHashMap<NetworkNode, Integer> activeNodes;
+
+    private Scanner scanner;
 
     public TerminalManager(BlockingQueue<TerminalIOMessage> messageSenderQueue, 
                             ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
@@ -104,7 +107,7 @@ public class TerminalManager implements Runnable{
         if (systemExit) ConsoleLogger.logRed("Scanner is closed. ", false);
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
-        messageSenderQueue.add(TerminalIOMessage.exit());
+        messageSenderQueue.add(InternalMessage.terminalToIO().exit());
     }
 
     public Thread stopConsole() {
@@ -151,7 +154,11 @@ public class TerminalManager implements Runnable{
         ConsoleLogger.logWhite("Sending message to node...");
 
         try {
-            messageSenderQueue.add(TerminalIOMessage.sendMessage(message).toIp(nodes[nodeNumber]));
+            messageSenderQueue.add(
+                InternalMessage.terminalToIO()
+                    .sendMessage(message)
+                    .toIp(nodes[nodeNumber])
+            );
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);
         }
@@ -162,18 +169,6 @@ public class TerminalManager implements Runnable{
         for (int i = 0; i < nodes.length; i++) {
             ConsoleLogger.logWhite(String.format("[%d] %s", i, nodes[i]));
         }
-    }
-
-    private boolean isValidFileName(String fileName) {
-        String extensionlessFileName;
-
-        if (!fileName.matches(Constants.ForbiddenFileNames.FORBIDDEN_CHARS_REGEX)) return false;
-        if (fileName.charAt(fileName.length() - 1) == ' ') return false;
-        if (fileName.charAt(fileName.length() - 1) == '.') return false;
-
-        extensionlessFileName = fileName.split(Constants.ForbiddenFileNames.FILE_EXTENSION_REGEX)[0];
-
-        return !(Constants.ForbiddenFileNames.RESERVED_NAMES.contains(extensionlessFileName.toUpperCase()));
     }
 
     private void processSend() {
@@ -190,13 +185,17 @@ public class TerminalManager implements Runnable{
 
         ConsoleLogger.logYellow("Enter the File's name (with extension) to send: ", false);
         fileName = scanner.nextLine();
-        if (isValidFileName(fileName)) {
+        if (FileUitls.isValidFileName(fileName)) {
             ConsoleLogger.logRed("Invalid file name. Aborting...");
             return;
         }
 
         try {
-            messageSenderQueue.add(TerminalIOMessage.sendFile(fileName).toIp(nodes[nodeNumber]));
+            messageSenderQueue.add(
+                InternalMessage.terminalToIO()
+                    .sendFile(fileName)
+                    .toIp(nodes[nodeNumber])
+            );
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);
         }

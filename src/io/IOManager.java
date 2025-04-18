@@ -1,6 +1,7 @@
 package io;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,25 +12,29 @@ import constants.Constants;
 import constants.Exceptions.FileSearchException;
 import io.consoleIO.TerminalManager;
 import io.fileIO.FileManager;
-import network.messages.IONetworkMessage;
-import network.messages.NetworkIOMessage;
-import network.messages.TerminalIOMessage;
+import io.fileIO.filePartition.FileData;
+import network.messages.foreign.ForeignMessage;
+import network.messages.foreign.ForeignResponseWrapper;
+import network.messages.internal.IONetworkMessage;
+import network.messages.internal.InternalMessage;
+import network.messages.internal.TerminalIOMessage;
 import network.threads.NetworkNode;
 
 public class IOManager implements Runnable {
     private BlockingQueue<IONetworkMessage> networkSenderQueue;    
-    private BlockingQueue<NetworkIOMessage> networkReceiverQueue;  
+    private BlockingQueue<ForeignMessage> networkReceiverQueue;  
 
     private BlockingQueue<TerminalIOMessage> consoleReceiverQueue;  
-    private ConcurrentHashMap<NetworkNode, Integer> activeNodes;
+    private ConcurrentHashMap<NetworkNode, Integer> activeNodes; // node -> last received Id
 
     private TerminalManager terminal;
     private FileManager fileManager;
+    private HashMap<String, FileData> fileDataMap;
     
     private volatile boolean running;
 
     public IOManager(BlockingQueue<IONetworkMessage> networkSenderQueue,
-                     BlockingQueue<NetworkIOMessage> networkReceiverQueue,
+                     BlockingQueue<ForeignMessage> networkReceiverQueue,
                      ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
         this.networkSenderQueue   = networkSenderQueue;
         this.networkReceiverQueue = networkReceiverQueue;
@@ -42,9 +47,11 @@ public class IOManager implements Runnable {
     @Override
     public void run() {
         TerminalIOMessage consoleMessage;
-        NetworkIOMessage networkMessage;
-        int listening = 2;
-        running = true;
+        ForeignMessage networkMessage;
+        int listening; 
+        
+        listening = 2;
+        running   = true;
 
         startConsole();
         while (running) {
@@ -71,6 +78,7 @@ public class IOManager implements Runnable {
     }
 
     private void processMessage(TerminalIOMessage message) {
+        fileManager.log(message);
         switch (message.getType()) {
             case EXIT         -> {processExit();}                
             case SEND_MESSAGE -> {processSendMessage(message);}
@@ -78,24 +86,40 @@ public class IOManager implements Runnable {
         }
     }
 
-    private void processMessage(NetworkIOMessage message) {
-        switch (message.getType()) {
-            case TALK -> {processTalk(message);}
-            case FILE -> {processReceivedFile(message);}
+    private void processMessage(ForeignMessage message) {
+        ForeignResponseWrapper response;
+        IONetworkMessage networkMessage;
+
+        response = message.accept(fileManager);
+        if (response == null) return; // no response needed
+
+        if (response.ackResponse()) {
+            networkMessage = InternalMessage.ioToNetwork()
+                .sendAck(response.getSourceIp())
+                .ackId(response.getMessageId());
+        } else {
+            networkMessage = InternalMessage.ioToNetwork()
+                .sendNAck(response.getSourceIp())
+                .nAckId(response.getMessageId())
+                .string(response.getMessage());          
         }
+
+        networkSenderQueue.offer(networkMessage);
     }
 
     private void processExit() {
         Thread terminalThread = terminal.stopConsole();
         terminalThread.interrupt();
-        networkSenderQueue.offer(IONetworkMessage.exit());
+        networkSenderQueue.offer(InternalMessage.ioToNetwork().exit());
 
         running = false;
     }
 
     private void processSendMessage(TerminalIOMessage message) {
         networkSenderQueue.offer(
-            IONetworkMessage.talk(message.getStringField())
+            InternalMessage.ioToNetwork()
+                .sendTalk(message.getDestinationIp())
+                .string(message.getStringField())
         );
     }
 
@@ -104,40 +128,25 @@ public class IOManager implements Runnable {
         String fileName;
         long fileSize;
         Queue<byte[]> fullData;
-        byte[] chunkData;
         String fileHash;
 
         try {
             fileName = message.getStringField();
-            file     = fileManager.getFile(Constants.Configs.Paths.INPUT_FOLDER_PATH + fileName);
+            file     = fileManager.getFile(Constants.Configs.Paths.SEND_FOLDER_PATH + fileName);
             fileSize = file.length();
             fullData = fileManager.getFileData(file);
             fileHash = fileManager.getFileHash(file);
 
+            fileDataMap.put(fileHash, new FileData(fullData, fileHash));
+
             networkSenderQueue.offer(
-                IONetworkMessage.file(fileName).fileSize(fileSize)
-            );
-            for (int i = 0; i < fullData.size(); i++) {
-                chunkData = fullData.poll();
-                networkSenderQueue.offer(
-                    IONetworkMessage.chunk(i).chunkData(chunkData)
-                );
-            }
-            networkSenderQueue.offer(
-                IONetworkMessage.end(fileHash)
+                InternalMessage.ioToNetwork()
+                    .sendFile(message.getDestinationIp())
+                    .fileName(fileName)
+                    .fileSize(fileSize)
             );
         } catch (FileSearchException e) {
             terminal.errorMessage(e.getMessage());
         }
-    }
-
-    private void processTalk(NetworkIOMessage message) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet.");
-    }
-
-    private void processReceivedFile(NetworkIOMessage message) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented yet.");
     }
 }

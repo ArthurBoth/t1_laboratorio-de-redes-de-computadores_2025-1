@@ -7,8 +7,8 @@ import java.util.concurrent.BlockingQueue;
 
 import constants.Constants;
 import io.consoleIO.ConsoleLogger;
-import network.messages.InternalMessage;
 import network.messages.ThreadMessage;
+import network.messages.internal.InternalMessage;
 
 import static constants.Constants.Configs.PRINT_LOGS;
 

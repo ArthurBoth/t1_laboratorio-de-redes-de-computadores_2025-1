@@ -1,12 +1,11 @@
 package network;
 
-
 public class NetworkListener {
 
     public NetworkListener() {
     }
     
-    /* TODO: 
+    /* // TODO: 
      * - Implement HEARTBEAT sending
      *   > Send a heartbeat upon initialization (broadcast)
      *   > Send a heartbeat to the network (broadcast) every 5 seconds

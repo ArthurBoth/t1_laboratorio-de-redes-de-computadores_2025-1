@@ -1,15 +1,13 @@
 package io.fileIO;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import constants.Constants;
 import io.consoleIO.ConsoleLogger;
 
 public abstract class FileIO {
@@ -48,21 +46,18 @@ public abstract class FileIO {
         return null;
     }
 
-    public static byte[] hashFile(Path path) throws NoSuchAlgorithmException {
-        MessageDigest digest;
-        DigestInputStream digestInputStream;
-        byte[] buffer;
-
-        try (InputStream inputStream = Files.newInputStream(path)) {
-            digest            = MessageDigest.getInstance("SHA-256");
-            digestInputStream = new DigestInputStream(inputStream, digest);
-            buffer            = new byte[Constants.Configs.MAX_BUFFER_SIZE];
-            while (digestInputStream.read(buffer) != -1);
+    public static void writeFile(String fileName, byte[] data) {
+        try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(fileName))) {
+            outputStream.write(data);
         } catch (IOException e) {
-            ConsoleLogger.logError("An error occurred. (hashing file)", e);
-            return null;
+            ConsoleLogger.logError("An error occurred. (writing file)", e);
         }
+    }
+
+    public static String hashFile(Path path) throws NoSuchAlgorithmException {
+        byte[] fileBytes = readFile(path);
+        if (fileBytes == null) return null;
         
-        return digest.digest();
+        return FileUitls.getFileHash(fileBytes);
     }
 }
