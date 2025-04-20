@@ -1,16 +1,16 @@
 package network.threads;
 
+import static utils.Constants.Configs.PRINT_LOGS;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.concurrent.BlockingQueue;
 
-import constants.Constants;
 import io.consoleIO.ConsoleLogger;
 import network.messages.ThreadMessage;
 import network.messages.internal.InternalMessage;
-
-import static constants.Constants.Configs.PRINT_LOGS;
+import utils.Constants;
 
 public class ReceiverThread extends NetworkThread {
     private BlockingQueue<ThreadMessage> messageQueue;

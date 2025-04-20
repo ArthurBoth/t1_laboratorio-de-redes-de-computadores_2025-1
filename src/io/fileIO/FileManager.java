@@ -1,5 +1,7 @@
 package io.fileIO;
 
+import static utils.Constants.Configs.Paths.RECEIVE_FOLDER_PATH;
+
 import java.io.File;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
@@ -8,8 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import constants.Constants;
-import constants.Exceptions.FileSearchException;
 import interfaces.visitors.ForeignMessageVisitor;
 import io.fileIO.filePartition.FileChunk;
 import network.messages.foreign.ForeignAck;
@@ -22,8 +22,9 @@ import network.messages.foreign.ForeignNAck;
 import network.messages.foreign.ForeignResponseWrapper;
 import network.messages.foreign.ForeignTalk;
 import network.messages.internal.TerminalIOMessage;
-
-import static constants.Constants.Configs.Paths.RECEIVE_FOLDER_PATH;
+import utils.Constants;
+import utils.FileUtils;
+import utils.Exceptions.FileSearchException;
 
 public class FileManager implements ForeignMessageVisitor {
     private FileLogger logger;
@@ -123,7 +124,7 @@ public class FileManager implements ForeignMessageVisitor {
         fileSize     = visitable.getFileSize();
         file         = new File(RECEIVE_FOLDER_PATH + fileName);
 
-        errorMessage = FileUitls.problemsCreatingFile(file);
+        errorMessage = FileUtils.problemsCreatingFile(file);
 
         if (fileSize > Constants.Configs.MAX_FILE_SIZE) 
             errorMessage = "File is too large";
@@ -200,7 +201,7 @@ public class FileManager implements ForeignMessageVisitor {
             errorMessage = "Missing chunks";
 
         try {
-            fileHash = FileUitls.getFileHash(fileData);
+            fileHash = FileUtils.getFileHash(fileData);
         } catch (NoSuchAlgorithmException e) {
             fileHash = null;
         }

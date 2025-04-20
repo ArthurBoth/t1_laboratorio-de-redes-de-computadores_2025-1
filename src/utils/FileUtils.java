@@ -1,11 +1,10 @@
-package io.fileIO;
+package utils;
 
 import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import constants.Constants;
 
-public abstract class FileUitls {
+public abstract class FileUtils {
     public static boolean isValidFileName(String fileName) {
         String extensionlessFileName;
 
@@ -21,7 +20,7 @@ public abstract class FileUitls {
     }
 
     public static String problemsCreatingFile(File file) {
-        if (!FileUitls.isValidFileName(file.getName())) return "Invalid file name";
+        if (!FileUtils.isValidFileName(file.getName())) return "Invalid file name";
         if (file.exists()) return "File already exists";
 
         return null;
@@ -42,5 +41,15 @@ public abstract class FileUitls {
 
     public static String getFileHash(byte[] data) throws NoSuchAlgorithmException {
         return hashToString(hashFile(data));
+    }
+
+    public static String byteArrayToString(byte[] data) {
+        StringBuilder sb = new StringBuilder("{");
+        for (int i = 0; i < data.length; i++) {
+            sb.append((char) (data[i] & 0xFF));
+            if (i == (data.length - 1)) sb.append(", ");
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }

@@ -4,10 +4,10 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import constants.Constants;
-import constants.Constants.Configs.Paths;
 import interfaces.ForeignLoggable;
 import interfaces.Loggable;
+import utils.Constants;
+import utils.Constants.Configs.Paths;
 
 public class FileLogger {
     private final DateTimeFormatter DATE_TIME_FORMATTER;

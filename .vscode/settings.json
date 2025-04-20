@@ -4,4 +4,7 @@
     "java.project.referencedLibraries": [
         "lib/**/*.jar"
     ],
+    "java.dependency.showMembers": false,
+    "java.signatureHelp.description.enabled": true,
+    "java.saveActions.organizeImports": true,
 }

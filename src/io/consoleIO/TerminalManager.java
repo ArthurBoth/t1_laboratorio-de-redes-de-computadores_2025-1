@@ -6,12 +6,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import constants.Constants;
-import constants.Constants.Configs;
-import io.fileIO.FileUitls;
 import network.messages.internal.InternalMessage;
 import network.messages.internal.TerminalIOMessage;
 import network.threads.NetworkNode;
+import utils.Constants;
+import utils.FileUtils;
+import utils.Constants.Configs;
 
 public class TerminalManager implements Runnable{
     private BlockingQueue<TerminalIOMessage> messageSenderQueue;
@@ -202,7 +202,7 @@ public class TerminalManager implements Runnable{
 
         ConsoleLogger.logYellow("Enter the File's name (with extension) to send: ", false);
         fileName = scanner.nextLine();
-        if (FileUitls.isValidFileName(fileName)) {
+        if (FileUtils.isValidFileName(fileName)) {
             ConsoleLogger.logRed("Invalid file name. Aborting...");
             return;
         }

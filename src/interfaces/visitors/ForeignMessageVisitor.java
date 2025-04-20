@@ -1,20 +1,19 @@
 package interfaces.visitors;
 
-import network.messages.foreign.ForeignAck;
-import network.messages.foreign.ForeignChunk;
-import network.messages.foreign.ForeignEnd;
-import network.messages.foreign.ForeignFile;
-import network.messages.foreign.ForeignHeartbeat;
-import network.messages.foreign.ForeignNAck;
-import network.messages.foreign.ForeignResponseWrapper;
-import network.messages.foreign.ForeignTalk;
+import messages.foreign.ForeignEndMessage;
+import messages.foreign.ForeignFileMessage;
+import messages.foreign.ForeignHeartbeatMessage;
+import messages.foreign.ForeignNAckMessage;
+import messages.foreign.ForeignTalkMessage;
+import messages.foreign.ForeignAckMessage;
+import messages.foreign.ForeignChunkMessage;
 
 public interface ForeignMessageVisitor {
-    ForeignResponseWrapper visit(ForeignHeartbeat visitable);
-    ForeignResponseWrapper visit(ForeignTalk visitable);
-    ForeignResponseWrapper visit(ForeignFile visitable);
-    ForeignResponseWrapper visit(ForeignChunk visitable);
-    ForeignResponseWrapper visit(ForeignEnd visitable);
-    ForeignResponseWrapper visit(ForeignAck visitable);
-    ForeignResponseWrapper visit(ForeignNAck visitable);
+    void visit(ForeignHeartbeatMessage message);
+    void visit(ForeignTalkMessage message);
+    void visit(ForeignFileMessage message);
+    void visit(ForeignChunkMessage message);
+    void visit(ForeignEndMessage message);
+    void visit(ForeignAckMessage message);
+    void visit(ForeignNAckMessage message);
 }

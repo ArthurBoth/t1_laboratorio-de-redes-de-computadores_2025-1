@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import io.consoleIO.ConsoleLogger;
+import utils.FileUtils;
 
 public abstract class FileIO {
     public static void writeLine(String path, String line) {
@@ -58,6 +59,6 @@ public abstract class FileIO {
         byte[] fileBytes = readFile(path);
         if (fileBytes == null) return null;
         
-        return FileUitls.getFileHash(fileBytes);
+        return FileUtils.getFileHash(fileBytes);
     }
 }

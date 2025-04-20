@@ -8,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import constants.Constants;
-import constants.Exceptions.FileSearchException;
 import io.consoleIO.TerminalManager;
 import io.fileIO.FileManager;
 import io.fileIO.filePartition.FileData;
@@ -19,6 +17,8 @@ import network.messages.internal.IONetworkMessage;
 import network.messages.internal.InternalMessage;
 import network.messages.internal.TerminalIOMessage;
 import network.threads.NetworkNode;
+import utils.Constants;
+import utils.Exceptions.FileSearchException;
 
 public class IOManager implements Runnable {
     private BlockingQueue<IONetworkMessage> networkSenderQueue;    
