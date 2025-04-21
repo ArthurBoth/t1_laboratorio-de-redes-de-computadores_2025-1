@@ -1,11 +1,13 @@
 package interfaces.visitors;
 
-import messages.internal.acknowledgments.AckMessage;
-import messages.internal.acknowledgments.NAckMessage;
+import messages.internal.receivedMessages.InternalReceivedAckMessage;
 import messages.internal.receivedMessages.InternalReceivedChunkMessage;
 import messages.internal.receivedMessages.InternalReceivedEndMessage;
 import messages.internal.receivedMessages.InternalReceivedFileMessage;
+import messages.internal.receivedMessages.InternalReceivedHeartbeatMessage;
+import messages.internal.receivedMessages.InternalReceivedNAckMessage;
 import messages.internal.receivedMessages.InternalReceivedTalkMessage;
+import messages.internal.receivedMessages.InternalReceivedUnsupportedMessage;
 import messages.internal.sentMessages.InternalExitMessage;
 import messages.internal.sentMessages.InternalSentAckMessage;
 import messages.internal.sentMessages.InternalSentFileMessage;
@@ -23,10 +25,12 @@ public interface InternalMessageVisitor {
     void visit(InternalSentNAckMessage message);
     
     // Internal received messages
-    void visit(InternalReceivedChunkMessage message);
-    void visit(InternalReceivedFileMessage message);
+    void visit(InternalReceivedHeartbeatMessage message);
     void visit(InternalReceivedTalkMessage message);
+    void visit(InternalReceivedFileMessage message);
+    void visit(InternalReceivedChunkMessage message);
     void visit(InternalReceivedEndMessage message);
-    void visit(AckMessage message);
-    void visit(NAckMessage message);
+    void visit(InternalReceivedAckMessage message);
+    void visit(InternalReceivedNAckMessage message);
+    void visit(InternalReceivedUnsupportedMessage message);
 }

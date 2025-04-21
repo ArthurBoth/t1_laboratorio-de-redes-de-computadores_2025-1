@@ -1,19 +1,12 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.HEARTBEAT_LOG_FORMAT;
 import static utils.Constants.Strings.HEARTBEAT_MESSAGE;
 
 public class ForeignHeartbeatMessage extends ForeignMessage {
-
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
-
-    @Override
-    protected String assembleFormattedMessage() {
-        return HEARTBEAT_MESSAGE;
-    }
 
     // **************************************************************************************************************
     // Visitor pattern for ForeignHeartbeatMessage
@@ -23,15 +16,17 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
-            );
+        return HEARTBEAT_MESSAGE;
     }
 
     @Override
@@ -65,6 +60,5 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
     private ForeignHeartbeatMessage(Builder builder) {
         this.clazz            = builder.clazz;
         this.destinationIp    = builder.destinationIp;
-        this.formattedMessage = assembleFormattedMessage();
     }
 }

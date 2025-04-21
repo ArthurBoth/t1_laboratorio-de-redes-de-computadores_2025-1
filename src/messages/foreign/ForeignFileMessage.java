@@ -1,5 +1,6 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.FILE_FORMAT;
@@ -10,17 +11,17 @@ public class ForeignFileMessage extends ForeignMessage {
     private String fileName;
     private long fileSize;
 
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
+    public int getMessageId() {
+        return this.MESSAGE_ID;
+    }
 
-    @Override
-    protected String assembleFormattedMessage() {
-        return FILE_FORMAT.formatted(
-            MESSAGE_ID,
-            fileName,
-            fileSize
-            );
-    }    
+    public String getFileName() {
+        return this.fileName;
+    }
+
+    public long getFileSize() {
+        return this.fileSize;
+    }
 
     // **************************************************************************************************************
     // Visitor pattern for ForeignFileMessage
@@ -30,14 +31,20 @@ public class ForeignFileMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
+        return FILE_FORMAT.formatted(
+            MESSAGE_ID,
+            fileName,
+            fileSize
             );
     }
 
@@ -93,6 +100,5 @@ public class ForeignFileMessage extends ForeignMessage {
         this.fileName         = builder.fileName;
         this.fileSize         = builder.fileSize;
         this.destinationIp    = builder.destinationIp;
-        this.formattedMessage = assembleFormattedMessage();
     }
 }

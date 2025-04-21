@@ -1,5 +1,6 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.ACK_FORMAT;
@@ -8,12 +9,8 @@ import static utils.Constants.Strings.ACK_LOG_FORMAT;
 public class ForeignAckMessage extends ForeignMessage {
     private final int ACKKED_MESSAGE_ID;
 
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
-
-    @Override
-    protected String assembleFormattedMessage() {
-        return ACK_FORMAT.formatted(ACKKED_MESSAGE_ID);
+    public int getAckkedId() {
+        return ACKKED_MESSAGE_ID;
     }
 
     // **************************************************************************************************************
@@ -24,14 +21,18 @@ public class ForeignAckMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
+        return ACK_FORMAT.formatted(
+            ACKKED_MESSAGE_ID
             );
     }
 

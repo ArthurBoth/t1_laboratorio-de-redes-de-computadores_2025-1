@@ -3,7 +3,6 @@ package messages.internal.receivedMessages;
 import java.net.InetAddress;
 
 import messages.internal.InternalMessage;
-import messages.internal.receivedMessages.InternalReceivedFileMessage.LongSetter;
 
 public abstract class InternalReceivedMessage extends InternalMessage {
     // **************************************************************************************************************
@@ -11,58 +10,58 @@ public abstract class InternalReceivedMessage extends InternalMessage {
     //    It should be used to map the messages received from the network to the internal messages of the system.
     // **************************************************************************************************************
     protected InetAddress sourceIp;
-    protected int messageId;
 
     public InetAddress getSourceIp() {
         return sourceIp;
     }
 
-    public int getMessageId() {
-        return messageId;
+    // **************************************************************************************************************
+    // Factory method for InternalReceivedIdMessage subclasses
+
+    public static InternalReceivedIdMessage.MessageSelection create(Class<?> clazz, int messageId) {
+        return InternalReceivedIdMessage.createWithId(clazz, messageId);
     }
 
     // **************************************************************************************************************
     // Builder pattern for InternalReceivedMessage
 
     public interface MessageSelection {
-        InternalReceivedTalkMessage.IpSetter<InternalReceivedTalkMessage> talk(String content);
-        InternalReceivedFileMessage.LongSetter file(String fileName);
-        InternalReceivedChunkMessage.IntSetter chunk(byte[] data);
-        InternalReceivedEndMessage.IpSetter<InternalReceivedEndMessage> end(String fileHash);
+        IpSetter<InternalReceivedHeartbeatMessage> heartbeat();
+        IpSetter<InternalReceivedAckMessage> ack(int messageId);
+        InternalReceivedNAckMessage.StringSetter nAck(int messageId);
+        IpSetter<InternalReceivedUnsupportedMessage> unsupportedMessage(String content);
     }
 
     private static final class Builder implements MessageSelection {
         private Class<?> clazz;
-        private int messageId;
 
-        private Builder(Class<?> clazz, int messageId) {
-            this.clazz     = clazz;
-            this.messageId = messageId;
+        private Builder(Class<?> clazz) {
+            this.clazz = clazz;
         }
 
         @Override
-        public InternalReceivedTalkMessage.IpSetter<InternalReceivedTalkMessage> talk(String content) {
-            return InternalReceivedTalkMessage.create(clazz, messageId, content);
+        public IpSetter<InternalReceivedHeartbeatMessage> heartbeat() {
+            return InternalReceivedHeartbeatMessage.createHeartbeat(clazz);
         }
 
         @Override
-        public LongSetter file(String fileName) {
-            return InternalReceivedFileMessage.create(clazz, messageId, fileName);
+        public IpSetter<InternalReceivedAckMessage> ack(int messageId) {
+            return InternalReceivedAckMessage.ack(clazz, messageId);
         }
 
         @Override
-        public InternalReceivedChunkMessage.IntSetter chunk(byte[] data) {
-            return InternalReceivedChunkMessage.create(clazz, messageId, data);
+        public InternalReceivedNAckMessage.StringSetter nAck(int messageId) {
+            return InternalReceivedNAckMessage.nAck(clazz, messageId);
         }
 
         @Override
-        public InternalReceivedEndMessage.IpSetter<InternalReceivedEndMessage> end(String fileHash) {
-            return InternalReceivedEndMessage.create(clazz, messageId, fileHash);
+        public IpSetter<InternalReceivedUnsupportedMessage> unsupportedMessage(String content) {
+            return InternalReceivedUnsupportedMessage.create(clazz, content);
         }
     }
 
-    public static Builder create(Class<?> clazz, int messageId) {
-        return new Builder(clazz, messageId);
+    public static InternalReceivedMessage.MessageSelection create(Class<?> clazz) {
+        return new Builder(clazz);
     }
     
     // **************************************************************************************************************

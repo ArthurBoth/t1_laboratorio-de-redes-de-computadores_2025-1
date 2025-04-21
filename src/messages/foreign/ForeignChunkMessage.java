@@ -1,5 +1,6 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 import utils.FileUtils;
 
@@ -11,17 +12,17 @@ public class ForeignChunkMessage extends ForeignMessage {
     private int chunkNumber;
     private byte[] chunkData;
 
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
+    public int getMessageId() {
+        return MESSAGE_ID;
+    }
 
-    @Override
-    protected String assembleFormattedMessage() {
-        String chunkContent = FileUtils.byteArrayToString(chunkData);
-        return CHUNK_FORMAT.formatted(
-                MESSAGE_ID,
-                chunkNumber
-                ) + chunkContent;
-    }    
+    public int getSequenceNumber() {
+        return chunkNumber;
+    }
+
+    public byte[] getData() {
+        return chunkData;
+    }
 
     // **************************************************************************************************************
     // Visitor pattern for ForeignChunkMessage
@@ -31,14 +32,20 @@ public class ForeignChunkMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
+        return CHUNK_FORMAT.formatted(
+            MESSAGE_ID,
+            chunkNumber,
+            FileUtils.byteArrayToString(chunkData)
             );
     }
 

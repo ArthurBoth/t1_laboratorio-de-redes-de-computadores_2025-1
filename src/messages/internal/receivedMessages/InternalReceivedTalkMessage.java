@@ -4,7 +4,7 @@ import interfaces.visitors.InternalMessageVisitor;
 
 import static utils.Constants.Strings.TALK_LOG_FORMAT;
 
-public class InternalReceivedTalkMessage extends InternalReceivedMessage {
+public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
     private String content;
 
     public String getContent() {

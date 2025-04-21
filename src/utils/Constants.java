@@ -50,22 +50,23 @@ public final class Constants {
         public static final String REGULAR_MESSAGE_FORMAT = "%s: %s";
         
         public static final String BROADCAST_IP      = "255.255.255.255";
-        public static final String HEARTBEAT_MESSAGE = CompilingFunctions.generateHeartbeatMessage();
+        public static final String HEARTBEAT_MESSAGE = "HEARTBEAT";
 
-        public static final String TALK_FORMAT  = CompilingFunctions.generateTalkFormat();
-        public static final String FILE_FORMAT  = CompilingFunctions.generateFileFormat();
-        public static final String CHUNK_FORMAT = CompilingFunctions.generateChunkFormat();
-        public static final String END_FORMAT   = CompilingFunctions.generateEndFormat();
-        public static final String ACK_FORMAT   = CompilingFunctions.generateAckFormat();
-        public static final String NACK_FORMAT  = CompilingFunctions.generateNackFormat();
+        public static final String TALK_FORMAT  = "TALK %d %s";
+        public static final String FILE_FORMAT  = "FILE %d %s %d";
+        public static final String CHUNK_FORMAT = "CHUNK %d %d {%s}";
+        public static final String END_FORMAT   = "END %d %s";
+        public static final String ACK_FORMAT   = "ACK %s";
+        public static final String NACK_FORMAT  = "NACK %d %s";
 
-        public static final String HEARTBEAT_LOG_FORMAT = "(%s) [%s] HEARTBEAT";
-        public static final String TALK_LOG_FORMAT      = "(%s) [%s] TALK(%d) : \"%s\"";
-        public static final String FILE_LOG_FORMAT      = "(%s) [%s] FILE(%d) : \"%s\" (%d bytes)";
-        public static final String CHUNK_LOG_FORMAT     = "(%s) [%s] CHUNK(%d): (seq %d) %s (%d bytes)";
-        public static final String END_LOG_FORMAT       = "(%s) [%s] END(%d)  : \"%s\"";
-        public static final String ACK_LOG_FORMAT       = "(%s) [%s] ACK   : Acknowleged '%d'";
-        public static final String NACK_LOG_FORMAT      = "(%s) [%s] NACK  : Didn't acknowlege '%d' because \"%s\"";
+        public static final String HEARTBEAT_LOG_FORMAT   = "(%s) [%s] HEARTBEAT";
+        public static final String TALK_LOG_FORMAT        = "(%s) [%s] TALK(%d) : \"%s\"";
+        public static final String FILE_LOG_FORMAT        = "(%s) [%s] FILE(%d) : \"%s\" (%d bytes)";
+        public static final String CHUNK_LOG_FORMAT       = "(%s) [%s] CHUNK(%d): (seq %d) %s (%d bytes)";
+        public static final String END_LOG_FORMAT         = "(%s) [%s] END(%d)  : \"%s\"";
+        public static final String ACK_LOG_FORMAT         = "(%s) [%s] ACK   : Acknowleged '%d'";
+        public static final String NACK_LOG_FORMAT        = "(%s) [%s] NACK  : Didn't acknowlege '%d' because \"%s\"";
+        public static final String UNSUPPORTED_LOG_FORMAT = "(%s) [%s] Unsupported message: %s";
 
         public static final String TALK_SENDING_REQUEST_FORMAT = "(%s) TALK_SENDING: %s";
         public static final String FILE_SENDING_REQUEST_FORMAT = "(%s) FILE_SENDING: %s";
@@ -121,37 +122,6 @@ public final class Constants {
                 System.exit(1);
             }
             return null;
-        }
-
-        private static String generateHeartbeatMessage() {
-            return "%s%s".formatted(
-                MessageHeaders.HEARTBEAT_HEADER, 
-                Configs.IP_ADDRESS
-            );
-        }
-        
-        private static String generateTalkFormat() {
-            return "%s%%d %%s".formatted(MessageHeaders.TALK_HEADER);
-        }
-
-        private static String generateFileFormat() {
-            return "%s%%d %%s %%d".formatted(MessageHeaders.FILE_HEADER);
-        }
-
-        private static String generateChunkFormat() {
-            return "%s%%d %%d ".formatted(MessageHeaders.CHUNK_HEADER);
-        }
-
-        private static String generateEndFormat() {
-            return "%s%%d %%s".formatted(MessageHeaders.END_HEADER);
-        }
-
-        private static String generateAckFormat() {
-            return "%s%%d".formatted(MessageHeaders.ACK_HEADER);
-        }
-
-        private static String generateNackFormat() {
-            return "%s%%d %%s".formatted(MessageHeaders.NACK_HEADER);
         }
 
         private static int calculateMinimumMaxChunkSize() {

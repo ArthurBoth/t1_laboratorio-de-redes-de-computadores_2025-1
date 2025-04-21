@@ -1,5 +1,6 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.NACK_FORMAT;
@@ -9,16 +10,13 @@ public class ForeignNAckMessage extends ForeignMessage {
     private final int NON_ACKKED_MESSAGE_ID;
     private String reason;
 
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
+    public int getNonAckkedId() {
+        return this.NON_ACKKED_MESSAGE_ID;
+    }
 
-    @Override
-    protected String assembleFormattedMessage() {
-        return NACK_FORMAT.formatted(
-            NON_ACKKED_MESSAGE_ID,
-            reason
-            );
-    }    
+    public String getReason() {
+        return this.reason;
+    }
 
     // **************************************************************************************************************
     // Visitor pattern for ForeignNAckMessage
@@ -28,14 +26,19 @@ public class ForeignNAckMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
+        return NACK_FORMAT.formatted(
+            NON_ACKKED_MESSAGE_ID,
+            reason
             );
     }
 

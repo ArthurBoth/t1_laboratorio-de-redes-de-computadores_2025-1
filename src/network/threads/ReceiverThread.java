@@ -8,14 +8,13 @@ import java.net.DatagramSocket;
 import java.util.concurrent.BlockingQueue;
 
 import io.consoleIO.ConsoleLogger;
-import network.messages.ThreadMessage;
-import network.messages.internal.InternalMessage;
+import messages.internal.InternalMessage;
 import utils.Constants;
 
 public class ReceiverThread extends NetworkThread {
-    private BlockingQueue<ThreadMessage> messageQueue;
+    private BlockingQueue<InternalMessage> messageQueue;
     
-    protected ReceiverThread(DatagramSocket socket, BlockingQueue<ThreadMessage> messageQueue) {
+    protected ReceiverThread(DatagramSocket socket, BlockingQueue<InternalMessage> messageQueue) {
         super(socket);
         this.messageQueue = messageQueue;
     }
@@ -28,7 +27,7 @@ public class ReceiverThread extends NetworkThread {
         while (running) {
             try {
                 packet          = waitForPacket();
-                receivedMessage = decodePacket(packet);
+                receivedMessage = MessageEncoder.decodePacket(packet);
                 if (receivedMessage != null) messageQueue.put(receivedMessage);
             } catch (IOException e) {
                 ConsoleLogger.logError("Error while receiving message", e);
@@ -45,9 +44,5 @@ public class ReceiverThread extends NetworkThread {
 
         socket.receive(packet);
         return packet;
-    }
-
-    private InternalMessage decodePacket(DatagramPacket packet) {
-        return ThreadMessage.decodeMessage(packet.getAddress(), packet.getData());
     }
 }

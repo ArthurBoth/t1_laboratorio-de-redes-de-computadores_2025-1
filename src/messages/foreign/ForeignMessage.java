@@ -3,6 +3,7 @@ package messages.foreign;
 import java.net.InetAddress;
 
 import interfaces.ForeignLoggable;
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.MessageVisitor;
@@ -19,18 +20,8 @@ public abstract class ForeignMessage extends ThreadMessage implements ForeignLog
     private static int messageIdCounter = 0;
 
     protected InetAddress destinationIp;
-    protected String formattedMessage;
 
-    protected abstract String assembleFormattedMessage();
-
-    /**
-     * @return The message already formatted according to the network protocol.
-     */
-    protected final String getFormattedMessage() {
-        return formattedMessage;
-    }
-
-    protected final InetAddress getDestinationIp() {
+    public final InetAddress getDestinationIp() {
         return destinationIp;
     }
     
@@ -38,6 +29,7 @@ public abstract class ForeignMessage extends ThreadMessage implements ForeignLog
     // Visitor pattern for ForeignMessage
     
     public abstract void accept(ForeignMessageVisitor visitor);
+    public abstract byte[] encode(EncoderVisitor visitor);
 
     @Override
     public void accept(LoggerVisitor visitor) {

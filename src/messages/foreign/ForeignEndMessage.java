@@ -1,5 +1,6 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.END_FORMAT;
@@ -9,17 +10,13 @@ public class ForeignEndMessage extends ForeignMessage {
     private final int MESSAGE_ID;
     private String fileHash;
 
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
+    public int getMessageId() {
+        return this.MESSAGE_ID;
+    }
 
-    @Override
-    protected String assembleFormattedMessage() {
-        return END_FORMAT.formatted(
-            MESSAGE_ID,
-            fileHash
-            );
-    }    
-
+    public String getFileHash() {
+        return this.fileHash;
+    }
     // **************************************************************************************************************
     // Visitor pattern for ForeignEndMessage
 
@@ -28,14 +25,19 @@ public class ForeignEndMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
+        return END_FORMAT.formatted(
+            MESSAGE_ID,
+            fileHash
             );
     }
 

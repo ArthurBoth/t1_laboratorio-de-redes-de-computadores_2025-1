@@ -10,26 +10,27 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import io.consoleIO.ConsoleLogger;
-import network.messages.ExternalMessage;
-import network.messages.ThreadMessage;
+import messages.foreign.ForeignMessage;
 import utils.Constants;
 
 public class SenderThread extends NetworkThread {
-    public BlockingQueue<ThreadMessage> messageQueue;
+    private BlockingQueue<ForeignMessage> messageQueue;
+    private MessageEncoder encoder;
 
-    public SenderThread(DatagramSocket socket, BlockingQueue<ThreadMessage> messageQueue) {
+    public SenderThread(DatagramSocket socket, BlockingQueue<ForeignMessage> messageQueue) {
         super(socket);
         this.messageQueue = messageQueue;
+        this.encoder      = new MessageEncoder();
     }
 
     @Override
     public void run() {
-        ExternalMessage message;
+        ForeignMessage message;
 
         if (PRINT_LOGS) ConsoleLogger.logBlue("SenderThread started.");
         while (running) {
             try {
-                message = (ExternalMessage) messageQueue.poll(Constants.Configs.SOCKET_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                message = messageQueue.poll(Constants.Configs.SOCKET_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 if (message != null) sendMessage(message);
             } catch (InterruptedException e) {
                 super.running = false;  
@@ -38,14 +39,14 @@ public class SenderThread extends NetworkThread {
         }
     }
     
-    private void sendMessage(ExternalMessage message) {
+    private void sendMessage(ForeignMessage message) {
         InetAddress address;
         int port;
         byte[] data;
         DatagramPacket packet;
 
         try {
-            data    = message.getMessageBytes();
+            data    = message.encode(encoder);
             port    = socket.getPort();
             address = message.getDestinationIp();
             packet  = new DatagramPacket(data, data.length, address, port);

@@ -1,5 +1,6 @@
 package messages.foreign;
 
+import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.MessageVisitor;
@@ -11,16 +12,13 @@ public class ForeignTalkMessage extends ForeignMessage {
     private final int MESSAGE_ID;
     private String messageContent;
 
-    // **************************************************************************************************************
-    // Inherited fields from ForeignMessage
+    public int getMessageId() {
+        return this.MESSAGE_ID;
+    }
 
-    @Override
-    protected String assembleFormattedMessage() {
-        return TALK_FORMAT.formatted(
-            MESSAGE_ID,
-            messageContent
-            );
-    }    
+    public String getContent() {
+        return this.messageContent;
+    }
 
     // **************************************************************************************************************
     // Visitor pattern for ForeignTalkMessage
@@ -40,14 +38,19 @@ public class ForeignTalkMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public byte[] encode(EncoderVisitor visitor) {
+        return visitor.encode(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return "(%s) %s".formatted(
-            clazz.getSimpleName(),
-            formattedMessage
+        return TALK_FORMAT.formatted(
+            MESSAGE_ID,
+            messageContent
             );
     }
 
@@ -90,6 +93,5 @@ public class ForeignTalkMessage extends ForeignMessage {
         this.clazz            = builder.clazz;
         this.destinationIp    = builder.destinationIp;
         this.messageContent   = builder.messageContent;
-        this.formattedMessage = assembleFormattedMessage();
     }
 }
