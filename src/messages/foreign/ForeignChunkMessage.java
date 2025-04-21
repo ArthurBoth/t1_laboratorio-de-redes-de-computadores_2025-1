@@ -4,6 +4,7 @@ import interfaces.visitors.ForeignMessageVisitor;
 import utils.FileUtils;
 
 import static utils.Constants.Strings.CHUNK_FORMAT;
+import static utils.Constants.Strings.CHUNK_LOG_FORMAT;
 
 public class ForeignChunkMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -38,6 +39,18 @@ public class ForeignChunkMessage extends ForeignMessage {
         return "(%s) %s".formatted(
             clazz.getSimpleName(),
             formattedMessage
+            );
+    }
+
+    @Override
+    public String getPrettyMessage() {
+        return CHUNK_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            destinationIp.getHostAddress(),
+            MESSAGE_ID,
+            chunkNumber,
+            FileUtils.byteArrayToString(chunkData),
+            chunkData.length
             );
     }
     

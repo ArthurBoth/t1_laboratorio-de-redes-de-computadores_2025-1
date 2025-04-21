@@ -1,6 +1,8 @@
 package messages.internal;
 
 import interfaces.visitors.InternalMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.MessageVisitor;
 import messages.ThreadMessage;
 import messages.internal.acknowledgments.AckMessage;
 import messages.internal.acknowledgments.NAckMessage;
@@ -18,13 +20,20 @@ public abstract class InternalMessage extends ThreadMessage {
 
     public abstract void accept(InternalMessageVisitor visitor);
 
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(MessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
     // ***************************************************************************************************************
     // Builder pattern for InternalMessage
 
     public interface MessageSelection {
-        // internal messages
-        InternalExitMessage exit();
-
         // sent messages
         InternalSentMessage.MessageSelection sendMessage();
 
@@ -39,11 +48,6 @@ public abstract class InternalMessage extends ThreadMessage {
 
         private Builder(Class<?> clazz) {
             this.clazz = clazz;
-        }
-
-        @Override
-        public InternalExitMessage exit() {
-            return InternalExitMessage.create(clazz);
         }
 
         @Override

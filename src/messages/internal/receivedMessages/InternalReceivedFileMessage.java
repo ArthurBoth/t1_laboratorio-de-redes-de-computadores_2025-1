@@ -1,10 +1,11 @@
 package messages.internal.receivedMessages;
 
+import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.InternalMessageVisitor;
 
 import static utils.Constants.Strings.FILE_LOG_FORMAT;
 
-public class InternalReceivedFileMessage extends InternalReceivedMessage {
+public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
      private String fileName;
      private long fileSize;
 
@@ -21,6 +22,11 @@ public class InternalReceivedFileMessage extends InternalReceivedMessage {
 
     @Override
     public void accept(InternalMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(FileMessageVisitor visitor) {
         visitor.visit(this);
     }
 

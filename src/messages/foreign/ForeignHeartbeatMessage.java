@@ -2,6 +2,7 @@ package messages.foreign;
 
 import interfaces.visitors.ForeignMessageVisitor;
 
+import static utils.Constants.Strings.HEARTBEAT_LOG_FORMAT;
 import static utils.Constants.Strings.HEARTBEAT_MESSAGE;
 
 public class ForeignHeartbeatMessage extends ForeignMessage {
@@ -31,6 +32,14 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
             clazz.getSimpleName(),
             formattedMessage
             );
+    }
+
+    @Override
+    public String getPrettyMessage() {
+        return HEARTBEAT_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            destinationIp.getHostAddress()
+        );
     }
 
     // **************************************************************************************************************

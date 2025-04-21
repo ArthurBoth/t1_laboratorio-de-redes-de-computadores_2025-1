@@ -1,8 +1,11 @@
 package messages.foreign;
 
 import interfaces.visitors.ForeignMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.MessageVisitor;
 
 import static utils.Constants.Strings.TALK_FORMAT;
+import static utils.Constants.Strings.TALK_LOG_FORMAT;
 
 public class ForeignTalkMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -27,6 +30,16 @@ public class ForeignTalkMessage extends ForeignMessage {
         visitor.visit(this);
     }
 
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(MessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
     // **************************************************************************************************************
     // Loggable interface implementation
 
@@ -36,6 +49,16 @@ public class ForeignTalkMessage extends ForeignMessage {
             clazz.getSimpleName(),
             formattedMessage
             );
+    }
+
+    @Override
+    public String getPrettyMessage() {
+        return TALK_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            destinationIp.getHostAddress(),
+            MESSAGE_ID,
+            messageContent
+        );
     }
 
     // **************************************************************************************************************

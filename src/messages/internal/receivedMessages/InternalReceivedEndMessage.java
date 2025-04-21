@@ -1,10 +1,11 @@
 package messages.internal.receivedMessages;
 
+import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.InternalMessageVisitor;
 
 import static utils.Constants.Strings.END_LOG_FORMAT;
 
-public class InternalReceivedEndMessage extends InternalReceivedMessage{
+public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
     private String fileHash;
 
     public String getFileHash() {
@@ -16,6 +17,11 @@ public class InternalReceivedEndMessage extends InternalReceivedMessage{
 
     @Override
     public void accept(InternalMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(FileMessageVisitor visitor) {
         visitor.visit(this);
     }
 

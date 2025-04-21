@@ -1,6 +1,7 @@
 package messages.internal.sentMessages;
 
 import interfaces.visitors.InternalMessageVisitor;
+import interfaces.visitors.InternalSentMessageVisitor;
 
 import static utils.Constants.Configs.MAX_CHUNK_SIZE;
 import static utils.Constants.Strings.FILE_SENDING_REQUEST_FORMAT;
@@ -48,6 +49,11 @@ public class InternalSentFileMessage extends InternalSentMessage {
 
     @Override
     public void accept(InternalMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalSentMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -109,7 +115,7 @@ public class InternalSentFileMessage extends InternalSentMessage {
         protected int chunkCount;
 
         private OptionalBuilder(InternalSentFileMessage other, byte[] fileData) {
-            this.other = other;
+            this.other      = other;
             this.fileData   = fileData;
             this.chunkCount = fileData.length / MAX_CHUNK_SIZE + (fileData.length % MAX_CHUNK_SIZE == 0 ? 0 : 1);
         }

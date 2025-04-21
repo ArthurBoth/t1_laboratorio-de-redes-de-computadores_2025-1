@@ -1,53 +1,54 @@
 package io;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import interfaces.visitors.InternalSentMessageVisitor;
 import io.consoleIO.TerminalManager;
 import io.fileIO.FileManager;
-import io.fileIO.filePartition.FileData;
-import network.messages.foreign.ForeignMessage;
-import network.messages.foreign.ForeignResponseWrapper;
-import network.messages.internal.IONetworkMessage;
-import network.messages.internal.InternalMessage;
-import network.messages.internal.TerminalIOMessage;
+import messages.ThreadMessage;
+import messages.foreign.ForeignMessage;
+import messages.foreign.ForeignTalkMessage;
+import messages.internal.InternalMessage;
+import messages.internal.sentMessages.InternalExitMessage;
+import messages.internal.sentMessages.InternalSentAckMessage;
+import messages.internal.sentMessages.InternalSentFileMessage;
+import messages.internal.sentMessages.InternalSentNAckMessage;
+import messages.internal.sentMessages.InternalSentTalkMessage;
 import network.threads.NetworkNode;
 import utils.Constants;
 import utils.Exceptions.FileSearchException;
 
-public class IOManager implements Runnable {
-    private BlockingQueue<IONetworkMessage> networkSenderQueue;    
-    private BlockingQueue<ForeignMessage> networkReceiverQueue;  
+public class IOManager implements Runnable, InternalSentMessageVisitor {
+    private BlockingQueue<ThreadMessage> networkSenderQueue;    
+    private BlockingQueue<ThreadMessage> networkReceiverQueue;  
 
-    private BlockingQueue<TerminalIOMessage> consoleReceiverQueue;  
-    private ConcurrentHashMap<NetworkNode, Integer> activeNodes; // node -> last received Id
+    private BlockingQueue<InternalMessage> ioReceiverQueue;
+    private ConcurrentHashMap<NetworkNode, Integer> activeNodes; // node -> seconds since last message
 
     private TerminalManager terminal;
     private FileManager fileManager;
-    private HashMap<String, FileData> fileDataMap;
     
     private volatile boolean running;
 
-    public IOManager(BlockingQueue<IONetworkMessage> networkSenderQueue,
-                     BlockingQueue<ForeignMessage> networkReceiverQueue,
+    public IOManager(BlockingQueue<ThreadMessage> networkSenderQueue,
+                     BlockingQueue<ThreadMessage> networkReceiverQueue,
                      ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
         this.networkSenderQueue   = networkSenderQueue;
         this.networkReceiverQueue = networkReceiverQueue;
         this.activeNodes          = activeNodes;
 
-        consoleReceiverQueue = new LinkedBlockingQueue<TerminalIOMessage>();
-        fileManager          = new FileManager();
+        ioReceiverQueue = new LinkedBlockingQueue<InternalMessage>();
+        fileManager     = new FileManager(ioReceiverQueue);
     }
 
     @Override
     public void run() {
-        TerminalIOMessage consoleMessage;
-        ForeignMessage networkMessage;
+        ThreadMessage message;
+        InternalMessage internalMessage;
         int listening; 
         
         listening = 2;
@@ -56,16 +57,16 @@ public class IOManager implements Runnable {
         startConsole();
         while (running) {
             try {
-                networkMessage = networkReceiverQueue.poll(
+                message = networkReceiverQueue.poll(
                     (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
                     TimeUnit.MILLISECONDS
                     );
-                if (networkMessage != null) processMessage(networkMessage);
-                consoleMessage = consoleReceiverQueue.poll(
+                if (message != null) message.accept(this);
+                internalMessage = ioReceiverQueue.poll(
                     (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
                     TimeUnit.MILLISECONDS
                     );
-                if (consoleMessage != null) processMessage(consoleMessage);
+                if (internalMessage != null) internalMessage.accept(this);
             } catch (InterruptedException e) {
                 return;
             }
@@ -73,80 +74,112 @@ public class IOManager implements Runnable {
     }
 
     private void startConsole() {
-        terminal = new TerminalManager(consoleReceiverQueue, activeNodes);
+        terminal = new TerminalManager(ioReceiverQueue, activeNodes);
         new Thread(() -> terminal.run()).start();
-    }
-
-    private void processMessage(TerminalIOMessage message) {
-        fileManager.log(message);
-        switch (message.getType()) {
-            case EXIT         -> {processExit();}                
-            case SEND_MESSAGE -> {processSendMessage(message);}
-            case SEND_FILE    -> {processSendFile(message);}
-        }
-    }
-
-    private void processMessage(ForeignMessage message) {
-        ForeignResponseWrapper response;
-        IONetworkMessage networkMessage;
-
-        response = message.accept(fileManager);
-        if (response == null) return; // no response needed
-
-        if (response.ackResponse()) {
-            networkMessage = InternalMessage.ioToNetwork()
-                .sendAck(response.getSourceIp())
-                .ackId(response.getMessageId());
-        } else {
-            networkMessage = InternalMessage.ioToNetwork()
-                .sendNAck(response.getSourceIp())
-                .nAckId(response.getMessageId())
-                .string(response.getMessage());          
-        }
-
-        networkSenderQueue.offer(networkMessage);
     }
 
     private void processExit() {
         Thread terminalThread = terminal.stopConsole();
         terminalThread.interrupt();
-        networkSenderQueue.offer(InternalMessage.ioToNetwork().exit());
+        networkSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .sendMessage()
+                .exit()
+            );
 
         running = false;
     }
 
-    private void processSendMessage(TerminalIOMessage message) {
-        networkSenderQueue.offer(
-            InternalMessage.ioToNetwork()
-                .sendTalk(message.getDestinationIp())
-                .string(message.getStringField())
-        );
+    private void processSendTalk(InternalSentTalkMessage message) {
+        networkSenderQueue.offer(message);
     }
 
-    private void processSendFile(TerminalIOMessage message) {
+    private void processSendFile(InternalSentFileMessage message) {
         File file;
         String fileName;
-        long fileSize;
-        Queue<byte[]> fullData;
+        byte[] fullData;
         String fileHash;
 
         try {
-            fileName = message.getStringField();
+            fileName = message.getFileName();
             file     = fileManager.getFile(Constants.Configs.Paths.SEND_FOLDER_PATH + fileName);
-            fileSize = file.length();
             fullData = fileManager.getFileData(file);
             fileHash = fileManager.getFileHash(file);
 
-            fileDataMap.put(fileHash, new FileData(fullData, fileHash));
-
             networkSenderQueue.offer(
-                InternalMessage.ioToNetwork()
-                    .sendFile(message.getDestinationIp())
-                    .fileName(fileName)
-                    .fileSize(fileSize)
+                message.fileData(fullData)
+                    .fileHash(fileHash)
             );
         } catch (FileSearchException e) {
             terminal.errorMessage(e.getMessage());
         }
+    }
+
+    private void processSendAck(InternalSentAckMessage message) {
+        networkSenderQueue.offer(
+            ThreadMessage.foreignMessage(getClass())
+                .ack(message.getAcknowledgedMessageId())
+                .to(message.getDestinationIp())
+            );
+    }
+
+    private void processSendNAck(InternalSentNAckMessage message) {
+        networkSenderQueue.offer(
+            ThreadMessage.foreignMessage(getClass())
+                .nAck(message.getNonAcknowledgedMessageId())
+                .because(message.getReason())
+                .to(message.getDestinationIp())
+            );
+    }
+
+    // **************************************************************************************************************
+    // Visitor pattern for IOManager
+
+    @Override
+    public void visit(InternalExitMessage message) {
+        message.accept(fileManager); // logs the message
+        processExit();
+    }
+
+    @Override
+    public void visit(InternalSentTalkMessage message) {
+        message.accept(fileManager); // logs the message
+        processSendTalk(message);
+    }
+
+    @Override
+    public void visit(InternalSentFileMessage message) {
+        message.accept(fileManager); // logs the message
+        processSendFile(message);
+    }
+
+    @Override
+    public void visit(InternalSentAckMessage message) {
+        message.accept(fileManager); // logs the message
+        processSendAck(message);
+    }
+
+    @Override
+    public void visit(InternalSentNAckMessage message) {
+        message.accept(fileManager); // logs the message
+        processSendNAck(message);
+    }
+
+    // *******************************************************
+    // Logging messages
+
+    @Override
+    public void visit(ForeignMessage message) {
+        message.accept(fileManager);
+    }
+
+    // Can still visiting ForeignTalkMessage
+    public void visit(ForeignTalkMessage message) {
+        message.accept(fileManager);
+    }
+
+    @Override
+    public void visit(InternalMessage message) {
+        message.accept(fileManager);
     }
 }

@@ -2,13 +2,16 @@ package messages.foreign;
 
 import java.net.InetAddress;
 
+import interfaces.ForeignLoggable;
 import interfaces.visitors.ForeignMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.MessageVisitor;
 import messages.ThreadMessage;
 import messages.foreign.ForeignChunkMessage.ByteArraySetter;
 import messages.foreign.ForeignFileMessage.LongSetter;
 import messages.foreign.ForeignNAckMessage.StringSetter;
 
-public abstract class ForeignMessage extends ThreadMessage {
+public abstract class ForeignMessage extends ThreadMessage implements ForeignLoggable {
     // **************************************************************************************************************
     // The ForeignMessage class is the base class for all external messages in the system.
     //    It should be used to create messages that will be sent over the network.
@@ -20,6 +23,9 @@ public abstract class ForeignMessage extends ThreadMessage {
 
     protected abstract String assembleFormattedMessage();
 
+    /**
+     * @return The message already formatted according to the network protocol.
+     */
     protected final String getFormattedMessage() {
         return formattedMessage;
     }
@@ -32,6 +38,16 @@ public abstract class ForeignMessage extends ThreadMessage {
     // Visitor pattern for ForeignMessage
     
     public abstract void accept(ForeignMessageVisitor visitor);
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(MessageVisitor visitor) {
+        visitor.visit(this);
+    }
 
     // **************************************************************************************************************
     // Builder pattern for ForeignMessage

@@ -13,7 +13,7 @@ public abstract class InternalReceivedMessage extends InternalMessage {
     protected InetAddress sourceIp;
     protected int messageId;
 
-    public InetAddress getSenderIp() {
+    public InetAddress getSourceIp() {
         return sourceIp;
     }
 

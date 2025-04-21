@@ -6,35 +6,34 @@ import java.io.File;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 
-import interfaces.visitors.ForeignMessageVisitor;
+import interfaces.visitors.FileMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
 import io.fileIO.filePartition.FileChunk;
-import network.messages.foreign.ForeignAck;
-import network.messages.foreign.ForeignChunk;
-import network.messages.foreign.ForeignEnd;
-import network.messages.foreign.ForeignFile;
-import network.messages.foreign.ForeignHeartbeat;
-import network.messages.foreign.ForeignMessage;
-import network.messages.foreign.ForeignNAck;
-import network.messages.foreign.ForeignResponseWrapper;
-import network.messages.foreign.ForeignTalk;
-import network.messages.internal.TerminalIOMessage;
+import messages.ThreadMessage;
+import messages.foreign.ForeignMessage;
+import messages.foreign.ForeignTalkMessage;
+import messages.internal.InternalMessage;
+import messages.internal.receivedMessages.InternalReceivedChunkMessage;
+import messages.internal.receivedMessages.InternalReceivedEndMessage;
+import messages.internal.receivedMessages.InternalReceivedFileMessage;
 import utils.Constants;
 import utils.FileUtils;
 import utils.Exceptions.FileSearchException;
 
-public class FileManager implements ForeignMessageVisitor {
+public class FileManager implements FileMessageVisitor, LoggerVisitor {
     private FileLogger logger;
-    private HashMap<InetAddress, HashMap<Integer, FileChunk>> fileDataMap; // ip -> (seq -> data)
-    private HashMap<InetAddress, File> fileMap; // ip -> File
+    private HashMap<InetAddress, HashMap<Integer, FileChunk>> fileDataMap;  // ip -> (seq -> data)
+    private HashMap<InetAddress, File> fileMap;                             // ip -> File
+    private BlockingQueue<InternalMessage> messageSenderQueue;
 
-    public FileManager() {
-        logger      = new FileLogger();
-        fileDataMap = new HashMap<InetAddress, HashMap<Integer, FileChunk>>();
-        fileMap = new HashMap<InetAddress, File>();
+    public FileManager(BlockingQueue<InternalMessage> messageSenderQueue) {
+        this.messageSenderQueue = messageSenderQueue;
+        logger                  = new FileLogger();
+        fileDataMap             = new HashMap<InetAddress, HashMap<Integer, FileChunk>>();
+        fileMap                 = new HashMap<InetAddress, File>();
     }
 
     public File getFile(String fileName) throws FileSearchException {
@@ -54,34 +53,8 @@ public class FileManager implements ForeignMessageVisitor {
         return file;
     }
 
-    public Queue<byte[]> getFileData(File file) throws FileSearchException {
-        int chunkSize;
-        int lastChunkSize;
-        int numberOfChunks;
-        Queue<byte[]> splitFileData;
-        byte[] fileData;
-        byte[] chunkData;
-
-        chunkSize      = (Constants.Configs.MAX_MESSAGE_SIZE - Constants.Configs.MIN_CHUNK_SIZE);
-        lastChunkSize  = (int) (file.length() % chunkSize);
-        numberOfChunks = (int) (file.length() / chunkSize) + (lastChunkSize > 0 ? 1 : 0);
-        splitFileData  = new LinkedList<byte[]>();
-        fileData       = FileIO.readFile(file.toPath());
-
-        if (fileData == null) throw new FileSearchException("File is empty");
-
-        for (int i = 0; i < numberOfChunks; i++) {
-            if (i == numberOfChunks - 1) {
-                chunkData = new byte[lastChunkSize];
-                System.arraycopy(fileData, i * chunkSize, chunkData, 0, lastChunkSize);
-            } else {
-                chunkData = new byte[chunkSize];
-                System.arraycopy(fileData, i * chunkSize, chunkData, 0, chunkSize);
-            }
-            splitFileData.add(chunkData);
-        }
-
-        return splitFileData;
+    public byte[] getFileData(File file) throws FileSearchException {
+        return FileIO.readFile(file.toPath());
     }
 
     public String getFileHash(File file) throws FileSearchException {
@@ -92,36 +65,36 @@ public class FileManager implements ForeignMessageVisitor {
         }
     }
 
-    public void log(TerminalIOMessage message) {
-        logger.logInternal(message);
-    }
-
-    public void log(ForeignMessage message) {
+    private void log(ForeignMessage message) {
         logger.logForeign(message);
     }
 
-    public void log(ForeignTalk message) {
-        logger.logTalk(message);
+    private void log(InternalMessage message) {
+        logger.logInternal(message);
     }
 
+    private void log(ForeignTalkMessage message) {
+        logger.logTalk(message);
+    }
+    
     // ****************************************************************************************************************
-    // Visitor pattern for ForeignMessage
+    // Visitor pattern for InternalMessage
 
     // ********************************************************
     // File management
 
     @Override
-    public ForeignResponseWrapper visit(ForeignFile visitable) {
+    public void visit(InternalReceivedFileMessage message) {
         String errorMessage;
         String fileName;
         long fileSize;
         File file;
         
-        log(visitable);
+        log(message);
 
         errorMessage = null;
-        fileName     = visitable.getFileName();
-        fileSize     = visitable.getFileSize();
+        fileName     = message.getFileName();
+        fileSize     = message.getFileSize();
         file         = new File(RECEIVE_FOLDER_PATH + fileName);
 
         errorMessage = FileUtils.problemsCreatingFile(file);
@@ -130,55 +103,74 @@ public class FileManager implements ForeignMessageVisitor {
             errorMessage = "File is too large";
         if (fileSize <= 0) 
             errorMessage = "File is empty";
-        if (fileDataMap.containsKey(visitable.getSourceIp())) 
+        if (fileDataMap.containsKey(message.getSourceIp())) 
             errorMessage = "Already receiving a file from that ip";
-
+        
         if (errorMessage != null) {
-            return ForeignResponseWrapper
-                        .notAck(visitable.getMessageId())
-                        .because(errorMessage)
-                        .from(visitable.getSourceIp());
+            messageSenderQueue.offer(
+                ThreadMessage.internalMessage(getClass())
+                    .sendMessage()
+                    .nAck(message.getMessageId())
+                    .because(errorMessage)
+                    .to(message.getSourceIp())
+            );
+            return;
         }
-
-        fileDataMap.put(visitable.getSourceIp(), new HashMap<Integer, FileChunk>());
-        fileMap.put(visitable.getSourceIp(), file);
-        return ForeignResponseWrapper.ack(visitable.getMessageId()).from(visitable.getSourceIp());
+        
+        fileDataMap.put(message.getSourceIp(), new HashMap<Integer, FileChunk>());
+        fileMap.put(message.getSourceIp(), file);
+        messageSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .sendMessage()
+                .ack(message.getMessageId())
+                .to(message.getSourceIp())
+        );
     }
 
     @Override
-    public ForeignResponseWrapper visit(ForeignChunk visitable) {
+    public void visit(InternalReceivedChunkMessage message) {
         String errorMessage;
         int sequenceNumber;
         byte[] chunkData;
         InetAddress sourceIp;
         FileChunk fileChunk;
 
-        log(visitable);
+        log(message);
 
         errorMessage   = null;
-        sequenceNumber = visitable.getSequenceNumber();
-        chunkData      = visitable.getChunkData();
-        sourceIp       = visitable.getSourceIp();
+        sequenceNumber = message.getSequenceNumber();
+        chunkData      = message.getData();
+        sourceIp       = message.getSourceIp();
         fileChunk      = new FileChunk(chunkData, sequenceNumber);
 
-        if (fileDataMap.get(sourceIp) == null)
+        if (fileDataMap.get(sourceIp) == null) {
             errorMessage = "Not receiving a file from that ip";
-        if (fileDataMap.get(sourceIp).putIfAbsent(sequenceNumber, fileChunk) != null)
+        } else if (fileDataMap.get(sourceIp).putIfAbsent(sequenceNumber, fileChunk) != null) {
             logger.logInternal(
                 Constants.Strings.DISCARTED_CHUNK_FORMAT.formatted(sequenceNumber, chunkData.length)
             );
+        }
 
         if (errorMessage != null) {
-            return ForeignResponseWrapper
-                        .notAck(visitable.getMessageId())
-                        .because(errorMessage)
-                        .from(visitable.getSourceIp());
+            messageSenderQueue.offer(
+                ThreadMessage.internalMessage(getClass())
+                    .sendMessage()
+                    .nAck(message.getMessageId())
+                    .because(errorMessage)
+                    .to(message.getSourceIp())
+            );
+            return;
         }
-        return ForeignResponseWrapper.ack(visitable.getMessageId()).from(visitable.getSourceIp());
+        messageSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .sendMessage()
+                .ack(message.getMessageId())
+                .to(message.getSourceIp())
+        );
     }
 
     @Override
-    public ForeignResponseWrapper visit(ForeignEnd visitable) {
+    public void visit(InternalReceivedEndMessage message) {
         String errorMessage;
         String receivedHash;
         String fileHash;
@@ -186,11 +178,11 @@ public class FileManager implements ForeignMessageVisitor {
         byte[] fileData;
         File file;
 
-        log(visitable);
+        log(message);
 
         errorMessage = null;
-        receivedHash = visitable.getHash();
-        sourceIp     = visitable.getSourceIp();
+        receivedHash = message.getFileHash();
+        sourceIp     = message.getSourceIp();
         file         = fileMap.get(sourceIp);
 
         if (fileDataMap.get(sourceIp) == null)
@@ -215,13 +207,22 @@ public class FileManager implements ForeignMessageVisitor {
         fileDataMap.remove(sourceIp);
         
         if (errorMessage != null) {
-            return ForeignResponseWrapper
-                        .notAck(visitable.getMessageId())
-                        .because(errorMessage)
-                        .from(visitable.getSourceIp());
+            messageSenderQueue.offer(
+                ThreadMessage.internalMessage(getClass())
+                    .sendMessage()
+                    .nAck(message.getMessageId())
+                    .because(errorMessage)
+                    .to(sourceIp)
+            );
+            return;
         }
         FileIO.writeFile(file.getName(), fileData);
-        return ForeignResponseWrapper.ack(visitable.getMessageId()).from(visitable.getSourceIp());
+        messageSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .sendMessage()
+                .ack(message.getMessageId())
+                .to(sourceIp)
+        );
     }
 
     private byte[] assembleFile(InetAddress sourceIp) {
@@ -256,29 +257,20 @@ public class FileManager implements ForeignMessageVisitor {
     }
 
     // ********************************************************
-    // Log only
+    // log only
 
     @Override
-    public ForeignResponseWrapper visit(ForeignHeartbeat visitable) {
-        log(visitable);
-        return null;
+    public void visit(ForeignMessage message) {
+        log(message);
     }
 
     @Override
-    public ForeignResponseWrapper visit(ForeignTalk visitable) {
-        log(visitable);
-        return ForeignResponseWrapper.ack(visitable.getMessageId()).from(visitable.getSourceIp());
+    public void visit(ForeignTalkMessage message) {
+        log(message);
     }
 
     @Override
-    public ForeignResponseWrapper visit(ForeignAck visitable) {
-        log(visitable);
-        return null;
-    }
-
-    @Override
-    public ForeignResponseWrapper visit(ForeignNAck visitable) {
-        log(visitable);
-        return null;
+    public void visit(InternalMessage message) {
+        log(message);
     }
 }

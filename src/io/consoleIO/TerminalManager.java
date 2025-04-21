@@ -6,15 +6,15 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import network.messages.internal.InternalMessage;
-import network.messages.internal.TerminalIOMessage;
+import messages.ThreadMessage;
+import messages.internal.InternalMessage;
 import network.threads.NetworkNode;
 import utils.Constants;
 import utils.FileUtils;
 import utils.Constants.Configs;
 
 public class TerminalManager implements Runnable{
-    private BlockingQueue<TerminalIOMessage> messageSenderQueue;
+    private BlockingQueue<InternalMessage> messageSenderQueue;
     private ConcurrentLinkedQueue<String> errorMessages;
     
     private volatile boolean running;
@@ -22,7 +22,7 @@ public class TerminalManager implements Runnable{
 
     private Scanner scanner;
 
-    public TerminalManager(BlockingQueue<TerminalIOMessage> messageSenderQueue, 
+    public TerminalManager(BlockingQueue<InternalMessage> messageSenderQueue,
                             ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
         this.messageSenderQueue = messageSenderQueue;
         scanner                 = new Scanner(System.in);
@@ -108,7 +108,9 @@ public class TerminalManager implements Runnable{
         if (systemExit) ConsoleLogger.logRed("Scanner is closed. ", false);
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
-        messageSenderQueue.add(InternalMessage.terminalToIO().exit());
+        messageSenderQueue.offer(
+            ThreadMessage.internalMessage(this.getClass()).sendMessage().exit()
+        );
     }
 
     public Thread stopConsole() {
@@ -171,10 +173,11 @@ public class TerminalManager implements Runnable{
         ConsoleLogger.logWhite("Sending message to node...");
 
         try {
-            messageSenderQueue.add(
-                InternalMessage.terminalToIO()
-                    .sendMessage(message)
-                    .toIp(node)
+            messageSenderQueue.offer(
+                ThreadMessage.internalMessage(this.getClass())
+                    .sendMessage()
+                    .talk(message)
+                    .to(node)
             );
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);
@@ -208,10 +211,11 @@ public class TerminalManager implements Runnable{
         }
 
         try {
-            messageSenderQueue.add(
-                InternalMessage.terminalToIO()
-                    .sendFile(fileName)
-                    .toIp(node)
+            messageSenderQueue.offer(
+                ThreadMessage.internalMessage(this.getClass())
+                    .sendMessage()
+                    .file(fileName)
+                    .to(node)
             );
         } catch (UnknownHostException e) {
             ConsoleLogger.logError("Unable to send, message discarted:", e);

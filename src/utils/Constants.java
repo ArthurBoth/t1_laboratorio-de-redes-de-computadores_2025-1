@@ -62,13 +62,15 @@ public final class Constants {
         public static final String HEARTBEAT_LOG_FORMAT = "(%s) [%s] HEARTBEAT";
         public static final String TALK_LOG_FORMAT      = "(%s) [%s] TALK(%d) : \"%s\"";
         public static final String FILE_LOG_FORMAT      = "(%s) [%s] FILE(%d) : \"%s\" (%d bytes)";
-        public static final String CHUNK_LOG_FORMAT     = "(%s) [%s] CHUNK(%d): (seq %d) {%s} (%d bytes)";
+        public static final String CHUNK_LOG_FORMAT     = "(%s) [%s] CHUNK(%d): (seq %d) %s (%d bytes)";
         public static final String END_LOG_FORMAT       = "(%s) [%s] END(%d)  : \"%s\"";
-        public static final String ACK_LOG_FORMAT       = "(%s) [%s] ACK      : AckId  = %d";
-        public static final String NACK_LOG_FORMAT      = "(%s) [%s] NACK     : NAckId = %d | \"%s\"";
+        public static final String ACK_LOG_FORMAT       = "(%s) [%s] ACK   : Acknowleged '%d'";
+        public static final String NACK_LOG_FORMAT      = "(%s) [%s] NACK  : Didn't acknowlege '%d' because \"%s\"";
 
-        public static final String TALK_SENDING_REQUEST_FORMAT = "(%s) TALK_SENDING: %s"; 
-        public static final String FILE_SENDING_REQUEST_FORMAT = "(%s) FILE_SENDING: %s"; 
+        public static final String TALK_SENDING_REQUEST_FORMAT = "(%s) TALK_SENDING: %s";
+        public static final String FILE_SENDING_REQUEST_FORMAT = "(%s) FILE_SENDING: %s";
+        public static final String ACK_SENDING_REQUEST_FORMAT  = "(%s) ACK_SENDING : %d";
+        public static final String NACK_SENDING_REQUEST_FORMAT = "(%s) NACK_SENDING: %d";
 
         public static final String DISCARTED_CHUNK_FORMAT = "(%s) DISCARTED CHUNK: %d (%d bytes)";
 

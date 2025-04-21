@@ -1,17 +1,15 @@
 package network;
 
-import java.net.InetAddress;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import messages.ThreadMessage;
-import messages.internal.acknowledgments.AckMessage;
-import messages.internal.sentMessages.InternalSentFileMessage;
 import network.threads.NetworkNode;
 
 public class NetworkListener {
-//     BlockingQueue<IONetworkMessage> IOReceiverQueue;
-//     BlockingQueue<ForeignMessage> IOSenderQueue;
-//     BlockingQueue<ForeignMessage> UDPReceiverQueue;
+    BlockingQueue<ThreadMessage> IOReceiverQueue;
+    BlockingQueue<ThreadMessage> IOSenderQueue;
+    BlockingQueue<ThreadMessage> UDPReceiverQueue;
 
     ConcurrentHashMap<NetworkNode, Integer> activeNodes;
 
@@ -19,19 +17,6 @@ public class NetworkListener {
     }
 
     private void setup() {
-        InetAddress localHost = null;
-        InternalSentFileMessage a =
-        ThreadMessage.internalMessage()
-            .sentMessage()
-            .sendFile(null)
-            .to(localHost);
-
-        AckMessage ack = ThreadMessage.internalMessage().ack(0).from(localHost);
-
-        a = a.fileData(null).fileHash(null);
-
-
-
         // TODO
         /*
          * Start Every thread 

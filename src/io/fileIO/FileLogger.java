@@ -61,12 +61,12 @@ public class FileLogger {
     }
 
     public void logInternal(Loggable message) {
-        log(message.getActualMessage(), Paths.LOG_FOLDER_PATH + Paths.INTERNAL_LOGS_FILE);
+        log(message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.INTERNAL_LOGS_FILE);
     }
 
     public void logForeign(ForeignLoggable message) {
         logSpaced(message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE);
-        logSpaced(message.getActualMessage(), Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
+        logSpaced(message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
     }
 
     public void logTalk(ForeignLoggable message) {

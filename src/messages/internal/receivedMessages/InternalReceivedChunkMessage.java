@@ -2,12 +2,13 @@ package messages.internal.receivedMessages;
 
 import java.net.InetAddress;
 
+import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.InternalMessageVisitor;
 import utils.FileUtils;
 
 import static utils.Constants.Strings.CHUNK_LOG_FORMAT;
 
-public class InternalReceivedChunkMessage extends InternalReceivedMessage {
+public class InternalReceivedChunkMessage extends InternalReceivedFileRelated {
     private byte[] data;    
     private int sequenceNumber;
 
@@ -22,7 +23,13 @@ public class InternalReceivedChunkMessage extends InternalReceivedMessage {
     // ***************************************************************************************************************
     // Visitor pattern for InternalReceivedChunkMessage
 
+    @Override
     public void accept(InternalMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(FileMessageVisitor visitor) {
         visitor.visit(this);
     }
 

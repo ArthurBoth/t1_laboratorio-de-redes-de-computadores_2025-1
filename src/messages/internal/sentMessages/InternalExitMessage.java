@@ -1,13 +1,14 @@
-package messages.internal;
+package messages.internal.sentMessages;
 
 import interfaces.visitors.InternalMessageVisitor;
+import interfaces.visitors.InternalSentMessageVisitor;
 
-public class InternalExitMessage extends InternalMessage {
+public class InternalExitMessage extends InternalSentMessage {
 
     // ***************************************************************************************************************
     // Factory pattern for InternalExitMessage
 
-    protected static InternalExitMessage create(Class<?> clazz) {
+    protected static InternalExitMessage build(Class<?> clazz) {
         return new InternalExitMessage(clazz);
     }
 
@@ -20,6 +21,11 @@ public class InternalExitMessage extends InternalMessage {
 
     @Override
     public void accept(InternalMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalSentMessageVisitor visitor) {
         visitor.visit(this);
     }
 

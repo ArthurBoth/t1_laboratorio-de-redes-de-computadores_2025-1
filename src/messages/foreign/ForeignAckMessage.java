@@ -3,6 +3,7 @@ package messages.foreign;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.ACK_FORMAT;
+import static utils.Constants.Strings.ACK_LOG_FORMAT;
 
 public class ForeignAckMessage extends ForeignMessage {
     private final int ACKKED_MESSAGE_ID;
@@ -13,7 +14,7 @@ public class ForeignAckMessage extends ForeignMessage {
     @Override
     protected String assembleFormattedMessage() {
         return ACK_FORMAT.formatted(ACKKED_MESSAGE_ID);
-    }    
+    }
 
     // **************************************************************************************************************
     // Visitor pattern for ForeignAckMessage
@@ -31,6 +32,15 @@ public class ForeignAckMessage extends ForeignMessage {
         return "(%s) %s".formatted(
             clazz.getSimpleName(),
             formattedMessage
+            );
+    }
+
+    @Override
+    public String getPrettyMessage() {
+        return ACK_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            destinationIp.getHostAddress(),
+            ACKKED_MESSAGE_ID
             );
     }
     

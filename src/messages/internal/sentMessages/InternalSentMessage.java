@@ -1,8 +1,11 @@
 package messages.internal.sentMessages;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
+import interfaces.visitors.InternalSentMessageVisitor;
 import messages.internal.InternalMessage;
+import messages.internal.sentMessages.InternalSentNAckMessage.StringSetter;
 
 public abstract class InternalSentMessage extends InternalMessage {
     // **************************************************************************************************************
@@ -18,11 +21,19 @@ public abstract class InternalSentMessage extends InternalMessage {
     }
 
     // **************************************************************************************************************
+    // Visitor pattern for InternalSentMessage
+
+    public abstract void accept(InternalSentMessageVisitor visitor); 
+
+    // **************************************************************************************************************
     // Builder pattern for InternalSentMessage
 
     public interface MessageSelection {
-        IpSetter<InternalSentTalkMessage> sendTalk(String content);
-        IpSetter<InternalSentFileMessage> sendFile(String fileName);
+        InternalExitMessage exit();
+        IpSetter<InternalSentTalkMessage> talk(String content);
+        IpSetter<InternalSentFileMessage> file(String fileName);
+        IpSetter<InternalSentAckMessage> ack(int messageId);
+        InternalSentNAckMessage.StringSetter nAck(int messageId);
     }
 
     private static final class Builder implements MessageSelection {
@@ -33,13 +44,28 @@ public abstract class InternalSentMessage extends InternalMessage {
         }
 
         @Override
-        public IpSetter<InternalSentFileMessage> sendFile(String fileName) {
+        public InternalExitMessage exit() {
+            return InternalExitMessage.build(clazz);
+        }
+
+        @Override
+        public IpSetter<InternalSentTalkMessage> talk(String content) {
+            return InternalSentTalkMessage.create(clazz, content);
+        }
+
+        @Override
+        public IpSetter<InternalSentFileMessage> file(String fileName) {
             return InternalSentFileMessage.create(clazz, fileName);
         }
 
         @Override
-        public IpSetter<InternalSentTalkMessage> sendTalk(String content) {
-            return InternalSentTalkMessage.create(clazz, content);
+        public IpSetter<InternalSentAckMessage> ack(int messageId) {
+            return InternalSentAckMessage.create(clazz, messageId);
+        }
+
+        @Override
+        public StringSetter nAck(int messageId) {
+            return InternalSentNAckMessage.create(clazz, messageId);
         }
     }
 
@@ -51,11 +77,18 @@ public abstract class InternalSentMessage extends InternalMessage {
     // Abstract Builder pattern for InternalSentMessage subclasses
 
     public interface IpSetter<T extends InternalSentMessage> {
+        T to(String destinationIp) throws UnknownHostException;
         T to(InetAddress destinationIp);
     }
  
     protected static abstract class IpBuilder<T extends InternalSentMessage> implements IpSetter<T> {
         protected InetAddress destinationIp;
+
+        @Override
+        public final T to(String destinationIp) throws UnknownHostException {
+            this.destinationIp = InetAddress.getByName(destinationIp);
+            return self();
+        }
 
         @Override
         public final T to(InetAddress destinationIp) {

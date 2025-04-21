@@ -3,6 +3,7 @@ package messages.foreign;
 import interfaces.visitors.ForeignMessageVisitor;
 
 import static utils.Constants.Strings.END_FORMAT;
+import static utils.Constants.Strings.END_LOG_FORMAT;
 
 public class ForeignEndMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -35,6 +36,16 @@ public class ForeignEndMessage extends ForeignMessage {
         return "(%s) %s".formatted(
             clazz.getSimpleName(),
             formattedMessage
+            );
+    }
+
+    @Override
+    public String getPrettyMessage() {
+        return END_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            destinationIp.getHostAddress(),
+            MESSAGE_ID,
+            fileHash
             );
     }
 

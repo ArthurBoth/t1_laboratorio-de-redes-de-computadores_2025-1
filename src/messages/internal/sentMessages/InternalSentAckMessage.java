@@ -3,17 +3,17 @@ package messages.internal.sentMessages;
 import interfaces.visitors.InternalMessageVisitor;
 import interfaces.visitors.InternalSentMessageVisitor;
 
-import static utils.Constants.Strings.TALK_SENDING_REQUEST_FORMAT;
+import static utils.Constants.Strings.ACK_SENDING_REQUEST_FORMAT;
 
-public class InternalSentTalkMessage extends InternalSentMessage {
-    private String content;
+public class InternalSentAckMessage extends InternalSentMessage {
+    private int ackkedId;
 
-    public String getContent() {
-        return content;
+    public int getAcknowledgedMessageId() {
+        return ackkedId;
     }
 
     // **************************************************************************************************************
-    // Visitor pattern for InternalSentTalkMessage
+    // Visitor pattern for InternalSentAckMessage
 
     @Override
     public void accept(InternalMessageVisitor visitor) {
@@ -30,37 +30,37 @@ public class InternalSentTalkMessage extends InternalSentMessage {
 
     @Override
     public String getMessage() {
-        return TALK_SENDING_REQUEST_FORMAT.formatted(
+        return ACK_SENDING_REQUEST_FORMAT.formatted(
             clazz.getSimpleName(), 
-            content
+            ackkedId
             );
     }
 
     // **************************************************************************************************************
-    // Builder pattern for InternalSentTalkMessage
+    // Builder pattern for InternalSentAckMessage
 
-    public static IpSetter<InternalSentTalkMessage> create(Class<?> clazz, String content) {
-        return new Builder(clazz, content);
+    public static IpSetter<InternalSentAckMessage> create(Class<?> clazz, int ackkedId) {
+        return new Builder(clazz, ackkedId);
     }
 
-    private static class Builder extends IpBuilder<InternalSentTalkMessage> {
+    private static class Builder extends IpBuilder<InternalSentAckMessage> {
         private Class<?> clazz;
-        private String content;
+        private int ackkedId;
 
-        private Builder(Class<?> clazz, String content) {
-            this.clazz   = clazz;
-            this.content = content;
+        private Builder(Class<?> clazz, int ackkedId) {
+            this.clazz    = clazz;
+            this.ackkedId = ackkedId;
         }
 
         @Override
-        public InternalSentTalkMessage self() {
-            return new InternalSentTalkMessage(this);
+        public InternalSentAckMessage self() {
+            return new InternalSentAckMessage(this);
         }
     }
 
-    private InternalSentTalkMessage(Builder builder) {
+    private InternalSentAckMessage(Builder builder) {
         this.clazz         = builder.clazz;
         this.destinationIp = builder.destinationIp;
-        this.content       = builder.content;
+        this.ackkedId      = builder.ackkedId;
     }
 }

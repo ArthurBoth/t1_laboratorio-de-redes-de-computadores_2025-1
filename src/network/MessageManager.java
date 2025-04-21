@@ -1,5 +1,5 @@
 package network;
 
-// public class MessageManager implements  {
+public class MessageManager {
     
-// }
+}
