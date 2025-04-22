@@ -3,15 +3,20 @@ package network;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
-import messages.ThreadMessage;
+import messages.foreign.ForeignMessage;
+import messages.internal.InternalMessage;
+import network.messageHandlers.MessageHandler;
 import network.threads.NetworkNode;
 
 public class NetworkListener {
-    BlockingQueue<ThreadMessage> IOReceiverQueue;
-    BlockingQueue<ThreadMessage> IOSenderQueue;
-    BlockingQueue<ThreadMessage> UDPReceiverQueue;
+    BlockingQueue<InternalMessage> ioReceiverQueue;
+    BlockingQueue<InternalMessage> ioSenderQueue;
+    BlockingQueue<InternalMessage> udpReceiverQueue;
+    BlockingQueue<ForeignMessage> udpSenderQueue;
 
     ConcurrentHashMap<NetworkNode, Integer> activeNodes;
+
+    MessageHandler handler;
 
     public NetworkListener() {
     }

@@ -7,12 +7,12 @@ import messages.ThreadMessage;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 
-public class MessageManager implements MessageVisitor {
+public class MessageHandler implements MessageVisitor {
     private BlockingQueue<ThreadMessage> ioSenderQueue;
     private BlockingQueue<ThreadMessage> udpSenderQueue;
 
-    private ForeignMessageManager foreignManager;
-    private InternalManager internalManager;
+    private ForeignMessageHandler foreignManager;
+    private InternalMessageHandler internalManager;
 
     // ****************************************************************************************************************
     // Visitor pattern for MessageManager

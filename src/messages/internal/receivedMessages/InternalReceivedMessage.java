@@ -1,6 +1,7 @@
 package messages.internal.receivedMessages;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import messages.internal.InternalMessage;
 
@@ -70,6 +71,7 @@ public abstract class InternalReceivedMessage extends InternalMessage {
 
     public interface IpSetter<T extends InternalReceivedMessage> {
         T from(InetAddress sourceIp);
+        T from(String sourceIp) throws UnknownHostException;
     }
 
     protected static abstract class IpBuilder<T extends InternalReceivedMessage> implements IpSetter<T> {
@@ -78,6 +80,12 @@ public abstract class InternalReceivedMessage extends InternalMessage {
         @Override
         public final T from(InetAddress sourceIp) {
             this.sourceIp = sourceIp;
+            return self();
+        }
+
+        @Override
+        public final T from(String sourceIp) throws UnknownHostException {
+            this.sourceIp = InetAddress.getByName(sourceIp);
             return self();
         }
 

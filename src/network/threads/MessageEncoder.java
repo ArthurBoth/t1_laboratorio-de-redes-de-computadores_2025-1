@@ -1,10 +1,13 @@
 package network.threads;
 
 import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import interfaces.visitors.EncoderVisitor;
+import io.consoleIO.ConsoleLogger;
 import messages.ThreadMessage;
 import messages.foreign.*;
 import messages.internal.InternalMessage;
@@ -151,6 +154,7 @@ public class MessageEncoder implements EncoderVisitor {
     }
 
     // **************************************************************************************************************
+    // Message decoding
 
     public InternalMessage decodePacket(DatagramPacket packet) {
         ByteBuffer buffer;
@@ -160,54 +164,160 @@ public class MessageEncoder implements EncoderVisitor {
         header = buffer.getChar();
 
         return switch (header) {
-            case HEARTBEAT_HEADER -> decodeHeartbeat(buffer, packet);
-            case TALK_HEADER      -> decodeTalk(buffer, packet);
-            case FILE_HEADER      -> decodeFile(buffer, packet);
-            case CHUNK_HEADER     -> decodeChunk(buffer, packet);
-            case END_HEADER       -> decodeEnd(buffer, packet);
-            case ACK_HEADER       -> decodeAck(buffer, packet);
-            case NACK_HEADER      -> decodeNAck(buffer, packet);
-            default               -> unexpectedHeader(buffer, packet);
+            case HEARTBEAT_HEADER -> decodeHeartbeat(buffer, packet.getAddress());
+            case TALK_HEADER      -> decodeTalk(buffer, packet.getAddress());
+            case FILE_HEADER      -> decodeFile(buffer, packet.getAddress());
+            case CHUNK_HEADER     -> decodeChunk(buffer, packet.getAddress());
+            case END_HEADER       -> decodeEnd(buffer, packet.getAddress());
+            case ACK_HEADER       -> decodeAck(buffer, packet.getAddress());
+            case NACK_HEADER      -> decodeNAck(buffer, packet.getAddress());
+            default               -> unexpectedHeader(buffer, packet.getAddress());
         };
     }
 
-    private InternalMessage decodeAck(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeAck(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * AckId  (int)
+         */
+        int akkedId= buffer.getInt();
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage()
+                            .ack(akkedId)
+                            .from(ipAddress);
     }
 
-    private InternalMessage decodeChunk(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeChunk(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * MessageId (int)
+         * SeqNum    (int)
+         * Data      (byte[])
+         */
+        int messageId;
+        int sequenceNumber;
+        byte[] chunkData;
+
+        messageId      = buffer.getInt();
+        sequenceNumber = buffer.getInt();
+        chunkData      = new byte[buffer.remaining()];
+        buffer.get(chunkData);
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage(messageId)
+                            .chunk(chunkData)
+                            .sequenceNumber(sequenceNumber)
+                            .from(ipAddress);
     }
 
-    private InternalMessage decodeEnd(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeEnd(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * MessageId (int)
+         * Hash      (String)
+         */
+        int messageId;
+        byte[] hashData;
+
+        messageId = buffer.getInt();
+        hashData  = new byte[buffer.remaining()];
+        buffer.get(hashData);
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage(messageId)
+                            .end(new String(hashData, StandardCharsets.UTF_16BE))
+                            .from(ipAddress);
     }
 
-    private InternalMessage decodeFile(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeFile(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * MessageId (int)
+         * NameSize  (int)
+         * Name      (String)
+         * Size      (long)
+         */
+        int messageId;
+        int nameSize;
+        byte[] nameData;
+        long fileSize;
+
+        messageId = buffer.getInt();
+        nameSize  = buffer.getInt();
+        nameData  = new byte[nameSize];
+        buffer.get(nameData, 0, nameSize);
+        fileSize  = buffer.getLong();
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage(messageId)
+                            .file(new String(nameData, StandardCharsets.UTF_16BE))
+                            .size(fileSize)
+                            .from(ipAddress);
     }
 
-    private InternalMessage decodeHeartbeat(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeHeartbeat(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * IpAddress (String)
+         */
+
+        byte[] ipData = new byte[buffer.remaining()];
+        buffer.get(ipData);
+
+        try {
+            return ThreadMessage.internalMessage(getClass())
+                                .receivedMessage()
+                                .heartbeat()
+                                .from(new String(ipData, StandardCharsets.UTF_16BE));
+        } catch (UnknownHostException e) {
+            ConsoleLogger.logError("Unknow host, Packet's address", e);
+            return ThreadMessage.internalMessage(getClass())
+                                .receivedMessage()
+                                .heartbeat()
+                                .from(ipAddress);
+        }
     }
 
-    private InternalMessage decodeNAck(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeNAck(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * NAckId (int)
+         * Reason (String)
+         */
+        int nAckkedId;
+        byte[] reasonData;
+
+        nAckkedId  = buffer.getInt();
+        reasonData = new byte[buffer.remaining()];
+        buffer.get(reasonData);
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage()
+                            .nAck(nAckkedId)
+                            .reason(new String(reasonData, StandardCharsets.UTF_16BE))
+                            .from(ipAddress);
     }
 
-    private InternalMessage decodeTalk(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage decodeTalk(ByteBuffer buffer, InetAddress ipAddress) {
+        /*
+         * MessageId (int)
+         * Content   (String)
+         */
+        int messageId;
+        byte[] contentData;
+
+        messageId   = buffer.getInt();
+        contentData = new byte[buffer.remaining()];
+        buffer.get(contentData);
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage(messageId)
+                            .talk(new String(contentData, StandardCharsets.UTF_16BE))
+                            .from(ipAddress);
     }
 
-    private InternalMessage unexpectedHeader(ByteBuffer buffer, DatagramPacket packet) {
-        // TODO
-        throw new UnsupportedOperationException("Not implemented Yet");
+    private InternalMessage unexpectedHeader(ByteBuffer buffer, InetAddress ipAddress) {
+        byte[] data = new byte[buffer.remaining()];
+        buffer.get(data);
+
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage()
+                            .unsupportedMessage(new String(data, StandardCharsets.UTF_16BE))
+                            .from(ipAddress);
     }
 }

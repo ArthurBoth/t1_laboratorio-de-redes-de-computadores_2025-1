@@ -13,10 +13,12 @@ import utils.Constants;
 
 public class ReceiverThread extends NetworkThread {
     private BlockingQueue<InternalMessage> messageQueue;
+    private MessageEncoder encoder;
     
     protected ReceiverThread(DatagramSocket socket, BlockingQueue<InternalMessage> messageQueue) {
         super(socket);
         this.messageQueue = messageQueue;
+        this.encoder      = new MessageEncoder();
     }
     @Override
     public void run() {
@@ -27,8 +29,8 @@ public class ReceiverThread extends NetworkThread {
         while (running) {
             try {
                 packet          = waitForPacket();
-                receivedMessage = MessageEncoder.decodePacket(packet);
-                if (receivedMessage != null) messageQueue.put(receivedMessage);
+                receivedMessage = encoder.decodePacket(packet);
+                messageQueue.put(receivedMessage);
             } catch (IOException e) {
                 ConsoleLogger.logError("Error while receiving message", e);
                 ConsoleLogger.logRed("Discarding packet.");
