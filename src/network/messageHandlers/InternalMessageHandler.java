@@ -14,6 +14,7 @@ import messages.internal.sentMessages.InternalSentAckMessage;
 import messages.internal.sentMessages.InternalSentFileMessage;
 import messages.internal.sentMessages.InternalSentNAckMessage;
 import messages.internal.sentMessages.InternalSentTalkMessage;
+import utils.Exceptions.EndExecutionException;
 
 public class InternalMessageHandler implements InternalMessageVisitor {
 
@@ -67,8 +68,7 @@ public class InternalMessageHandler implements InternalMessageVisitor {
 
     @Override
     public void visit(InternalExitMessage message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        throw new EndExecutionException();
     }
 
     @Override

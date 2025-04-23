@@ -9,10 +9,15 @@ import messages.internal.InternalMessage;
 
 public class MessageHandler implements MessageVisitor {
     private BlockingQueue<ThreadMessage> ioSenderQueue;
-    private BlockingQueue<ThreadMessage> udpSenderQueue;
+    private BlockingQueue<ForeignMessage> udpSenderQueue;
 
     private ForeignMessageHandler foreignManager;
     private InternalMessageHandler internalManager;
+
+    public MessageHandler(BlockingQueue<ThreadMessage> ioSenderQueue, BlockingQueue<ForeignMessage> udpSenderQueue) {
+        this.ioSenderQueue  = ioSenderQueue;
+        this.udpSenderQueue = udpSenderQueue;
+    }
 
     // ****************************************************************************************************************
     // Visitor pattern for MessageManager

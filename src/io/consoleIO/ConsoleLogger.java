@@ -165,7 +165,7 @@ public class ConsoleLogger {
     
     public static synchronized void logError(String message, Exception e) {
         if (PRINT_LOGS) {
-            System.out.println(Colours.RED);
+            System.out.print(Colours.RED);
             System.err.printf("ERROR: %s%n", message);
 
             System.out.print(Colours.YELLOW);
@@ -179,6 +179,17 @@ public class ConsoleLogger {
             System.out.print(Colours.RED);
             System.err.printf("ERROR: %s", message);
             System.out.println(Colours.RESET);
+        }
+    }
+    
+    public static synchronized void logError(Exception e) {
+        if (PRINT_LOGS) {
+            System.out.print(Colours.RED);
+            System.err.printf("ERROR: %s%n", e.getMessage());
+            
+            System.out.print(Colours.YELLOW);
+            e.printStackTrace();
+            System.out.print(Colours.RESET);
         }
     }
 

@@ -11,9 +11,15 @@ public final class Exceptions {
         }
     }
 
-    public static class InvalidConfigurationException extends RuntimeException {
-        public InvalidConfigurationException(String message) {
+    public static class ThreadNotStartedException extends RuntimeException {
+        public ThreadNotStartedException(String message) {
             super(message);
+        }
+    }
+
+    public static class EndExecutionException extends RuntimeException {
+        public EndExecutionException() {
+            super();
         }
     }
 }

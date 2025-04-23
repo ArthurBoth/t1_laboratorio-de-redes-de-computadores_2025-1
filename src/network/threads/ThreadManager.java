@@ -1,21 +1,64 @@
 package network.threads;
 
 import java.net.DatagramSocket;
+import java.util.LinkedList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import io.IOManager;
+import messages.ThreadMessage;
+import messages.foreign.ForeignMessage;
+import messages.internal.InternalMessage;
+import utils.Exceptions.ThreadNotStartedException;
 
 public class ThreadManager {
-    private DatagramSocket socket;
+    private final DatagramSocket SOCKET;
+    private final ConcurrentHashMap<NetworkNode, Integer> NODES; // node -> seconds since last message
+    
+    private LinkedList<Thread> threads;
 
-    private SenderThread sender;
-    private ReceiverThread receiver;
-    private IOManager io;
-
-    public void start() {
-
+    public ThreadManager(DatagramSocket socket, ConcurrentHashMap<NetworkNode, Integer> nodes) {
+        this.SOCKET  = socket;
+        this.NODES   = nodes;
+        this.threads = new LinkedList<Thread>();
     }
 
-    private void setup() {
-        sender = new SenderThread(socket, null)
-    } 
+    public BlockingQueue<ForeignMessage> createSender() {
+        BlockingQueue<ForeignMessage> queue  = new LinkedBlockingDeque<ForeignMessage>();
+        SenderThread                  thread = new SenderThread(SOCKET, queue);
+
+        threads.add(new Thread(() -> thread.run()));
+        return queue;
+    }
+
+    public BlockingQueue<InternalMessage> createReceiver() {
+        BlockingQueue<InternalMessage> queue  = new LinkedBlockingDeque<InternalMessage>();
+        ReceiverThread                 thread = new ReceiverThread(SOCKET, queue);
+
+        threads.add(new Thread(() -> thread.run()));
+        return queue;
+    }
+
+    public BlockingQueue<ThreadMessage> createIO(BlockingQueue<ThreadMessage> sender) {
+        BlockingQueue<ThreadMessage> receiver = new LinkedBlockingDeque<ThreadMessage>();
+        IOManager                    thread   = new IOManager(receiver, sender, NODES);
+
+        threads.add(new Thread(() -> thread.run()));
+        return receiver;
+    }
+
+    public void startThreads() {
+        threads.stream()
+               .filter(x -> x == null)
+               .findFirst()
+               .ifPresent(_ -> { throw new ThreadNotStartedException("Thread object not created"); });
+    
+        threads.forEach(Thread::start);
+    }
+
+    public void stopThreads() {
+        threads.forEach(Thread::interrupt);
+        threads.clear();
+    }
 }
