@@ -3,6 +3,7 @@ package messages.internal.receivedMessages;
 import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.InternalMessageVisitor;
 
+import static utils.Constants.Strings.END_FORMAT;
 import static utils.Constants.Strings.END_LOG_FORMAT;
 
 public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
@@ -12,7 +13,7 @@ public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
         return fileHash;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedEndMessage
 
     @Override
@@ -25,20 +26,28 @@ public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return END_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            sourceIp.getHostAddress(), 
-            messageId, 
+        return END_FORMAT.formatted(
+            messageId,
             fileHash
         );
     }
 
-    // **************************************************************************************************************
+    @Override
+    public String getPrettyMessage() {
+        return END_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            sourceIp.getHostAddress(),
+            messageId,
+            fileHash
+        );
+    }
+
+    // ****************************************************************************************************
     // Factory pattern for InternalReceivedEndMessage
 
     public static IpSetter<InternalReceivedEndMessage> create(Class<?> clazz, int messageId, String fileHash) {

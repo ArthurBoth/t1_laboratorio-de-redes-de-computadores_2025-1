@@ -17,14 +17,14 @@ import static utils.Constants.MessageHeaders.*;
 
 public class MessageEncoder implements EncoderVisitor {
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Factory pattern for MessageEncoder
 
     public static MessageEncoder create() {
         return new MessageEncoder();
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern implementation for encofing
 
     @Override
@@ -153,7 +153,7 @@ public class MessageEncoder implements EncoderVisitor {
         return buffer.array();
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Message decoding
 
     public InternalMessage decodePacket(DatagramPacket packet) {

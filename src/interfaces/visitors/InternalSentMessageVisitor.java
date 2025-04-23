@@ -1,15 +1,15 @@
 package interfaces.visitors;
 
-import messages.internal.sentMessages.InternalExitMessage;
-import messages.internal.sentMessages.InternalSentAckMessage;
-import messages.internal.sentMessages.InternalSentFileMessage;
-import messages.internal.sentMessages.InternalSentNAckMessage;
-import messages.internal.sentMessages.InternalSentTalkMessage;
+import messages.internal.sentMessages.InternalRequestSendAckMessage;
+import messages.internal.sentMessages.InternalRequestExitMessage;
+import messages.internal.sentMessages.InternalRequestSendFileMessage;
+import messages.internal.sentMessages.InternalRequestSendNAckMessage;
+import messages.internal.sentMessages.InternalRequestTalkMessage;
 
 public interface InternalSentMessageVisitor extends MessageVisitor {
-    void visit(InternalExitMessage message);
-    void visit(InternalSentTalkMessage message);
-    void visit(InternalSentFileMessage message);
-    void visit(InternalSentAckMessage message);
-    void visit(InternalSentNAckMessage message);
+    void visit(InternalRequestExitMessage message);
+    void visit(InternalRequestTalkMessage message);
+    void visit(InternalRequestSendFileMessage message);
+    void visit(InternalRequestSendAckMessage message);
+    void visit(InternalRequestSendNAckMessage message);
 }

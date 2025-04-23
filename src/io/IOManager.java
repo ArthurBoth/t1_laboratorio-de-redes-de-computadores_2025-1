@@ -13,11 +13,11 @@ import messages.ThreadMessage;
 import messages.foreign.ForeignMessage;
 import messages.foreign.ForeignTalkMessage;
 import messages.internal.InternalMessage;
-import messages.internal.sentMessages.InternalExitMessage;
-import messages.internal.sentMessages.InternalSentAckMessage;
-import messages.internal.sentMessages.InternalSentFileMessage;
-import messages.internal.sentMessages.InternalSentNAckMessage;
-import messages.internal.sentMessages.InternalSentTalkMessage;
+import messages.internal.sentMessages.InternalRequestSendAckMessage;
+import messages.internal.sentMessages.InternalRequestExitMessage;
+import messages.internal.sentMessages.InternalRequestSendFileMessage;
+import messages.internal.sentMessages.InternalRequestSendNAckMessage;
+import messages.internal.sentMessages.InternalRequestTalkMessage;
 import network.threads.NetworkNode;
 import utils.Constants;
 import utils.Exceptions.FileSearchException;
@@ -90,11 +90,11 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
         running = false;
     }
 
-    private void processSendTalk(InternalSentTalkMessage message) {
+    private void processSendTalk(InternalRequestTalkMessage message) {
         networkSenderQueue.offer(message);
     }
 
-    private void processSendFile(InternalSentFileMessage message) {
+    private void processSendFile(InternalRequestSendFileMessage message) {
         File file;
         String fileName;
         byte[] fullData;
@@ -115,7 +115,7 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
         }
     }
 
-    private void processSendAck(InternalSentAckMessage message) {
+    private void processSendAck(InternalRequestSendAckMessage message) {
         networkSenderQueue.offer(
             ThreadMessage.foreignMessage(getClass())
                 .ack(message.getAcknowledgedMessageId())
@@ -123,7 +123,7 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
             );
     }
 
-    private void processSendNAck(InternalSentNAckMessage message) {
+    private void processSendNAck(InternalRequestSendNAckMessage message) {
         networkSenderQueue.offer(
             ThreadMessage.foreignMessage(getClass())
                 .nAck(message.getNonAcknowledgedMessageId())
@@ -132,40 +132,40 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
             );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for IOManager
 
     @Override
-    public void visit(InternalExitMessage message) {
+    public void visit(InternalRequestExitMessage message) {
         message.accept(fileManager); // logs the message
         processExit();
     }
 
     @Override
-    public void visit(InternalSentTalkMessage message) {
+    public void visit(InternalRequestTalkMessage message) {
         message.accept(fileManager); // logs the message
         processSendTalk(message);
     }
 
     @Override
-    public void visit(InternalSentFileMessage message) {
+    public void visit(InternalRequestSendFileMessage message) {
         message.accept(fileManager); // logs the message
         processSendFile(message);
     }
 
     @Override
-    public void visit(InternalSentAckMessage message) {
+    public void visit(InternalRequestSendAckMessage message) {
         message.accept(fileManager); // logs the message
         processSendAck(message);
     }
 
     @Override
-    public void visit(InternalSentNAckMessage message) {
+    public void visit(InternalRequestSendNAckMessage message) {
         message.accept(fileManager); // logs the message
         processSendNAck(message);
     }
 
-    // *******************************************************
+    // ****************************************************************************************************
     // Logging messages
 
     @Override

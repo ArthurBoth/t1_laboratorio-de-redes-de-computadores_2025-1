@@ -4,8 +4,8 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import interfaces.ForeignLoggable;
 import interfaces.Loggable;
+import interfaces.PrettyLoggable;
 import utils.Constants;
 import utils.Constants.Configs.Paths;
 
@@ -56,21 +56,38 @@ public class FileLogger {
         FileIO.writeLine(filePath, line);
     }
 
+    // ****************************************************************************************************
+    // Logging messages
+
     public void logInternal(String message) {
         log(message, Paths.LOG_FOLDER_PATH + Paths.INTERNAL_LOGS_FILE);
     }
 
     public void logInternal(Loggable message) {
         log(message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.INTERNAL_LOGS_FILE);
+        log(message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE);
+        log(message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
     }
 
-    public void logForeign(ForeignLoggable message) {
-        logSpaced(message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE);
-        logSpaced(message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
+    public void logSent(PrettyLoggable message) {
+        log(message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.SENT_LOGS_FILE);
+        log("SENT: " + message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE);
+        log("SENT: " + message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
     }
 
-    public void logTalk(ForeignLoggable message) {
-        logForeign(message);
-        logSpaced(message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.TALK_LOGS_FILE);
+    public void logSentTalk(PrettyLoggable message) {
+        logSent(message);
+        log("SENT: " + message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.TALK_LOGS_FILE);
+    }
+
+    public void logReceived(PrettyLoggable message) {
+        log(message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.RECEIVED_LOGS_FILE);
+        logSpaced("RECEIVED: " + message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE);
+        logSpaced("RECEIVED: " + message.getMessage(), Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
+    }
+
+    public void logReceivedTalk(PrettyLoggable message) {
+        logReceived(message);
+        logSpaced("RECEIVED: " + message.getPrettyMessage(), Paths.LOG_FOLDER_PATH + Paths.TALK_LOGS_FILE);
     }
 }

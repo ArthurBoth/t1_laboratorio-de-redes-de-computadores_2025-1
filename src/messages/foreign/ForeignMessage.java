@@ -2,7 +2,7 @@ package messages.foreign;
 
 import java.net.InetAddress;
 
-import interfaces.ForeignLoggable;
+import interfaces.PrettyLoggable;
 import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.ForeignMessageVisitor;
 import interfaces.visitors.LoggerVisitor;
@@ -12,11 +12,11 @@ import messages.foreign.ForeignChunkMessage.ByteArraySetter;
 import messages.foreign.ForeignFileMessage.LongSetter;
 import messages.foreign.ForeignNAckMessage.StringSetter;
 
-public abstract class ForeignMessage extends ThreadMessage implements ForeignLoggable {
-    // **************************************************************************************************************
+public abstract class ForeignMessage extends ThreadMessage implements PrettyLoggable {
+    // ****************************************************************************************************
     // The ForeignMessage class is the base class for all external messages in the system.
     //    It should be used to create messages that will be sent over the network.
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     private static int messageIdCounter = 0;
 
     protected InetAddress destinationIp;
@@ -25,7 +25,7 @@ public abstract class ForeignMessage extends ThreadMessage implements ForeignLog
         return destinationIp;
     }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignMessage
     
     public abstract void accept(ForeignMessageVisitor visitor);
@@ -41,7 +41,7 @@ public abstract class ForeignMessage extends ThreadMessage implements ForeignLog
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignMessage
 
     public interface MessageSeleciton {
@@ -102,7 +102,7 @@ public abstract class ForeignMessage extends ThreadMessage implements ForeignLog
         return new Builder(clazz);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Abstract Builder pattern for ForeignMessage subclasses
 
     public interface IpSetter<T extends ForeignMessage> {

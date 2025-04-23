@@ -5,14 +5,14 @@ import java.net.UnknownHostException;
 
 import interfaces.visitors.InternalSentMessageVisitor;
 import messages.internal.InternalMessage;
-import messages.internal.sentMessages.InternalSentNAckMessage.StringSetter;
+import messages.internal.sentMessages.InternalRequestSendNAckMessage.StringSetter;
 
-public abstract class InternalSentMessage extends InternalMessage {
-    // **************************************************************************************************************
+public abstract class InternalRequestMessage extends InternalMessage {
+    // ****************************************************************************************************
     // The InternalSentMessage class is the base class for messages that will, eventually, be sent over the 
     // network.
     //    It should be used to create messages that won't be sent over the network.
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     
     protected InetAddress destinationIp;
 
@@ -20,20 +20,20 @@ public abstract class InternalSentMessage extends InternalMessage {
         return destinationIp;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalSentMessage
 
     public abstract void accept(InternalSentMessageVisitor visitor); 
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalSentMessage
 
     public interface MessageSelection {
-        InternalExitMessage exit();
-        IpSetter<InternalSentTalkMessage> talk(String content);
-        IpSetter<InternalSentFileMessage> file(String fileName);
-        IpSetter<InternalSentAckMessage> ack(int messageId);
-        InternalSentNAckMessage.StringSetter nAck(int messageId);
+        InternalRequestExitMessage exit();
+        IpSetter<InternalRequestTalkMessage> talk(String content);
+        IpSetter<InternalRequestSendFileMessage> file(String fileName);
+        IpSetter<InternalRequestSendAckMessage> ack(int messageId);
+        InternalRequestSendNAckMessage.StringSetter nAck(int messageId);
     }
 
     private static final class Builder implements MessageSelection {
@@ -44,28 +44,28 @@ public abstract class InternalSentMessage extends InternalMessage {
         }
 
         @Override
-        public InternalExitMessage exit() {
-            return InternalExitMessage.build(clazz);
+        public InternalRequestExitMessage exit() {
+            return InternalRequestExitMessage.build(clazz);
         }
 
         @Override
-        public IpSetter<InternalSentTalkMessage> talk(String content) {
-            return InternalSentTalkMessage.create(clazz, content);
+        public IpSetter<InternalRequestTalkMessage> talk(String content) {
+            return InternalRequestTalkMessage.create(clazz, content);
         }
 
         @Override
-        public IpSetter<InternalSentFileMessage> file(String fileName) {
-            return InternalSentFileMessage.create(clazz, fileName);
+        public IpSetter<InternalRequestSendFileMessage> file(String fileName) {
+            return InternalRequestSendFileMessage.create(clazz, fileName);
         }
 
         @Override
-        public IpSetter<InternalSentAckMessage> ack(int messageId) {
-            return InternalSentAckMessage.create(clazz, messageId);
+        public IpSetter<InternalRequestSendAckMessage> ack(int messageId) {
+            return InternalRequestSendAckMessage.create(clazz, messageId);
         }
 
         @Override
         public StringSetter nAck(int messageId) {
-            return InternalSentNAckMessage.create(clazz, messageId);
+            return InternalRequestSendNAckMessage.create(clazz, messageId);
         }
     }
 
@@ -73,15 +73,15 @@ public abstract class InternalSentMessage extends InternalMessage {
         return new Builder(clazz);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Abstract Builder pattern for InternalSentMessage subclasses
 
-    public interface IpSetter<T extends InternalSentMessage> {
+    public interface IpSetter<T extends InternalRequestMessage> {
         T to(String destinationIp) throws UnknownHostException;
         T to(InetAddress destinationIp);
     }
  
-    protected static abstract class IpBuilder<T extends InternalSentMessage> implements IpSetter<T> {
+    protected static abstract class IpBuilder<T extends InternalRequestMessage> implements IpSetter<T> {
         protected InetAddress destinationIp;
 
         @Override

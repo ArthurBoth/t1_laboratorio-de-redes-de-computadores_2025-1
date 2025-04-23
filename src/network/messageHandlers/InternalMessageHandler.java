@@ -1,42 +1,40 @@
 package network.messageHandlers;
 
+import java.util.concurrent.BlockingQueue;
+
 import interfaces.visitors.InternalMessageVisitor;
-import messages.internal.receivedMessages.InternalReceivedAckMessage;
-import messages.internal.receivedMessages.InternalReceivedChunkMessage;
-import messages.internal.receivedMessages.InternalReceivedEndMessage;
-import messages.internal.receivedMessages.InternalReceivedFileMessage;
-import messages.internal.receivedMessages.InternalReceivedHeartbeatMessage;
-import messages.internal.receivedMessages.InternalReceivedNAckMessage;
-import messages.internal.receivedMessages.InternalReceivedTalkMessage;
-import messages.internal.receivedMessages.InternalReceivedUnsupportedMessage;
-import messages.internal.sentMessages.InternalExitMessage;
-import messages.internal.sentMessages.InternalSentAckMessage;
-import messages.internal.sentMessages.InternalSentFileMessage;
-import messages.internal.sentMessages.InternalSentNAckMessage;
-import messages.internal.sentMessages.InternalSentTalkMessage;
+import messages.ThreadMessage;
+import messages.internal.receivedMessages.*;
+import messages.internal.sentMessages.*;
+import utils.Exceptions.EndExecutionException;
 
 public class InternalMessageHandler implements InternalMessageVisitor {
+    private BlockingQueue<ThreadMessage> ioSenderQueue;
+
+    public InternalMessageHandler(BlockingQueue<ThreadMessage> ioSenderQueue) {
+        this.ioSenderQueue = ioSenderQueue;
+    }
 
     @Override
-    public void visit(InternalSentTalkMessage message) {
+    public void visit(InternalRequestTalkMessage message) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
 
     @Override
-    public void visit(InternalSentFileMessage message) {
+    public void visit(InternalRequestSendFileMessage message) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
 
     @Override
-    public void visit(InternalSentAckMessage message) {
+    public void visit(InternalRequestSendAckMessage message) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
 
     @Override
-    public void visit(InternalSentNAckMessage message) {
+    public void visit(InternalRequestSendNAckMessage message) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
@@ -66,9 +64,8 @@ public class InternalMessageHandler implements InternalMessageVisitor {
     }
 
     @Override
-    public void visit(InternalExitMessage message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    public void visit(InternalRequestExitMessage message) {
+        throw new EndExecutionException();
     }
 
     @Override

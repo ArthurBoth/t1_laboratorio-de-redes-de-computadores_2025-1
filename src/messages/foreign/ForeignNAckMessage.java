@@ -18,7 +18,7 @@ public class ForeignNAckMessage extends ForeignMessage {
         return this.reason;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignNAckMessage
 
     @Override
@@ -31,7 +31,7 @@ public class ForeignNAckMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -52,7 +52,7 @@ public class ForeignNAckMessage extends ForeignMessage {
         );
     }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignNAckMessage
 
     public static StringSetter create(Class<?> clazz, int nonAckkedMessageId) {

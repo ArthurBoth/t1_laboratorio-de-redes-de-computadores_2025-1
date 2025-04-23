@@ -20,7 +20,7 @@ public class ForeignTalkMessage extends ForeignMessage {
         return this.messageContent;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignTalkMessage
 
     @Override
@@ -43,7 +43,7 @@ public class ForeignTalkMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -64,7 +64,7 @@ public class ForeignTalkMessage extends ForeignMessage {
         );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignTalkMessage
 
     public static IpSetter<ForeignTalkMessage> create(Class<?> clazz, int messageId, String content) {

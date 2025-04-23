@@ -6,15 +6,15 @@ import interfaces.visitors.MessageVisitor;
 import messages.ThreadMessage;
 import messages.internal.receivedMessages.InternalReceivedIdMessage;
 import messages.internal.receivedMessages.InternalReceivedMessage;
-import messages.internal.sentMessages.InternalSentMessage;
+import messages.internal.sentMessages.InternalRequestMessage;
 
 public abstract class InternalMessage extends ThreadMessage {
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // The InternalMessage class is the base class for all internal messages in the system.
     //    It should be used to create messages that won't be sent over the network.
-    // **************************************************************************************************************
+    // ****************************************************************************************************
 
-    // ***************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalMessage
 
     public abstract void accept(InternalMessageVisitor visitor);
@@ -29,12 +29,12 @@ public abstract class InternalMessage extends ThreadMessage {
         visitor.visit(this);
     }
 
-    // ***************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalMessage
 
     public interface MessageSelection {
         // sent messages
-        InternalSentMessage.MessageSelection sendMessage();
+        InternalRequestMessage.MessageSelection sendMessage();
 
         // received messages
         InternalReceivedMessage.MessageSelection receivedMessage();
@@ -49,8 +49,8 @@ public abstract class InternalMessage extends ThreadMessage {
         }
 
         @Override
-        public InternalSentMessage.MessageSelection sendMessage() {
-            return InternalSentMessage.create(clazz);
+        public InternalRequestMessage.MessageSelection sendMessage() {
+            return InternalRequestMessage.create(clazz);
         }
 
         @Override

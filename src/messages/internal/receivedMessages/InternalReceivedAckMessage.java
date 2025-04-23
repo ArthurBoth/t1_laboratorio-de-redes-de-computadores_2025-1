@@ -1,5 +1,6 @@
 package messages.internal.receivedMessages;
 
+import static utils.Constants.Strings.ACK_FORMAT;
 import static utils.Constants.Strings.ACK_LOG_FORMAT;
 
 import interfaces.visitors.InternalMessageVisitor;
@@ -11,7 +12,7 @@ public class InternalReceivedAckMessage extends InternalReceivedMessage {
         return messageId;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedAckMessage
 
     @Override
@@ -19,19 +20,26 @@ public class InternalReceivedAckMessage extends InternalReceivedMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return ACK_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            sourceIp.getHostAddress(), 
+        return ACK_FORMAT.formatted(
             messageId
         );
     }
 
-    // **************************************************************************************************************
+    @Override
+    public String getPrettyMessage() {
+        return ACK_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            sourceIp.getHostAddress(),
+            messageId
+        );
+    }
+
+    // ****************************************************************************************************
     // Builder pattern for InternalReceivedAckMessage
 
     public static IpSetter<InternalReceivedAckMessage> ack(Class<?> clazz, int messageId) {

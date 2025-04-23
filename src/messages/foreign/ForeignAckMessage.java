@@ -13,7 +13,7 @@ public class ForeignAckMessage extends ForeignMessage {
         return ACKKED_MESSAGE_ID;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignAckMessage
 
     @Override
@@ -26,7 +26,7 @@ public class ForeignAckMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -45,7 +45,7 @@ public class ForeignAckMessage extends ForeignMessage {
             );
     }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignAckMessage
 
     public static IpSetter<ForeignAckMessage> create(Class<?> clazz, int ackkedMessageId) {

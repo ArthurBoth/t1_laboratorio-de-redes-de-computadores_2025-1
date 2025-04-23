@@ -3,6 +3,7 @@ package messages.internal.receivedMessages;
 import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.InternalMessageVisitor;
 
+import static utils.Constants.Strings.FILE_FORMAT;
 import static utils.Constants.Strings.FILE_LOG_FORMAT;
 
 public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
@@ -17,7 +18,7 @@ public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
         return fileSize;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedFileMessage
 
     @Override
@@ -30,13 +31,22 @@ public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
+        return FILE_FORMAT.formatted(
+            messageId,
+            fileName,
+            fileSize
+        );
+    }
+
+    @Override
+    public String getPrettyMessage() {
         return FILE_LOG_FORMAT.formatted(
-            clazz.getSimpleName(), 
+            clazz.getSimpleName(),
             sourceIp.getHostAddress(), 
             messageId, 
             fileName, 
@@ -44,7 +54,7 @@ public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
         );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalReceivedFileMessage
 
     public static LongSetter create(Class<?> clazz, int messageId, String fileName) {

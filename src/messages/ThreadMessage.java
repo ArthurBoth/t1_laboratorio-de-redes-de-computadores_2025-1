@@ -8,12 +8,12 @@ import messages.internal.InternalMessage;
 public abstract class ThreadMessage implements Loggable {
     protected Class<?> clazz;
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ThreadMessage
 
     public abstract void accept(MessageVisitor visitor);
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Factory pattern for ThreadMessage
 
     /**

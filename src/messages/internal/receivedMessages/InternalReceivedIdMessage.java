@@ -9,7 +9,7 @@ public abstract class InternalReceivedIdMessage extends InternalReceivedMessage 
         return messageId;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalReceivedIdMessage
 
     public interface MessageSelection {

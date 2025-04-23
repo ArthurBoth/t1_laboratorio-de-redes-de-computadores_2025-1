@@ -1,15 +1,19 @@
 package network.messageHandlers;
 
+import java.util.concurrent.BlockingQueue;
+
 import interfaces.visitors.ForeignMessageVisitor;
-import messages.foreign.ForeignAckMessage;
-import messages.foreign.ForeignChunkMessage;
-import messages.foreign.ForeignEndMessage;
-import messages.foreign.ForeignFileMessage;
-import messages.foreign.ForeignHeartbeatMessage;
-import messages.foreign.ForeignNAckMessage;
-import messages.foreign.ForeignTalkMessage;
+import messages.ThreadMessage;
+import messages.foreign.*;
 
 public class ForeignMessageHandler implements ForeignMessageVisitor {
+    private BlockingQueue<ForeignMessage> udpSenderQueue;
+    private BlockingQueue<ThreadMessage> ioSenderQueue;
+
+    public ForeignMessageHandler(BlockingQueue<ForeignMessage> udpSenderQueue, BlockingQueue<ThreadMessage> ioSenderQueue) {
+        this.udpSenderQueue = udpSenderQueue;
+        this.ioSenderQueue  = ioSenderQueue;
+    }
 
     @Override
     public void visit(ForeignHeartbeatMessage message) {

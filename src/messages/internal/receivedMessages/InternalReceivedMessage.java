@@ -3,27 +3,28 @@ package messages.internal.receivedMessages;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import interfaces.PrettyLoggable;
 import messages.internal.InternalMessage;
 
-public abstract class InternalReceivedMessage extends InternalMessage {
-    // **************************************************************************************************************
+public abstract class InternalReceivedMessage extends InternalMessage implements PrettyLoggable {
+    // ****************************************************************************************************
     // The InternalReceivedMessage class is the base class for all messages received from the network.
     //    It should be used to map the messages received from the network to the internal messages of the system.
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     protected InetAddress sourceIp;
 
     public InetAddress getSourceIp() {
         return sourceIp;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Factory method for InternalReceivedIdMessage subclasses
 
     public static InternalReceivedIdMessage.MessageSelection create(Class<?> clazz, int messageId) {
         return InternalReceivedIdMessage.createWithId(clazz, messageId);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalReceivedMessage
 
     public interface MessageSelection {
@@ -65,7 +66,7 @@ public abstract class InternalReceivedMessage extends InternalMessage {
         return new Builder(clazz);
     }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Abstract Builder pattern for InternalReceivedMessage subclasses
 
 

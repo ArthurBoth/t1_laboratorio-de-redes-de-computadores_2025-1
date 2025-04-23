@@ -2,16 +2,17 @@ package messages.internal.receivedMessages;
 
 import interfaces.visitors.InternalMessageVisitor;
 
+import static utils.Constants.Strings.TALK_FORMAT;
 import static utils.Constants.Strings.TALK_LOG_FORMAT;
 
 public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
-    private String content;
+    private String messageContent;
 
     public String getContent() {
-        return content;
+        return messageContent;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedTalkMessage
 
     @Override
@@ -19,35 +20,43 @@ public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return TALK_LOG_FORMAT.formatted(
-            clazz.getSimpleName(), 
-            sourceIp.getHostAddress(), 
-            messageId, 
-            content
+        return TALK_FORMAT.formatted(
+            messageId,
+            messageContent
         );
     }
 
-    // **************************************************************************************************************
+    @Override
+    public String getPrettyMessage() {
+        return TALK_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            sourceIp.getHostAddress(),
+            messageId,
+            messageContent
+        );
+    }
+
+    // ****************************************************************************************************
     // Factory pattern for InternalReceivedTalkMessage
 
-    public static IpSetter<InternalReceivedTalkMessage> create(Class<?> clazz, int messageId, String content) {
-        return new Builder(clazz, messageId, content);
+    public static IpSetter<InternalReceivedTalkMessage> create(Class<?> clazz, int messageId, String messageContent) {
+        return new Builder(clazz, messageId, messageContent);
     }
 
     private static class Builder extends IpBuilder<InternalReceivedTalkMessage> {
         private Class<?> clazz;
-        private String content;
+        private String messageContent;
         private int messageId;
 
-        private Builder(Class<?> clazz, int messageId, String content) {
-            this.clazz     = clazz;
-            this.messageId = messageId;
-            this.content   = content;
+        private Builder(Class<?> clazz, int messageId, String messageContent) {
+            this.clazz          = clazz;
+            this.messageId      = messageId;
+            this.messageContent = messageContent;
         }
 
         @Override
@@ -57,9 +66,9 @@ public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
     }
 
     private InternalReceivedTalkMessage(Builder builder) {
-        this.clazz     = builder.clazz;
-        this.messageId = builder.messageId;
-        this.sourceIp  = builder.sourceIp;
-        this.content   = builder.content;
+        this.clazz          = builder.clazz;
+        this.messageId      = builder.messageId;
+        this.sourceIp       = builder.sourceIp;
+        this.messageContent = builder.messageContent;
     }
 }

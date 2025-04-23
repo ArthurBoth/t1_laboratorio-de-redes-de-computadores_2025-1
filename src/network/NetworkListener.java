@@ -3,14 +3,17 @@ package network;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.consoleIO.ConsoleLogger;
+import messages.ThreadMessage;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 import network.messageHandlers.MessageHandler;
 import network.threads.NetworkNode;
+import utils.Exceptions.EndExecutionException;
 
 public class NetworkListener {
-    BlockingQueue<InternalMessage> ioReceiverQueue;
-    BlockingQueue<InternalMessage> ioSenderQueue;
+    BlockingQueue<ThreadMessage> ioReceiverQueue;
+    BlockingQueue<ThreadMessage> ioSenderQueue;
     BlockingQueue<InternalMessage> udpReceiverQueue;
     BlockingQueue<ForeignMessage> udpSenderQueue;
 
@@ -22,25 +25,40 @@ public class NetworkListener {
     }
 
     private void setup() {
-        // TODO
-        /*
-         * Start Every thread 
-         * - NetworkSender
-         * - NetworkReceiver
-         * - IO manager
-         *      (Io manager will start the console on another thread)
-         */
-        throw new UnsupportedOperationException("Not implemented yet");
+        handler = new MessageHandler(udpSenderQueue, ioSenderQueue);
     }
 
-    public void start() {
+    public void startListening() {
+        ThreadMessage message;
         setup();
-        // TODO
-        /*
-         * Start listening to both the network and the console
-         * Use visitor pattern to Ack or Nack foreign messages
-         * also process console messages
-         */
-        throw new UnsupportedOperationException("Not implemented yet");
+
+        try {
+            while (true) {
+                message = ioReceiverQueue.poll();
+                if (message != null) message.accept(handler);
+                message = udpReceiverQueue.poll();
+                if (message != null) message.accept(handler);
+            }
+        } catch (EndExecutionException e) {
+            return;
+        } catch (Exception e) {
+            ConsoleLogger.logError(e);
+        }
+    }
+
+    public void setIoReceiverQueue(BlockingQueue<ThreadMessage> ioReceiverQueue) {
+        this.ioReceiverQueue = ioReceiverQueue;
+    }
+
+    public void setIoSenderQueue(BlockingQueue<ThreadMessage> ioSenderQueue) {
+        this.ioSenderQueue = ioSenderQueue;
+    }
+
+    public void setUdpReceiverQueue(BlockingQueue<InternalMessage> udpReceiverQueue) {
+        this.udpReceiverQueue = udpReceiverQueue;
+    }
+
+    public void setUdpSenderQueue(BlockingQueue<ForeignMessage> udpSenderQueue) {
+        this.udpSenderQueue = udpSenderQueue;
     }
 }

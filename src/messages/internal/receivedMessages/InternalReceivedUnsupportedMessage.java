@@ -1,5 +1,6 @@
 package messages.internal.receivedMessages;
 
+import static utils.Constants.Strings.UNSUPPORTED_FORMAT;
 import static utils.Constants.Strings.UNSUPPORTED_LOG_FORMAT;
 
 import interfaces.visitors.InternalMessageVisitor;
@@ -7,7 +8,7 @@ import interfaces.visitors.InternalMessageVisitor;
 public class InternalReceivedUnsupportedMessage extends InternalReceivedMessage {
     private String content;
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedUnsupportedMessage
 
     @Override
@@ -15,11 +16,20 @@ public class InternalReceivedUnsupportedMessage extends InternalReceivedMessage 
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
+        return UNSUPPORTED_FORMAT.formatted(
+            clazz.getSimpleName(),
+            sourceIp.getHostAddress(),
+            content
+        );
+    }
+
+    @Override
+    public String getPrettyMessage() {
         return UNSUPPORTED_LOG_FORMAT.formatted(
             clazz.getSimpleName(),
             sourceIp.getHostAddress(), 
@@ -27,7 +37,7 @@ public class InternalReceivedUnsupportedMessage extends InternalReceivedMessage 
         );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Factory pattern for InternalReceivedUnsupportedMessage
 
     public static IpSetter<InternalReceivedUnsupportedMessage> create(Class<?> clazz, String content) {

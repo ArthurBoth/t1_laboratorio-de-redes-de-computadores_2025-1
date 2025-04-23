@@ -1,5 +1,5 @@
 package interfaces;
 
-public interface ForeignLoggable extends Loggable {
+public interface PrettyLoggable extends Loggable{
     String getPrettyMessage();
 }

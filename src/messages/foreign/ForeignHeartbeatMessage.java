@@ -8,7 +8,7 @@ import static utils.Constants.Strings.HEARTBEAT_MESSAGE;
 
 public class ForeignHeartbeatMessage extends ForeignMessage {
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignHeartbeatMessage
 
     @Override
@@ -21,7 +21,7 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -37,7 +37,7 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
         );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignHeartbeatMessage
 
     public static IpSetter<ForeignHeartbeatMessage> create(Class<?> clazz) {

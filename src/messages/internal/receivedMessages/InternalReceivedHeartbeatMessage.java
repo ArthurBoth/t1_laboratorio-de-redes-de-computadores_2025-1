@@ -6,7 +6,7 @@ import static utils.Constants.Strings.HEARTBEAT_LOG_FORMAT;
 
 public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedHeartbeatMessage
 
     @Override
@@ -14,7 +14,7 @@ public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -25,7 +25,15 @@ public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
         );
     }
 
-    // **************************************************************************************************************
+    @Override
+    public String getPrettyMessage() {
+        return HEARTBEAT_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            sourceIp.getHostAddress()
+        );
+    }
+
+    // ****************************************************************************************************
     // Factory pattern for InternalReceivedHeartbeatMessage
 
     public static IpSetter<InternalReceivedHeartbeatMessage> createHeartbeat(Class<?> clazz) {

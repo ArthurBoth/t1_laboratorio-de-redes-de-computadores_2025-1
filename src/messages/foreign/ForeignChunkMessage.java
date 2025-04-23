@@ -9,7 +9,7 @@ import static utils.Constants.Strings.CHUNK_LOG_FORMAT;
 
 public class ForeignChunkMessage extends ForeignMessage {
     private final int MESSAGE_ID;
-    private int chunkNumber;
+    private int sequenceNumber;
     private byte[] chunkData;
 
     public int getMessageId() {
@@ -17,14 +17,14 @@ public class ForeignChunkMessage extends ForeignMessage {
     }
 
     public int getSequenceNumber() {
-        return chunkNumber;
+        return sequenceNumber;
     }
 
     public byte[] getData() {
         return chunkData;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignChunkMessage
 
     @Override
@@ -37,16 +37,16 @@ public class ForeignChunkMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
         return CHUNK_FORMAT.formatted(
             MESSAGE_ID,
-            chunkNumber,
+            sequenceNumber,
             FileUtils.byteArrayToString(chunkData)
-            );
+        );
     }
 
     @Override
@@ -55,17 +55,17 @@ public class ForeignChunkMessage extends ForeignMessage {
             clazz.getSimpleName(),
             destinationIp.getHostAddress(),
             MESSAGE_ID,
-            chunkNumber,
+            sequenceNumber,
             FileUtils.byteArrayToString(chunkData),
             chunkData.length
-            );
+        );
     }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignChunkMessage
 
-    public static ByteArraySetter create(Class<?> clazz, int messageId, int chunkNumber) {
-        return new Builder(clazz, messageId, chunkNumber);
+    public static ByteArraySetter create(Class<?> clazz, int messageId, int sequenceNumber) {
+        return new Builder(clazz, messageId, sequenceNumber);
     }
 
     public interface ByteArraySetter {
@@ -75,13 +75,13 @@ public class ForeignChunkMessage extends ForeignMessage {
     private static class Builder extends IpBuilder<ForeignChunkMessage> implements ByteArraySetter {
         private final int MESSAGE_ID;
         private Class<?> clazz;
-        private int chunkNumber;
+        private int sequenceNumber;
         private byte[] chunkData;
 
-        private Builder(Class<?> clazz, int messageId, int chunkNumber) {
-            this.MESSAGE_ID  = messageId;
-            this.clazz       = clazz;
-            this.chunkNumber = chunkNumber;
+        private Builder(Class<?> clazz, int messageId, int sequenceNumber) {
+            this.MESSAGE_ID     = messageId;
+            this.clazz          = clazz;
+            this.sequenceNumber = sequenceNumber;
         }
 
         @Override
@@ -97,9 +97,9 @@ public class ForeignChunkMessage extends ForeignMessage {
     }
 
     private ForeignChunkMessage(Builder builder) {
-        this.MESSAGE_ID  = builder.MESSAGE_ID;
-        this.clazz       = builder.clazz;
-        this.chunkNumber = builder.chunkNumber;
-        this.chunkData   = builder.chunkData;
+        this.MESSAGE_ID     = builder.MESSAGE_ID;
+        this.clazz          = builder.clazz;
+        this.sequenceNumber = builder.sequenceNumber;
+        this.chunkData      = builder.chunkData;
     }
 }

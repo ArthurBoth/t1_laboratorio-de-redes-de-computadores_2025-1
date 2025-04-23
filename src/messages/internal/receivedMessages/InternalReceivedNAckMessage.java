@@ -1,5 +1,6 @@
 package messages.internal.receivedMessages;
 
+import static utils.Constants.Strings.NACK_FORMAT;
 import static utils.Constants.Strings.NACK_LOG_FORMAT;
 
 import interfaces.visitors.InternalMessageVisitor;
@@ -16,7 +17,7 @@ public class InternalReceivedNAckMessage extends InternalReceivedMessage {
         return reason;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalReceivedNAckMessage
 
     @Override
@@ -24,20 +25,28 @@ public class InternalReceivedNAckMessage extends InternalReceivedMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
     public String getMessage() {
-        return NACK_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            sourceIp.getHostAddress(), 
+        return NACK_FORMAT.formatted(
             messageId,
             reason
         );
     }
 
-    // **************************************************************************************************************
+    @Override
+    public String getPrettyMessage() {
+        return NACK_LOG_FORMAT.formatted(
+            clazz.getSimpleName(),
+            sourceIp.getHostAddress(),
+            messageId,
+            reason
+        );
+    }
+
+    // ****************************************************************************************************
     // Builder pattern for InternalReceivedNAckMessage
 
     public static StringSetter nAck(Class<?> clazz, int messageId) {

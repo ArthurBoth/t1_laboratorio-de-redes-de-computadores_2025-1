@@ -23,7 +23,7 @@ public class ForeignFileMessage extends ForeignMessage {
         return this.fileSize;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignFileMessage
 
     @Override
@@ -36,7 +36,7 @@ public class ForeignFileMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -45,7 +45,7 @@ public class ForeignFileMessage extends ForeignMessage {
             MESSAGE_ID,
             fileName,
             fileSize
-            );
+        );
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ForeignFileMessage extends ForeignMessage {
         );
     }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignFileMessage
 
     public static LongSetter create(Class<?> clazz, int messageId, String fileName) {

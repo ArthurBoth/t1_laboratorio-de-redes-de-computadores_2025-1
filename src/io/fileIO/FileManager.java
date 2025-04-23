@@ -19,6 +19,8 @@ import messages.internal.InternalMessage;
 import messages.internal.receivedMessages.InternalReceivedChunkMessage;
 import messages.internal.receivedMessages.InternalReceivedEndMessage;
 import messages.internal.receivedMessages.InternalReceivedFileMessage;
+import messages.internal.receivedMessages.InternalReceivedMessage;
+import messages.internal.receivedMessages.InternalReceivedTalkMessage;
 import utils.Constants;
 import utils.FileUtils;
 import utils.Exceptions.FileSearchException;
@@ -65,22 +67,30 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         }
     }
 
+    private void log(InternalReceivedMessage message) {
+        logger.logReceived(message);
+    }
+
+    private void log(InternalReceivedTalkMessage message) {
+        logger.logReceivedTalk(message);
+    }
+
     private void log(ForeignMessage message) {
-        logger.logForeign(message);
+        logger.logSent(message);
+    }
+
+    private void log(ForeignTalkMessage message) {
+        logger.logSentTalk(message);
     }
 
     private void log(InternalMessage message) {
         logger.logInternal(message);
     }
-
-    private void log(ForeignTalkMessage message) {
-        logger.logTalk(message);
-    }
     
-    // ****************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalMessage
 
-    // ********************************************************
+    // **************************************************
     // File management
 
     @Override
@@ -256,8 +266,23 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         return fileData;
     }
 
-    // ********************************************************
+    // **************************************************
     // log only
+
+    @Override
+    public void visit(InternalMessage message) {
+        log(message);
+    }
+
+    @Override
+    public void visit(InternalReceivedMessage message) {
+        log(message);
+    }
+
+    @Override
+    public void visit(InternalReceivedTalkMessage message) {
+        log(message);
+    }
 
     @Override
     public void visit(ForeignMessage message) {
@@ -266,11 +291,6 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
 
     @Override
     public void visit(ForeignTalkMessage message) {
-        log(message);
-    }
-
-    @Override
-    public void visit(InternalMessage message) {
         log(message);
     }
 }

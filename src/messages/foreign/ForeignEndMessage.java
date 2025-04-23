@@ -17,7 +17,8 @@ public class ForeignEndMessage extends ForeignMessage {
     public String getFileHash() {
         return this.fileHash;
     }
-    // **************************************************************************************************************
+
+    // ****************************************************************************************************
     // Visitor pattern for ForeignEndMessage
 
     @Override
@@ -30,7 +31,7 @@ public class ForeignEndMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -38,7 +39,7 @@ public class ForeignEndMessage extends ForeignMessage {
         return END_FORMAT.formatted(
             MESSAGE_ID,
             fileHash
-            );
+        );
     }
 
     @Override
@@ -48,10 +49,10 @@ public class ForeignEndMessage extends ForeignMessage {
             destinationIp.getHostAddress(),
             MESSAGE_ID,
             fileHash
-            );
+        );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignEndMessage
 
     public static IpSetter<ForeignEndMessage> create(Class<?> clazz, int messageId, String fileHash) {

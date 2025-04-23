@@ -6,7 +6,7 @@ import interfaces.visitors.InternalSentMessageVisitor;
 import static utils.Constants.Configs.MAX_CHUNK_SIZE;
 import static utils.Constants.Strings.FILE_SENDING_REQUEST_FORMAT;
 
-public class InternalSentFileMessage extends InternalSentMessage {
+public class InternalRequestSendFileMessage extends InternalRequestMessage {
     private String fileName;
     private String fileHash;
     private byte[] fileData;
@@ -44,7 +44,7 @@ public class InternalSentFileMessage extends InternalSentMessage {
         return fileName;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalSentFileMessage
 
     @Override
@@ -57,7 +57,7 @@ public class InternalSentFileMessage extends InternalSentMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -68,14 +68,14 @@ public class InternalSentFileMessage extends InternalSentMessage {
             );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalSentFileMessage
 
-    public static IpBuilder<InternalSentFileMessage> create(Class<?> clazz, String fileName) {
+    public static IpBuilder<InternalRequestSendFileMessage> create(Class<?> clazz, String fileName) {
         return new MandatoryBuilder(clazz, fileName);
     }
 
-    private static class MandatoryBuilder extends IpBuilder<InternalSentFileMessage> {
+    private static class MandatoryBuilder extends IpBuilder<InternalRequestSendFileMessage> {
         private Class<?> clazz;
         private String fileName;
 
@@ -85,18 +85,18 @@ public class InternalSentFileMessage extends InternalSentMessage {
         }
 
         @Override
-        protected InternalSentFileMessage self() {
-            return new InternalSentFileMessage(this);
+        protected InternalRequestSendFileMessage self() {
+            return new InternalRequestSendFileMessage(this);
         }
     }
 
-    private InternalSentFileMessage(MandatoryBuilder builder) {
+    private InternalRequestSendFileMessage(MandatoryBuilder builder) {
         this.clazz         = builder.clazz;
         this.destinationIp = builder.destinationIp;
         this.fileName      = builder.fileName;
     }
 
-    // *******************************************************
+    // ****************************************************************************************************
     // Builder Appenders
 
     // non-static method
@@ -105,29 +105,29 @@ public class InternalSentFileMessage extends InternalSentMessage {
     }
 
     public interface FileHashSetter {
-        InternalSentFileMessage fileHash(String fileHash);
+        InternalRequestSendFileMessage fileHash(String fileHash);
     }
 
     private static class OptionalBuilder implements FileHashSetter {
-        InternalSentFileMessage other;
+        InternalRequestSendFileMessage other;
         protected String fileHash;
         protected byte[] fileData;
         protected int chunkCount;
 
-        private OptionalBuilder(InternalSentFileMessage other, byte[] fileData) {
+        private OptionalBuilder(InternalRequestSendFileMessage other, byte[] fileData) {
             this.other      = other;
             this.fileData   = fileData;
             this.chunkCount = fileData.length / MAX_CHUNK_SIZE + (fileData.length % MAX_CHUNK_SIZE == 0 ? 0 : 1);
         }
 
         @Override
-        public InternalSentFileMessage fileHash(String fileHash) {
+        public InternalRequestSendFileMessage fileHash(String fileHash) {
             this.fileHash = fileHash;
-            return new InternalSentFileMessage(other, this);
+            return new InternalRequestSendFileMessage(other, this);
         }
     }
 
-    private InternalSentFileMessage(InternalSentFileMessage other, OptionalBuilder optionalBuilder) {
+    private InternalRequestSendFileMessage(InternalRequestSendFileMessage other, OptionalBuilder optionalBuilder) {
         this.clazz         = other.clazz;
         this.destinationIp = other.destinationIp;
         this.fileName      = other.fileName;

@@ -5,7 +5,7 @@ import interfaces.visitors.InternalSentMessageVisitor;
 
 import static utils.Constants.Strings.NACK_SENDING_REQUEST_FORMAT;
 
-public class InternalSentNAckMessage extends InternalSentMessage {
+public class InternalRequestSendNAckMessage extends InternalRequestMessage {
     private int nonAckkedId;
     private String reason;
 
@@ -17,7 +17,7 @@ public class InternalSentNAckMessage extends InternalSentMessage {
         return reason;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalSentNAckMessage
 
     @Override
@@ -30,7 +30,7 @@ public class InternalSentNAckMessage extends InternalSentMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -41,7 +41,7 @@ public class InternalSentNAckMessage extends InternalSentMessage {
             );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalSentNAckMessage
 
     public static StringSetter create(Class<?> clazz, int nonAckkedId) {
@@ -49,10 +49,10 @@ public class InternalSentNAckMessage extends InternalSentMessage {
     }
 
     public interface StringSetter {
-        IpSetter<InternalSentNAckMessage> because(String reason);
+        IpSetter<InternalRequestSendNAckMessage> because(String reason);
     }
 
-    private static class Builder extends IpBuilder<InternalSentNAckMessage> implements StringSetter {
+    private static class Builder extends IpBuilder<InternalRequestSendNAckMessage> implements StringSetter {
         private Class<?> clazz;
         private int nonAckkedId;
         private String reason;
@@ -63,18 +63,18 @@ public class InternalSentNAckMessage extends InternalSentMessage {
         }
 
         @Override
-        public IpSetter<InternalSentNAckMessage> because(String reason) {
+        public IpSetter<InternalRequestSendNAckMessage> because(String reason) {
             this.reason = reason;
             return this;
         }
 
         @Override
-        public InternalSentNAckMessage self() {
-            return new InternalSentNAckMessage(this);
+        public InternalRequestSendNAckMessage self() {
+            return new InternalRequestSendNAckMessage(this);
         }
     }
 
-    private InternalSentNAckMessage(Builder builder) {
+    private InternalRequestSendNAckMessage(Builder builder) {
         this.clazz         = builder.clazz;
         this.destinationIp = builder.destinationIp;
         this.nonAckkedId   = builder.nonAckkedId;

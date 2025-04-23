@@ -5,14 +5,14 @@ import interfaces.visitors.InternalSentMessageVisitor;
 
 import static utils.Constants.Strings.ACK_SENDING_REQUEST_FORMAT;
 
-public class InternalSentAckMessage extends InternalSentMessage {
+public class InternalRequestSendAckMessage extends InternalRequestMessage {
     private int ackkedId;
 
     public int getAcknowledgedMessageId() {
         return ackkedId;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for InternalSentAckMessage
 
     @Override
@@ -25,7 +25,7 @@ public class InternalSentAckMessage extends InternalSentMessage {
         visitor.visit(this);
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Loggable interface implementation
 
     @Override
@@ -36,14 +36,14 @@ public class InternalSentAckMessage extends InternalSentMessage {
             );
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for InternalSentAckMessage
 
-    public static IpSetter<InternalSentAckMessage> create(Class<?> clazz, int ackkedId) {
+    public static IpSetter<InternalRequestSendAckMessage> create(Class<?> clazz, int ackkedId) {
         return new Builder(clazz, ackkedId);
     }
 
-    private static class Builder extends IpBuilder<InternalSentAckMessage> {
+    private static class Builder extends IpBuilder<InternalRequestSendAckMessage> {
         private Class<?> clazz;
         private int ackkedId;
 
@@ -53,12 +53,12 @@ public class InternalSentAckMessage extends InternalSentMessage {
         }
 
         @Override
-        public InternalSentAckMessage self() {
-            return new InternalSentAckMessage(this);
+        public InternalRequestSendAckMessage self() {
+            return new InternalRequestSendAckMessage(this);
         }
     }
 
-    private InternalSentAckMessage(Builder builder) {
+    private InternalRequestSendAckMessage(Builder builder) {
         this.clazz         = builder.clazz;
         this.destinationIp = builder.destinationIp;
         this.ackkedId      = builder.ackkedId;
