@@ -1,12 +1,7 @@
 package messages.foreign;
 
 import interfaces.visitors.EncoderVisitor;
-import interfaces.visitors.ForeignMessageVisitor;
-import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.MessageVisitor;
-
-import static utils.Constants.Strings.TALK_FORMAT;
-import static utils.Constants.Strings.TALK_LOG_FORMAT;
 
 public class ForeignTalkMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -20,19 +15,6 @@ public class ForeignTalkMessage extends ForeignMessage {
         return this.messageContent;
     }
 
-    // **************************************************************************************************************
-    // Visitor pattern for ForeignTalkMessage
-
-    @Override
-    public void accept(ForeignMessageVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public void accept(LoggerVisitor visitor) {
-        visitor.visit(this);
-    }
-
     @Override
     public void accept(MessageVisitor visitor) {
         visitor.visit(this);
@@ -43,28 +25,7 @@ public class ForeignTalkMessage extends ForeignMessage {
         return visitor.encode(this);
     }
 
-    // **************************************************************************************************************
-    // Loggable interface implementation
-
-    @Override
-    public String getMessage() {
-        return TALK_FORMAT.formatted(
-            MESSAGE_ID,
-            messageContent
-            );
-    }
-
-    @Override
-    public String getPrettyMessage() {
-        return TALK_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            destinationIp.getHostAddress(),
-            MESSAGE_ID,
-            messageContent
-        );
-    }
-
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignTalkMessage
 
     public static IpSetter<ForeignTalkMessage> create(Class<?> clazz, int messageId, String content) {

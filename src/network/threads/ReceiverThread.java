@@ -7,8 +7,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.concurrent.BlockingQueue;
 
-import io.consoleIO.ConsoleLogger;
 import messages.internal.InternalMessage;
+import utils.ConsoleLogger;
 import utils.Constants;
 
 public class ReceiverThread extends NetworkThread {

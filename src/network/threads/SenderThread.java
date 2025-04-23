@@ -9,8 +9,8 @@ import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import io.consoleIO.ConsoleLogger;
 import messages.foreign.ForeignMessage;
+import utils.ConsoleLogger;
 import utils.Constants;
 
 public class SenderThread extends NetworkThread {
@@ -52,12 +52,6 @@ public class SenderThread extends NetworkThread {
             packet  = new DatagramPacket(data, data.length, address, port);
 
             socket.send(packet);
-
-            if (PRINT_LOGS) {
-                ConsoleLogger.logBlue("Sent message: %s to %s:%d".formatted(
-                    message.getMessage(), address.toString(), port
-                ));
-            }
         } catch (IOException e) {
             ConsoleLogger.logError("Failed to send message", e);   
         }

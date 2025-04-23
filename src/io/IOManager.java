@@ -6,25 +6,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import interfaces.visitors.InternalSentMessageVisitor;
-import io.consoleIO.TerminalManager;
-import io.fileIO.FileManager;
+import interfaces.visitors.internal.InternalRequestMessageVisitor;
+import io.console.TerminalManager;
+import io.files.FileManager;
 import messages.ThreadMessage;
-import messages.foreign.ForeignMessage;
-import messages.foreign.ForeignTalkMessage;
 import messages.internal.InternalMessage;
-import messages.internal.sentMessages.InternalExitMessage;
-import messages.internal.sentMessages.InternalSentAckMessage;
-import messages.internal.sentMessages.InternalSentFileMessage;
-import messages.internal.sentMessages.InternalSentNAckMessage;
-import messages.internal.sentMessages.InternalSentTalkMessage;
+import messages.internal.received.InternalReceivedMessage;
+import messages.internal.requested.InternalRequestExitMessage;
+import messages.internal.requested.InternalRequestSendAckMessage;
+import messages.internal.requested.InternalRequestSendFileMessage;
+import messages.internal.requested.InternalRequestSendNAckMessage;
+import messages.internal.requested.InternalRequestSendTalkMessage;
 import network.threads.NetworkNode;
 import utils.Constants;
 import utils.Exceptions.FileSearchException;
 
-public class IOManager implements Runnable, InternalSentMessageVisitor {
-    private BlockingQueue<ThreadMessage> networkSenderQueue;    
-    private BlockingQueue<ThreadMessage> networkReceiverQueue;  
+public class IoManager implements Runnable, InternalRequestMessageVisitor {
+    private BlockingQueue<InternalMessage> networkSenderQueue;
+    private BlockingQueue<InternalMessage> networkReceiverQueue;
 
     private BlockingQueue<InternalMessage> ioReceiverQueue;
     private ConcurrentHashMap<NetworkNode, Integer> activeNodes; // node -> seconds since last message
@@ -34,8 +33,8 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
     
     private volatile boolean running;
 
-    public IOManager(BlockingQueue<ThreadMessage> networkSenderQueue,
-                     BlockingQueue<ThreadMessage> networkReceiverQueue,
+    public IoManager(BlockingQueue<InternalMessage> networkSenderQueue,
+                     BlockingQueue<InternalMessage> networkReceiverQueue,
                      ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
         this.networkSenderQueue   = networkSenderQueue;
         this.networkReceiverQueue = networkReceiverQueue;
@@ -47,8 +46,8 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
 
     @Override
     public void run() {
-        ThreadMessage message;
-        InternalMessage internalMessage;
+        IoHandler handler = new IoHandler(this);
+        InternalMessage message;
         int listening; 
         
         listening = 2;
@@ -61,12 +60,12 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
                     (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
                     TimeUnit.MILLISECONDS
                     );
-                if (message != null) message.accept(this);
-                internalMessage = ioReceiverQueue.poll(
+                if (message != null) message.accept(handler);
+                message = ioReceiverQueue.poll(
                     (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
                     TimeUnit.MILLISECONDS
                     );
-                if (internalMessage != null) internalMessage.accept(this);
+                if (message != null) message.accept(handler);
             } catch (InterruptedException e) {
                 return;
             }
@@ -90,11 +89,7 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
         running = false;
     }
 
-    private void processSendTalk(InternalSentTalkMessage message) {
-        networkSenderQueue.offer(message);
-    }
-
-    private void processSendFile(InternalSentFileMessage message) {
+    private void processSendFile(InternalRequestSendFileMessage message) {
         File file;
         String fileName;
         byte[] fullData;
@@ -115,71 +110,41 @@ public class IOManager implements Runnable, InternalSentMessageVisitor {
         }
     }
 
-    private void processSendAck(InternalSentAckMessage message) {
-        networkSenderQueue.offer(
-            ThreadMessage.foreignMessage(getClass())
-                .ack(message.getAcknowledgedMessageId())
-                .to(message.getDestinationIp())
-            );
-    }
-
-    private void processSendNAck(InternalSentNAckMessage message) {
-        networkSenderQueue.offer(
-            ThreadMessage.foreignMessage(getClass())
-                .nAck(message.getNonAcknowledgedMessageId())
-                .because(message.getReason())
-                .to(message.getDestinationIp())
-            );
-    }
-
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for IOManager
 
     @Override
-    public void visit(InternalExitMessage message) {
+    public void visit(InternalRequestExitMessage message) {
         message.accept(fileManager); // logs the message
         processExit();
     }
 
     @Override
-    public void visit(InternalSentTalkMessage message) {
-        message.accept(fileManager); // logs the message
-        processSendTalk(message);
+    public void visit(InternalRequestSendTalkMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
     }
 
     @Override
-    public void visit(InternalSentFileMessage message) {
+    public void visit(InternalRequestSendFileMessage message) {
         message.accept(fileManager); // logs the message
         processSendFile(message);
     }
 
     @Override
-    public void visit(InternalSentAckMessage message) {
-        message.accept(fileManager); // logs the message
-        processSendAck(message);
+    public void visit(InternalRequestSendAckMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
     }
 
     @Override
-    public void visit(InternalSentNAckMessage message) {
-        message.accept(fileManager); // logs the message
-        processSendNAck(message);
+    public void visit(InternalRequestSendNAckMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
     }
 
-    // *******************************************************
-    // Logging messages
-
-    @Override
-    public void visit(ForeignMessage message) {
-        message.accept(fileManager);
-    }
-
-    // Can still visiting ForeignTalkMessage
-    public void visit(ForeignTalkMessage message) {
-        message.accept(fileManager);
-    }
-
-    @Override
-    public void visit(InternalMessage message) {
-        message.accept(fileManager);
+    public void visit(InternalReceivedMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
     }
 }

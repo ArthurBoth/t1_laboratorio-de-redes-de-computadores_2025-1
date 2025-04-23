@@ -1,5 +1,8 @@
 package network.threads;
 
+import static utils.Constants.Configs.IP_ADDRESS;
+import static utils.Constants.MessageHeaders.*;
+
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -7,24 +10,21 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import interfaces.visitors.EncoderVisitor;
-import io.consoleIO.ConsoleLogger;
 import messages.ThreadMessage;
 import messages.foreign.*;
 import messages.internal.InternalMessage;
-
-import static utils.Constants.Configs.IP_ADDRESS;
-import static utils.Constants.MessageHeaders.*;
+import utils.ConsoleLogger;
 
 public class MessageEncoder implements EncoderVisitor {
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Factory pattern for MessageEncoder
 
     public static MessageEncoder create() {
         return new MessageEncoder();
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern implementation for encofing
 
     @Override
@@ -153,7 +153,7 @@ public class MessageEncoder implements EncoderVisitor {
         return buffer.array();
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Message decoding
 
     public InternalMessage decodePacket(DatagramPacket packet) {

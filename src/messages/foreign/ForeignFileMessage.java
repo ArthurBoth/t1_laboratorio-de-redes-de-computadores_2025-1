@@ -1,10 +1,6 @@
 package messages.foreign;
 
 import interfaces.visitors.EncoderVisitor;
-import interfaces.visitors.ForeignMessageVisitor;
-
-import static utils.Constants.Strings.FILE_FORMAT;
-import static utils.Constants.Strings.FILE_LOG_FORMAT;
 
 public class ForeignFileMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -23,43 +19,15 @@ public class ForeignFileMessage extends ForeignMessage {
         return this.fileSize;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignFileMessage
-
-    @Override
-    public void accept(ForeignMessageVisitor visitor) {
-        visitor.visit(this);
-    }
 
     @Override
     public byte[] encode(EncoderVisitor visitor) {
         return visitor.encode(this);
     }
-
-    // **************************************************************************************************************
-    // Loggable interface implementation
-
-    @Override
-    public String getMessage() {
-        return FILE_FORMAT.formatted(
-            MESSAGE_ID,
-            fileName,
-            fileSize
-            );
-    }
-
-    @Override
-    public String getPrettyMessage() {
-        return FILE_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            destinationIp.getHostAddress(),
-            MESSAGE_ID,
-            fileName,
-            fileSize
-        );
-    }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignFileMessage
 
     public static LongSetter create(Class<?> clazz, int messageId, String fileName) {

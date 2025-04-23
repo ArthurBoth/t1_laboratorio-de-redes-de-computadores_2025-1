@@ -6,8 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import io.IOManager;
-import messages.ThreadMessage;
+import io.IoManager;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 import utils.Exceptions.ThreadNotStartedException;
@@ -40,9 +39,9 @@ public class ThreadManager {
         return queue;
     }
 
-    public BlockingQueue<ThreadMessage> createIO(BlockingQueue<ThreadMessage> sender) {
-        BlockingQueue<ThreadMessage> receiver = new LinkedBlockingDeque<ThreadMessage>();
-        IOManager                    thread   = new IOManager(receiver, sender, NODES);
+    public BlockingQueue<InternalMessage> createIO(BlockingQueue<InternalMessage> sender) {
+        BlockingQueue<InternalMessage> receiver = new LinkedBlockingDeque<InternalMessage>();
+        IoManager                      thread   = new IoManager(receiver, sender, NODES);
 
         threads.add(new Thread(() -> thread.run()));
         return receiver;
@@ -52,7 +51,7 @@ public class ThreadManager {
         threads.stream()
                .filter(x -> x == null)
                .findFirst()
-               .ifPresent(_ -> { throw new ThreadNotStartedException("Thread object not created"); });
+               .ifPresent(x -> { throw new ThreadNotStartedException("Thread object not created"); });
     
         threads.forEach(Thread::start);
     }

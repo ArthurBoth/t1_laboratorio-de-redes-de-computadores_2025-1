@@ -6,7 +6,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import messages.ThreadMessage;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 import network.threads.NetworkNode;
@@ -28,8 +27,8 @@ public class NetworkManager {
     }
 
     private void setup() throws SocketException {
-        BlockingQueue<ThreadMessage> ioSenderQueue;
-        BlockingQueue<ThreadMessage> ioReceiverQueue;
+        BlockingQueue<InternalMessage> ioSenderQueue;
+        BlockingQueue<InternalMessage> ioReceiverQueue;
         BlockingQueue<InternalMessage> udpReceiverQueue;
         BlockingQueue<ForeignMessage> udpSenderQueue;
 
@@ -40,7 +39,7 @@ public class NetworkManager {
 
         udpSenderQueue   = threadManager.createSender();
         udpReceiverQueue = threadManager.createReceiver();
-        ioSenderQueue    = new LinkedBlockingQueue<ThreadMessage>();
+        ioSenderQueue    = new LinkedBlockingQueue<InternalMessage>();
         ioReceiverQueue  = threadManager.createIO(ioSenderQueue);
 
         listener.setIoReceiverQueue(ioReceiverQueue);

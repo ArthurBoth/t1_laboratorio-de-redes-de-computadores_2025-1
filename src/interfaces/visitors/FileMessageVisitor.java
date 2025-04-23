@@ -1,8 +1,8 @@
 package interfaces.visitors;
 
-import messages.internal.receivedMessages.InternalReceivedChunkMessage;
-import messages.internal.receivedMessages.InternalReceivedEndMessage;
-import messages.internal.receivedMessages.InternalReceivedFileMessage;
+import messages.internal.received.InternalReceivedChunkMessage;
+import messages.internal.received.InternalReceivedEndMessage;
+import messages.internal.received.InternalReceivedFileMessage;
 
 public interface FileMessageVisitor {
     void visit(InternalReceivedFileMessage message);

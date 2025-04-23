@@ -1,10 +1,6 @@
 package messages.foreign;
 
 import interfaces.visitors.EncoderVisitor;
-import interfaces.visitors.ForeignMessageVisitor;
-
-import static utils.Constants.Strings.ACK_FORMAT;
-import static utils.Constants.Strings.ACK_LOG_FORMAT;
 
 public class ForeignAckMessage extends ForeignMessage {
     private final int ACKKED_MESSAGE_ID;
@@ -13,39 +9,15 @@ public class ForeignAckMessage extends ForeignMessage {
         return ACKKED_MESSAGE_ID;
     }
 
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Visitor pattern for ForeignAckMessage
-
-    @Override
-    public void accept(ForeignMessageVisitor visitor) {
-        visitor.visit(this);
-    }
 
     @Override
     public byte[] encode(EncoderVisitor visitor) {
         return visitor.encode(this);
     }
-
-    // **************************************************************************************************************
-    // Loggable interface implementation
-
-    @Override
-    public String getMessage() {
-        return ACK_FORMAT.formatted(
-            ACKKED_MESSAGE_ID
-            );
-    }
-
-    @Override
-    public String getPrettyMessage() {
-        return ACK_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            destinationIp.getHostAddress(),
-            ACKKED_MESSAGE_ID
-            );
-    }
     
-    // **************************************************************************************************************
+    // ****************************************************************************************************
     // Builder pattern for ForeignAckMessage
 
     public static IpSetter<ForeignAckMessage> create(Class<?> clazz, int ackkedMessageId) {

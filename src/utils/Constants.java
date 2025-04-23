@@ -29,9 +29,12 @@ public final class Constants {
             public static final String SEND_FOLDER_PATH    = "./.SEND/";
             public static final String RECEIVE_FOLDER_PATH = "./.RECEIVE/";
             public static final String LOG_FOLDER_PATH     = "./logs/";
+
             public static final String PRETTY_LOGS_FILE    = "pretty.log";
             public static final String ACTUAL_LOGS_FILE    = "regular.log";
             public static final String INTERNAL_LOGS_FILE  = "internal.log";
+            public static final String RECEIVED_LOGS_FILE  = "received.log";
+            public static final String SENT_LOGS_FILE      = "sent.log";
             public static final String TALK_LOGS_FILE      = "talk.log";
             
             private Paths() {
@@ -51,13 +54,18 @@ public final class Constants {
         
         public static final String BROADCAST_IP      = "255.255.255.255";
         public static final String HEARTBEAT_MESSAGE = "HEARTBEAT";
+        public static final String EXIT_MESSAGE      = "EXIT";
 
-        public static final String TALK_FORMAT  = "TALK %d %s";
-        public static final String FILE_FORMAT  = "FILE %d %s %d";
-        public static final String CHUNK_FORMAT = "CHUNK %d %d {%s}";
-        public static final String END_FORMAT   = "END %d %s";
-        public static final String ACK_FORMAT   = "ACK %s";
-        public static final String NACK_FORMAT  = "NACK %d %s";
+        public static final String TALK_FORMAT              = "TALK %d %s";
+        public static final String SIMPLE_TALK_FORMAT       = "TALK %s";
+        public static final String FILE_FORMAT              = "FILE %d %s %d";
+        public static final String FILE_REQUEST_FORMAT      = "FILE %s";
+        public static final String FILE_FULL_REQUEST_FORMAT = "FILE %s %d %s";
+        public static final String CHUNK_FORMAT             = "CHUNK %d %d {%s}";
+        public static final String END_FORMAT               = "END %d %s";
+        public static final String ACK_FORMAT               = "ACK %s";
+        public static final String NACK_FORMAT              = "NACK %d %s";
+        public static final String UNSUPPORTED_FORMAT       = "UNSUPPORTED: %s";
 
         public static final String HEARTBEAT_LOG_FORMAT   = "(%s) [%s] HEARTBEAT";
         public static final String TALK_LOG_FORMAT        = "(%s) [%s] TALK(%d) : \"%s\"";
@@ -68,10 +76,11 @@ public final class Constants {
         public static final String NACK_LOG_FORMAT        = "(%s) [%s] NACK  : Didn't acknowlege '%d' because \"%s\"";
         public static final String UNSUPPORTED_LOG_FORMAT = "(%s) [%s] Unsupported message: %s";
 
-        public static final String TALK_SENDING_REQUEST_FORMAT = "(%s) TALK_SENDING: %s";
-        public static final String FILE_SENDING_REQUEST_FORMAT = "(%s) FILE_SENDING: %s";
-        public static final String ACK_SENDING_REQUEST_FORMAT  = "(%s) ACK_SENDING : %d";
-        public static final String NACK_SENDING_REQUEST_FORMAT = "(%s) NACK_SENDING: %d";
+        public static final String EXIT_SENDING_LOG_FORMAT = "(%s) EXIT";
+        public static final String TALK_SENDING_LOG_FORMAT = "(%s) TALK_SENDING: %s";
+        public static final String FILE_SENDING_LOG_FORMAT = "(%s) FILE_SENDING: %s";
+        public static final String ACK_SENDING_LOG_FORMAT  = "(%s) ACK_SENDING : %d";
+        public static final String NACK_SENDING_LOG_FORMAT = "(%s) NACK_SENDING: %d \"%s\"";
 
         public static final String DISCARTED_CHUNK_FORMAT = "(%s) DISCARTED CHUNK: %d (%d bytes)";
 

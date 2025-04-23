@@ -1,11 +1,15 @@
 package interfaces.visitors;
 
-import messages.foreign.ForeignMessage;
-import messages.foreign.ForeignTalkMessage;
 import messages.internal.InternalMessage;
+import messages.internal.received.InternalReceivedMessage;
+import messages.internal.received.InternalReceivedTalkMessage;
+import messages.internal.requested.InternalRequestSendMessage;
+import messages.internal.requested.InternalRequestSendTalkMessage;
 
 public interface LoggerVisitor {
-    void visit(ForeignMessage message);
-    void visit(ForeignTalkMessage message);
     void visit(InternalMessage message);
+    void visit(InternalReceivedMessage message);
+    void visit(InternalReceivedTalkMessage message);
+    void visit(InternalRequestSendMessage message);
+    void visit(InternalRequestSendTalkMessage message);
 }
