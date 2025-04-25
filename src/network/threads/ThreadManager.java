@@ -1,6 +1,7 @@
 package network.threads;
 
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,11 +14,11 @@ import utils.Exceptions.ThreadNotStartedException;
 
 public class ThreadManager {
     private final DatagramSocket SOCKET;
-    private final ConcurrentHashMap<NetworkNode, Integer> NODES; // node -> seconds since last message
+    private final ConcurrentHashMap<InetAddress, Integer> NODES; // node -> seconds since last message
     
     private LinkedList<Thread> threads;
 
-    public ThreadManager(DatagramSocket socket, ConcurrentHashMap<NetworkNode, Integer> nodes) {
+    public ThreadManager(DatagramSocket socket, ConcurrentHashMap<InetAddress, Integer> nodes) {
         this.SOCKET  = socket;
         this.NODES   = nodes;
         this.threads = new LinkedList<Thread>();

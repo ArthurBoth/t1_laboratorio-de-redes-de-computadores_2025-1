@@ -1,5 +1,6 @@
 package io.console;
 
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
@@ -8,7 +9,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import messages.ThreadMessage;
 import messages.internal.InternalMessage;
-import network.threads.NetworkNode;
 import utils.ConsoleLogger;
 import utils.Constants;
 import utils.FileUtils;
@@ -19,12 +19,12 @@ public class TerminalManager implements Runnable{
     private ConcurrentLinkedQueue<String> errorMessages;
     
     private volatile boolean running;
-    private ConcurrentHashMap<NetworkNode, Integer> activeNodes;
+    private ConcurrentHashMap<InetAddress, Integer> activeNodes;
 
     private Scanner scanner;
 
     public TerminalManager(BlockingQueue<InternalMessage> messageSenderQueue,
-                            ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
+                            ConcurrentHashMap<InetAddress, Integer> activeNodes) {
         this.messageSenderQueue = messageSenderQueue;
         scanner                 = new Scanner(System.in);
         errorMessages           = new ConcurrentLinkedQueue<String>();
@@ -158,7 +158,7 @@ public class TerminalManager implements Runnable{
         String message;
         
         nodes = activeNodes.keySet().stream()
-                .map(NetworkNode::getIpAddress)
+                .map(InetAddress::getHostAddress)
                 .toArray(String[]::new);
 
         node = getNodeToSend(nodes);
@@ -198,7 +198,7 @@ public class TerminalManager implements Runnable{
         String fileName;
 
         nodes = activeNodes.keySet().stream()
-                .map(NetworkNode::getIpAddress)
+                .map(InetAddress::getHostAddress)
                 .toArray(String[]::new);
 
         node = getNodeToSend(nodes);

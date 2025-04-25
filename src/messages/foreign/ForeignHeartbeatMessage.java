@@ -15,16 +15,11 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignHeartbeatMessage
 
-    public static IpSetter<ForeignHeartbeatMessage> create(Class<?> clazz) {
-        return new Builder(clazz);
+    public static IpBuilder<ForeignHeartbeatMessage> create() {
+        return new Builder();
     }
 
     private static class Builder extends IpBuilder<ForeignHeartbeatMessage> {
-        private Class<?> clazz;
-
-        private Builder (Class<?> clazz) {
-            this.clazz = clazz;
-        }
 
         @Override
         protected ForeignHeartbeatMessage self() {
@@ -33,7 +28,6 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
     }
 
     private ForeignHeartbeatMessage(Builder builder) {
-        this.clazz            = builder.clazz;
-        this.destinationIp    = builder.destinationIp;
+        this.destinationIp = builder.destinationIp;
     }
 }

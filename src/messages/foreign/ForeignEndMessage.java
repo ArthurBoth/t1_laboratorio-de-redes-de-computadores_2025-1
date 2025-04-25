@@ -25,18 +25,16 @@ public class ForeignEndMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignEndMessage
 
-    public static IpSetter<ForeignEndMessage> create(Class<?> clazz, int messageId, String fileHash) {
-        return new Builder(clazz, messageId, fileHash);
+    public static IpBuilder<ForeignEndMessage> create(int messageId, String fileHash) {
+        return new Builder(messageId, fileHash);
     }
 
     private static class Builder extends IpBuilder<ForeignEndMessage> {
         private final int MESSAGE_ID;
-        private Class<?> clazz;
         private String fileHash;
 
-        private Builder(Class<?> clazz, int messageId, String fileHash) {
+        private Builder(int messageId, String fileHash) {
             this.MESSAGE_ID = messageId;
-            this.clazz      = clazz;
             this.fileHash   = fileHash;
         }
 
@@ -48,7 +46,6 @@ public class ForeignEndMessage extends ForeignMessage {
 
     private ForeignEndMessage(Builder builder) {
         this.MESSAGE_ID = builder.MESSAGE_ID;
-        this.clazz      = builder.clazz;
         this.fileHash   = builder.fileHash;
     }
 }

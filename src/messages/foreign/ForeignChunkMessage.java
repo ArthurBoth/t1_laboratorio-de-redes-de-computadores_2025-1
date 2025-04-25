@@ -30,8 +30,8 @@ public class ForeignChunkMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignChunkMessage
 
-    public static ByteArraySetter create(Class<?> clazz, int messageId, int sequenceNumber) {
-        return new Builder(clazz, messageId, sequenceNumber);
+    public static ByteArraySetter create(int messageId, int sequenceNumber) {
+        return new Builder(messageId, sequenceNumber);
     }
 
     public interface ByteArraySetter {
@@ -40,13 +40,11 @@ public class ForeignChunkMessage extends ForeignMessage {
 
     private static class Builder extends IpBuilder<ForeignChunkMessage> implements ByteArraySetter {
         private final int MESSAGE_ID;
-        private Class<?> clazz;
         private int sequenceNumber;
         private byte[] chunkData;
 
-        private Builder(Class<?> clazz, int messageId, int sequenceNumber) {
+        private Builder(int messageId, int sequenceNumber) {
             this.MESSAGE_ID     = messageId;
-            this.clazz          = clazz;
             this.sequenceNumber = sequenceNumber;
         }
 
@@ -64,7 +62,6 @@ public class ForeignChunkMessage extends ForeignMessage {
 
     private ForeignChunkMessage(Builder builder) {
         this.MESSAGE_ID     = builder.MESSAGE_ID;
-        this.clazz          = builder.clazz;
         this.sequenceNumber = builder.sequenceNumber;
         this.chunkData      = builder.chunkData;
     }

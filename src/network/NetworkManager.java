@@ -1,6 +1,7 @@
 package network;
 
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,7 +9,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
-import network.threads.NetworkNode;
 import network.threads.ThreadManager;
 import utils.Constants;
 
@@ -17,7 +17,7 @@ public class NetworkManager {
 
     private NetworkListener listener;
     private ThreadManager threadManager;
-    private ConcurrentHashMap<NetworkNode, Integer> activeNodes; // node -> seconds since last message
+    private ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
 
     public void start() throws SocketException {
         setup();
@@ -33,8 +33,8 @@ public class NetworkManager {
         BlockingQueue<ForeignMessage> udpSenderQueue;
 
         socket        = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
-        activeNodes   = new ConcurrentHashMap<NetworkNode, Integer>();
-        listener      = new NetworkListener();
+        activeNodes   = new ConcurrentHashMap<InetAddress, Integer>();
+        listener      = new NetworkListener(activeNodes);
         threadManager = new ThreadManager(socket, activeNodes);
 
         udpSenderQueue   = threadManager.createSender();

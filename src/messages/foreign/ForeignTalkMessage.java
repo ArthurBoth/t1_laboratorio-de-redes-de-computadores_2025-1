@@ -28,18 +28,16 @@ public class ForeignTalkMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignTalkMessage
 
-    public static IpSetter<ForeignTalkMessage> create(Class<?> clazz, int messageId, String content) {
-        return new Builder(clazz, messageId, content);
+    public static IpBuilder<ForeignTalkMessage> create(int messageId, String content) {
+        return new Builder(messageId, content);
     }
 
     private static class Builder extends IpBuilder<ForeignTalkMessage> {
         private final int MESSAGE_ID;
-        private Class<?> clazz;
         private String messageContent;
 
-        private Builder(Class<?> clazz, int messageId, String messageContent) {
+        private Builder(int messageId, String messageContent) {
             this.MESSAGE_ID     = messageId;
-            this.clazz          = clazz;
             this.messageContent = messageContent;
         }
 
@@ -50,9 +48,8 @@ public class ForeignTalkMessage extends ForeignMessage {
     }
 
     private ForeignTalkMessage(Builder builder) {
-        this.MESSAGE_ID       = builder.MESSAGE_ID;
-        this.clazz            = builder.clazz;
-        this.destinationIp    = builder.destinationIp;
-        this.messageContent   = builder.messageContent;
+        this.MESSAGE_ID     = builder.MESSAGE_ID;
+        this.destinationIp  = builder.destinationIp;
+        this.messageContent = builder.messageContent;
     }
 }

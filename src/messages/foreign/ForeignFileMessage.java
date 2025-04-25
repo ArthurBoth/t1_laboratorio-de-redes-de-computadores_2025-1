@@ -1,6 +1,7 @@
 package messages.foreign;
 
 import interfaces.visitors.EncoderVisitor;
+import interfaces.visitors.foreign.ForeignVisitor;
 
 public class ForeignFileMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -26,12 +27,17 @@ public class ForeignFileMessage extends ForeignMessage {
     public byte[] encode(EncoderVisitor visitor) {
         return visitor.encode(this);
     }
+
+    @Override
+    public void accept(ForeignVisitor visitor) {
+        visitor.ack(this);
+    }
     
     // ****************************************************************************************************
     // Builder pattern for ForeignFileMessage
 
-    public static LongSetter create(Class<?> clazz, int messageId, String fileName) {
-        return new Builder(clazz, messageId, fileName);
+    public static LongSetter create(int messageId, String fileName) {
+        return new Builder(messageId, fileName);
     }
 
     public interface LongSetter {
@@ -40,13 +46,11 @@ public class ForeignFileMessage extends ForeignMessage {
 
     private static class Builder extends IpBuilder<ForeignFileMessage> implements LongSetter {
         private final int MESSAGE_ID;
-        private Class<?> clazz;
         private String fileName;
         private long fileSize;
 
-        private Builder(Class<?> clazz, int messageId, String fileName) {
+        private Builder(int messageId, String fileName) {
             this.MESSAGE_ID = messageId;
-            this.clazz      = clazz;
             this.fileName   = fileName;
         }
 
@@ -64,7 +68,6 @@ public class ForeignFileMessage extends ForeignMessage {
 
     private ForeignFileMessage(Builder builder) {
         this.MESSAGE_ID       = builder.MESSAGE_ID;
-        this.clazz            = builder.clazz;
         this.fileName         = builder.fileName;
         this.fileSize         = builder.fileSize;
         this.destinationIp    = builder.destinationIp;

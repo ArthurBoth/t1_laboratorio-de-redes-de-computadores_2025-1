@@ -1,6 +1,7 @@
 package io;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,7 +18,6 @@ import messages.internal.requested.InternalRequestSendAckMessage;
 import messages.internal.requested.InternalRequestSendFileMessage;
 import messages.internal.requested.InternalRequestSendNAckMessage;
 import messages.internal.requested.InternalRequestSendTalkMessage;
-import network.threads.NetworkNode;
 import utils.Constants;
 import utils.Exceptions.FileSearchException;
 
@@ -26,7 +26,7 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
     private BlockingQueue<InternalMessage> networkReceiverQueue;
 
     private BlockingQueue<InternalMessage> ioReceiverQueue;
-    private ConcurrentHashMap<NetworkNode, Integer> activeNodes; // node -> seconds since last message
+    private ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
 
     private TerminalManager terminal;
     private FileManager fileManager;
@@ -35,7 +35,7 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
 
     public IoManager(BlockingQueue<InternalMessage> networkSenderQueue,
                      BlockingQueue<InternalMessage> networkReceiverQueue,
-                     ConcurrentHashMap<NetworkNode, Integer> activeNodes) {
+                     ConcurrentHashMap<InetAddress, Integer> activeNodes) {
         this.networkSenderQueue   = networkSenderQueue;
         this.networkReceiverQueue = networkReceiverQueue;
         this.activeNodes          = activeNodes;

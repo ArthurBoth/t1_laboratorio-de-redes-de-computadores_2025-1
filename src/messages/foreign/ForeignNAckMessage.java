@@ -22,8 +22,8 @@ public class ForeignNAckMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignNAckMessage
 
-    public static StringSetter create(Class<?> clazz, int nonAckkedMessageId) {
-        return new Builder(clazz, nonAckkedMessageId);
+    public static StringSetter create(int nonAckkedMessageId) {
+        return new Builder(nonAckkedMessageId);
     }
 
     public interface StringSetter {
@@ -32,12 +32,10 @@ public class ForeignNAckMessage extends ForeignMessage {
 
     private static class Builder extends IpBuilder<ForeignNAckMessage> implements StringSetter {
         private final int NON_ACKKED_MESSAGE_ID;
-        private Class<?> clazz;
         private String reason;
 
-        private Builder(Class<?> clazz, int nonAckkedMessageId) {
+        private Builder(int nonAckkedMessageId) {
             this.NON_ACKKED_MESSAGE_ID = nonAckkedMessageId;
-            this.clazz                 = clazz;
         }
 
         @Override
@@ -54,7 +52,6 @@ public class ForeignNAckMessage extends ForeignMessage {
 
     private ForeignNAckMessage(Builder builder) {
         this.NON_ACKKED_MESSAGE_ID = builder.NON_ACKKED_MESSAGE_ID;
-        this.clazz                 = builder.clazz;
         this.destinationIp         = builder.destinationIp;
         this.reason                = builder.reason;
     }

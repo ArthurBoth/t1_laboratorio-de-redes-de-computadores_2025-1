@@ -4,6 +4,7 @@ import java.net.InetAddress;
 
 import interfaces.visitors.EncoderVisitor;
 import interfaces.visitors.MessageVisitor;
+import interfaces.visitors.foreign.ForeignVisitor;
 import messages.ThreadMessage;
 import messages.foreign.ForeignChunkMessage.ByteArraySetter;
 import messages.foreign.ForeignFileMessage.LongSetter;
@@ -14,8 +15,6 @@ public abstract class ForeignMessage extends ThreadMessage {
     // The ForeignMessage class is the base class for all external messages in the system.
     //    It should be used to create messages that will be sent over the network.
     // ****************************************************************************************************
-    private static int messageIdCounter = 0;
-
     protected InetAddress destinationIp;
 
     public final InetAddress getDestinationIp() {
@@ -32,65 +31,77 @@ public abstract class ForeignMessage extends ThreadMessage {
         visitor.visit(this);
     }
 
+    public void accept(ForeignVisitor visitor) {
+        visitor.ack(this);
+    }
+
     // ****************************************************************************************************
     // Builder pattern for ForeignMessage
 
-    public interface MessageSeleciton {
-        ForeignHeartbeatMessage.IpSetter<ForeignHeartbeatMessage> heartbeat();
-        ForeignTalkMessage.IpSetter<ForeignTalkMessage> talk(String content);
+    public interface IdMessageSeleciton {
+        ForeignTalkMessage.IpBuilder<ForeignTalkMessage> talk(String content);
         ForeignFileMessage.LongSetter file(String fileName);
         ForeignChunkMessage.ByteArraySetter chunk(int chunkNumber);
-        ForeignEndMessage.IpSetter<ForeignEndMessage> end(String fileHash);
-        ForeignAckMessage.IpSetter<ForeignAckMessage> ack(int ackkedMessageId);
-        ForeignNAckMessage.StringSetter nAck(int nonAckkedMessageId);
+        ForeignEndMessage.IpBuilder<ForeignEndMessage> end(String fileHash);
     }
 
-    private static class Builder implements MessageSeleciton {
-        private Class<?> clazz;
+    private static class IdBuilder implements IdMessageSeleciton {
+        private int messageId;
 
-        private Builder(Class<?> clazz) {
-            this.clazz = clazz;
+        private IdBuilder(int messageId) {
+            this.messageId = messageId;
         }
 
         @Override
-        public IpSetter<ForeignHeartbeatMessage> heartbeat() {
-            return ForeignHeartbeatMessage.create(clazz); 
-        }
-
-        @Override
-        public IpSetter<ForeignTalkMessage> talk(String content) {
-            return ForeignTalkMessage.create(clazz, messageIdCounter++, content); 
+        public IpBuilder<ForeignTalkMessage> talk(String content) {
+            return ForeignTalkMessage.create(messageId, content);
         }
 
         @Override
         public LongSetter file(String fileName) {
-            return ForeignFileMessage.create(clazz, messageIdCounter++, fileName); 
+            return ForeignFileMessage.create(messageId, fileName);
         }
 
         @Override
         public ByteArraySetter chunk(int chunkNumber) {
-            return ForeignChunkMessage.create(clazz, messageIdCounter++, chunkNumber); 
+            return ForeignChunkMessage.create(messageId, chunkNumber);
         }
 
         @Override
-        public IpSetter<ForeignEndMessage> end(String fileHash) {
-            return ForeignEndMessage.create(clazz, messageIdCounter++, fileHash); 
+        public IpBuilder<ForeignEndMessage> end(String fileHash) {
+            return ForeignEndMessage.create(messageId, fileHash);
+        }
+    }
+
+    public interface IdlessMessageSeleciton {
+        ForeignHeartbeatMessage.IpBuilder<ForeignHeartbeatMessage> heartbeat();
+        ForeignAckMessage.IpBuilder<ForeignAckMessage> ack(int ackkedMessageId);
+        ForeignNAckMessage.StringSetter nAck(int nonAckkedMessageId);
+    }
+
+    private static class IdlessBuilder implements IdlessMessageSeleciton {
+        @Override
+        public IpBuilder<ForeignHeartbeatMessage> heartbeat() {
+            return ForeignHeartbeatMessage.create();
         }
 
         @Override
-        public IpSetter<ForeignAckMessage> ack(int ackkedMessageId) {
-            return ForeignAckMessage.create(clazz, ackkedMessageId); 
+        public IpBuilder<ForeignAckMessage> ack(int ackkedMessageId) {
+            return ForeignAckMessage.create(ackkedMessageId);
         }
 
         @Override
         public StringSetter nAck(int nonAckkedMessageId) {
-            return ForeignNAckMessage.create(clazz, nonAckkedMessageId);
+            return ForeignNAckMessage.create(nonAckkedMessageId);
         }
-
     }
 
-    public static MessageSeleciton instance(Class<?> clazz) {
-        return new Builder(clazz);
+    public static IdMessageSeleciton instance(int messageId) {
+        return new IdBuilder(messageId);
+    }
+
+    public static IdlessBuilder instance() {
+        return  new IdlessBuilder();
     }
 
     // ****************************************************************************************************
@@ -100,8 +111,9 @@ public abstract class ForeignMessage extends ThreadMessage {
         T to(InetAddress destinationIp);
     }
 
-    protected static abstract class IpBuilder<T extends ForeignMessage> implements IpSetter<T> {
+    public static abstract class IpBuilder<T extends ForeignMessage> implements IpSetter<T> {
         protected InetAddress destinationIp;
+        protected int port;
 
         @Override
         public final T to(InetAddress destinationIp) {

@@ -1,5 +1,6 @@
 package network;
 
+import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,7 +10,6 @@ import messages.internal.InternalMessage;
 import messages.internal.received.InternalReceivedMessage;
 import messages.internal.requested.InternalRequestMessage;
 import network.messageHandlers.MessageHandler;
-import network.threads.NetworkNode;
 import utils.ConsoleLogger;
 import utils.Exceptions.EndExecutionException;
 
@@ -19,15 +19,16 @@ public class NetworkListener implements InternalMessageVisitor {
     BlockingQueue<InternalMessage> udpReceiverQueue;
     BlockingQueue<ForeignMessage> udpSenderQueue;
 
-    ConcurrentHashMap<NetworkNode, Integer> activeNodes;
+    ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
 
     MessageHandler handler;
 
-    public NetworkListener() {
+    public NetworkListener(ConcurrentHashMap<InetAddress, Integer> activeNodes) {
+        this.activeNodes = activeNodes;
     }
 
     private void setup() {
-        handler = new MessageHandler(udpSenderQueue, ioSenderQueue);
+        handler = new MessageHandler(udpSenderQueue, ioSenderQueue, activeNodes);
     }
 
     public void startListening() {
@@ -63,6 +64,9 @@ public class NetworkListener implements InternalMessageVisitor {
     public void setUdpSenderQueue(BlockingQueue<ForeignMessage> udpSenderQueue) {
         this.udpSenderQueue = udpSenderQueue;
     }
+
+    // ****************************************************************************************************
+    // Visitor pattern for InternalMessageVisitor
 
     @Override
     public void visit(InternalRequestMessage message) {

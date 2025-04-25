@@ -20,17 +20,15 @@ public class ForeignAckMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignAckMessage
 
-    public static IpSetter<ForeignAckMessage> create(Class<?> clazz, int ackkedMessageId) {
-        return new Builder(clazz, ackkedMessageId);
+    public static IpBuilder<ForeignAckMessage> create(int ackkedMessageId) {
+        return new Builder(ackkedMessageId);
     }
 
     private static class Builder extends IpBuilder<ForeignAckMessage> {
         private final int ACKKED_MESSAGE_ID;
-        private Class<?> clazz;
 
-        private Builder(Class<?> clazz, int ackkedMessageId) {
+        private Builder(int ackkedMessageId) {
             this.ACKKED_MESSAGE_ID = ackkedMessageId;
-            this.clazz             = clazz;
         }
 
         @Override
@@ -41,7 +39,6 @@ public class ForeignAckMessage extends ForeignMessage {
 
     private ForeignAckMessage(Builder builder) {
         this.ACKKED_MESSAGE_ID = builder.ACKKED_MESSAGE_ID;
-        this.clazz             = builder.clazz;
         this.destinationIp     = builder.destinationIp;
     }
 }
