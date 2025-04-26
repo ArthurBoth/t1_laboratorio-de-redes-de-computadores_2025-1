@@ -31,21 +31,24 @@ public class NetworkManager {
         BlockingQueue<InternalMessage> ioReceiverQueue;
         BlockingQueue<InternalMessage> udpReceiverQueue;
         BlockingQueue<ForeignMessage> udpSenderQueue;
+        BlockingQueue<InternalMessage> timerReceiverQueue;
 
         socket        = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
         activeNodes   = new ConcurrentHashMap<InetAddress, Integer>();
         listener      = new NetworkListener(activeNodes);
         threadManager = new ThreadManager(socket, activeNodes);
 
-        udpSenderQueue   = threadManager.createSender();
-        udpReceiverQueue = threadManager.createReceiver();
-        ioSenderQueue    = new LinkedBlockingQueue<InternalMessage>();
-        ioReceiverQueue  = threadManager.createIO(ioSenderQueue);
+        udpSenderQueue     = threadManager.createSender();
+        udpReceiverQueue   = threadManager.createReceiver();
+        timerReceiverQueue = threadManager.createTimer(udpSenderQueue);
+        ioSenderQueue      = new LinkedBlockingQueue<InternalMessage>();
+        ioReceiverQueue    = threadManager.createIo(ioSenderQueue);
 
         listener.setIoReceiverQueue(ioReceiverQueue);
         listener.setIoSenderQueue(ioSenderQueue);
         listener.setUdpReceiverQueue(udpReceiverQueue);
         listener.setUdpSenderQueue(udpSenderQueue);
+        listener.setTimerReceiverQueue(timerReceiverQueue);
         
         socket.setBroadcast(true);
         threadManager.startThreads();

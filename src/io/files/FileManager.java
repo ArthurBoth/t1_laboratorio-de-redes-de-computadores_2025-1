@@ -19,8 +19,8 @@ import messages.internal.received.InternalReceivedEndMessage;
 import messages.internal.received.InternalReceivedFileMessage;
 import messages.internal.received.InternalReceivedMessage;
 import messages.internal.received.InternalReceivedTalkMessage;
-import messages.internal.requested.InternalRequestSendMessage;
-import messages.internal.requested.InternalRequestSendTalkMessage;
+import messages.internal.requested.send.InternalRequestSendMessage;
+import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import utils.Constants;
 import utils.FileUtils;
 import utils.Exceptions.FileSearchException;
@@ -99,7 +99,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         if (errorMessage != null) {
             messageSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
-                    .sendMessage()
+                    .request()
+                    .send()
                     .nAck(message.getMessageId())
                     .because(errorMessage)
                     .to(message.getSourceIp())
@@ -111,7 +112,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         fileMap.put(message.getSourceIp(), file);
         messageSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
-                .sendMessage()
+                .request()
+                .send()
                 .ack(message.getMessageId())
                 .to(message.getSourceIp())
         );
@@ -119,6 +121,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
 
     @Override
     public void visit(InternalReceivedChunkMessage message) {
+        // TODO discard EndMessage if missing chunks (Out of order)
         String errorMessage;
         int sequenceNumber;
         byte[] chunkData;
@@ -144,7 +147,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         if (errorMessage != null) {
             messageSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
-                    .sendMessage()
+                    .request()
+                    .send()
                     .nAck(message.getMessageId())
                     .because(errorMessage)
                     .to(message.getSourceIp())
@@ -153,7 +157,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         }
         messageSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
-                .sendMessage()
+                .request()
+                .send()
                 .ack(message.getMessageId())
                 .to(message.getSourceIp())
         );
@@ -199,7 +204,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         if (errorMessage != null) {
             messageSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
-                    .sendMessage()
+                    .request()
+                    .send()
                     .nAck(message.getMessageId())
                     .because(errorMessage)
                     .to(sourceIp)
@@ -209,7 +215,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         FileIo.writeFile(file.getName(), fileData);
         messageSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
-                .sendMessage()
+                .request()
+                .send()
                 .ack(message.getMessageId())
                 .to(sourceIp)
         );

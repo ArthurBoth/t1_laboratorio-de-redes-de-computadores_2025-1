@@ -1,5 +1,7 @@
 package messages.foreign;
 
+import static utils.Constants.Configs.BROADCAST_IP;
+
 import interfaces.visitors.EncoderVisitor;
 
 public class ForeignHeartbeatMessage extends ForeignMessage {
@@ -15,19 +17,11 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
     // ****************************************************************************************************
     // Builder pattern for ForeignHeartbeatMessage
 
-    public static IpBuilder<ForeignHeartbeatMessage> create() {
-        return new Builder();
+    public static ForeignHeartbeatMessage create() {
+        return new ForeignHeartbeatMessage();
     }
 
-    private static class Builder extends IpBuilder<ForeignHeartbeatMessage> {
-
-        @Override
-        protected ForeignHeartbeatMessage self() {
-            return new ForeignHeartbeatMessage(this);
-        }
-    }
-
-    private ForeignHeartbeatMessage(Builder builder) {
-        this.destinationIp = builder.destinationIp;
+    private ForeignHeartbeatMessage() {
+        this.destinationIp = BROADCAST_IP;
     }
 }

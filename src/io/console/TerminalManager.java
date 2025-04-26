@@ -14,7 +14,7 @@ import utils.Constants;
 import utils.FileUtils;
 import utils.Constants.Configs;
 
-public class TerminalManager implements Runnable{
+public class TerminalManager implements Runnable {
     private BlockingQueue<InternalMessage> messageSenderQueue;
     private ConcurrentLinkedQueue<String> errorMessages;
     
@@ -58,10 +58,11 @@ public class TerminalManager implements Runnable{
     }
 
     private void printMenu() {
+        //TODO list all nodes on the network (Via a 'devices' command)
         ConsoleLogger.logCyan("Menu:");
         ConsoleLogger.logYellow("[0] Exit");
-        ConsoleLogger.logYellow("[1] Send a message");
-        ConsoleLogger.logYellow("[2] Send a file");
+        ConsoleLogger.logYellow("[1] Send a message");  // TODO change to 'talk <ip> <message>' format
+        ConsoleLogger.logYellow("[2] Send a file");     //TODO change to 'sendfile <ip> <filename>' format
         ConsoleLogger.logYellow(">> ", false);
     }
 
@@ -110,7 +111,9 @@ public class TerminalManager implements Runnable{
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
         messageSenderQueue.offer(
-            ThreadMessage.internalMessage(this.getClass()).sendMessage().exit()
+            ThreadMessage.internalMessage(this.getClass())
+                .request()
+                .exit()
         );
     }
 
@@ -176,7 +179,8 @@ public class TerminalManager implements Runnable{
         try {
             messageSenderQueue.offer(
                 ThreadMessage.internalMessage(this.getClass())
-                    .sendMessage()
+                    .request()
+                    .send()
                     .talk(message)
                     .to(node)
             );
@@ -214,7 +218,8 @@ public class TerminalManager implements Runnable{
         try {
             messageSenderQueue.offer(
                 ThreadMessage.internalMessage(this.getClass())
-                    .sendMessage()
+                    .request()
+                    .send()
                     .file(fileName)
                     .to(node)
             );

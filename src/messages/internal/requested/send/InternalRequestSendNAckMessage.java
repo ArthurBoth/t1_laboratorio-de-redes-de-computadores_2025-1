@@ -1,4 +1,4 @@
-package messages.internal.requested;
+package messages.internal.requested.send;
 
 import static utils.Constants.Strings.NACK_FORMAT;
 import static utils.Constants.Strings.NACK_SENDING_LOG_FORMAT;

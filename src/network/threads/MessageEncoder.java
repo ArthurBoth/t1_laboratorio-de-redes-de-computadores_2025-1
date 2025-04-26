@@ -107,7 +107,7 @@ public class MessageEncoder implements EncoderVisitor {
          * Header    (char)
          * IpAddress (String)
          */
-        byte[]     ipData     = IP_ADDRESS.getBytes(StandardCharsets.UTF_16BE);
+        byte[]     ipData     = IP_ADDRESS.getHostAddress().getBytes(StandardCharsets.UTF_16BE);
         int        bufferSize = Character.BYTES + ipData.length;
         ByteBuffer buffer     = ByteBuffer.allocate(bufferSize);
 

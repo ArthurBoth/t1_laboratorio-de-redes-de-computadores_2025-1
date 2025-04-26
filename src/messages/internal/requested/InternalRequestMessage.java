@@ -3,7 +3,7 @@ package messages.internal.requested;
 import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 import messages.internal.InternalMessage;
-import messages.internal.requested.InternalRequestSendNAckMessage.StringSetter;
+import messages.internal.requested.send.InternalRequestSendMessage;
 
 public abstract class InternalRequestMessage extends InternalMessage {
     // ****************************************************************************************************
@@ -27,10 +27,8 @@ public abstract class InternalRequestMessage extends InternalMessage {
 
     public interface MessageSelection {
         InternalRequestExitMessage exit();
-        InternalRequestSendMessage.IpSetter<InternalRequestSendTalkMessage> talk(String content);
-        InternalRequestSendMessage.IpSetter<InternalRequestSendFileMessage> file(String fileName);
-        InternalRequestSendMessage.IpSetter<InternalRequestSendAckMessage> ack(int messageId);
-        InternalRequestSendNAckMessage.StringSetter nAck(int messageId);
+        InternalRequestResendMessage resend(int messageId);
+        InternalRequestSendMessage.MessageSelection send();
     }
 
     private static final class Builder implements MessageSelection {
@@ -46,23 +44,13 @@ public abstract class InternalRequestMessage extends InternalMessage {
         }
 
         @Override
-        public InternalRequestSendMessage.IpSetter<InternalRequestSendTalkMessage> talk(String content) {
-            return InternalRequestSendTalkMessage.create(clazz, content);
+        public InternalRequestResendMessage resend(int messageId) {
+            return InternalRequestResendMessage.build(clazz, messageId);
         }
 
         @Override
-        public InternalRequestSendMessage.IpSetter<InternalRequestSendFileMessage> file(String fileName) {
-            return InternalRequestSendFileMessage.create(clazz, fileName);
-        }
-
-        @Override
-        public InternalRequestSendMessage.IpSetter<InternalRequestSendAckMessage> ack(int messageId) {
-            return InternalRequestSendAckMessage.create(clazz, messageId);
-        }
-
-        @Override
-        public StringSetter nAck(int messageId) {
-            return InternalRequestSendNAckMessage.create(clazz, messageId);
+        public messages.internal.requested.send.InternalRequestSendMessage.MessageSelection send() {
+            return InternalRequestSendMessage.build(clazz);
         }
     }
 

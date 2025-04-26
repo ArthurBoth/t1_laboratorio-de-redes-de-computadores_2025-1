@@ -16,6 +16,10 @@ import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 import messages.internal.received.*;
 import messages.internal.requested.*;
+import messages.internal.requested.send.InternalRequestSendAckMessage;
+import messages.internal.requested.send.InternalRequestSendFileMessage;
+import messages.internal.requested.send.InternalRequestSendNAckMessage;
+import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import utils.Exceptions.EndExecutionException;
 
 
@@ -98,7 +102,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
         loggerQueue.offer(message);
 
         sentMessage = sentMessages.remove(message.getAcknowledgedId());
-        sentMessage.accept(this);
+        if (sentMessage != null) sentMessage.accept(this);
     }
 
     @Override
@@ -122,6 +126,29 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
     @Override
     public void visit(InternalRequestExitMessage request) {
         throw new EndExecutionException();
+    }
+
+    /**
+     * Resends the message with the given id
+     * <br></br>
+     * Internally, the idCounter is incremented, yet the udp packet sent, holds the
+     * same messageId as the original message
+     * @param message keeps the messageId of the message to be resent
+     */
+    @Override
+    public void visit(InternalRequestResendMessage message) {
+        int messageId;
+        ForeignMessage sentMessage;
+
+        loggerQueue.offer(message);
+
+        sentMessage = sentMessages.remove(message.getResendId());
+        if (sentMessage == null) {
+            return;
+        }
+
+        messageId   = idCounter++;
+        sentMessages.put(messageId, sentMessage);
     }
 
     @Override
@@ -166,7 +193,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
     }
 
     // ****************************************************************************************************
-    // Visitor pattern for ForeignVisitor
+    // ForeignVisitor interface implementation
 
     @Override
     public void ack(ForeignMessage request) {

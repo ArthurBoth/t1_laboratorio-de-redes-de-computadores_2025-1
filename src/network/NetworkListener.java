@@ -14,10 +14,11 @@ import utils.ConsoleLogger;
 import utils.Exceptions.EndExecutionException;
 
 public class NetworkListener implements InternalMessageVisitor {
-    BlockingQueue<InternalMessage> ioReceiverQueue;
-    BlockingQueue<InternalMessage> ioSenderQueue;
-    BlockingQueue<InternalMessage> udpReceiverQueue;
-    BlockingQueue<ForeignMessage> udpSenderQueue;
+    private BlockingQueue<InternalMessage> ioReceiverQueue;
+    private BlockingQueue<InternalMessage> ioSenderQueue;
+    private BlockingQueue<InternalMessage> udpReceiverQueue;
+    private BlockingQueue<ForeignMessage> udpSenderQueue;
+    private BlockingQueue<InternalMessage> timerReceiverQueue;
 
     ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
 
@@ -37,15 +38,25 @@ public class NetworkListener implements InternalMessageVisitor {
 
         try {
             while (true) {
-                message = ioReceiverQueue.poll();
-                if (message != null) message.accept(this);
-                message = udpReceiverQueue.poll();
-                if (message != null) message.accept(this);
+                message = listen();
+                message.accept(this);
             }
         } catch (EndExecutionException e) {
             return;
         } catch (Exception e) {
             ConsoleLogger.logError(e);
+        }
+    }
+
+    private InternalMessage listen() {
+        InternalMessage message;
+        while(true) {
+            message = ioReceiverQueue.poll();
+            if (message != null) return message;
+            message = udpReceiverQueue.poll();
+            if (message != null) return message;
+            message = timerReceiverQueue.poll();
+            if (message != null) return message;
         }
     }
 
@@ -63,6 +74,10 @@ public class NetworkListener implements InternalMessageVisitor {
 
     public void setUdpSenderQueue(BlockingQueue<ForeignMessage> udpSenderQueue) {
         this.udpSenderQueue = udpSenderQueue;
+    }
+
+    public void setTimerReceiverQueue(BlockingQueue<InternalMessage> timerReceiverQueue) {
+        this.timerReceiverQueue = timerReceiverQueue;
     }
 
     // ****************************************************************************************************

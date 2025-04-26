@@ -1,4 +1,4 @@
-package messages.internal.requested;
+package messages.internal.requested.send;
 
 import static utils.Constants.Strings.SIMPLE_TALK_FORMAT;
 import static utils.Constants.Strings.TALK_SENDING_LOG_FORMAT;

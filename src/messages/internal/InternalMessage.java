@@ -35,7 +35,7 @@ public abstract class InternalMessage extends ThreadMessage implements Loggable 
 
     public interface MessageSelection {
         // sent messages
-        InternalRequestMessage.MessageSelection sendMessage();
+        InternalRequestMessage.MessageSelection request();
 
         // received messages
         InternalReceivedMessage.MessageSelection receivedMessage();
@@ -50,7 +50,7 @@ public abstract class InternalMessage extends ThreadMessage implements Loggable 
         }
 
         @Override
-        public InternalRequestMessage.MessageSelection sendMessage() {
+        public InternalRequestMessage.MessageSelection request() {
             return InternalRequestMessage.create(clazz);
         }
 

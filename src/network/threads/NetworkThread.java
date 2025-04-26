@@ -2,17 +2,11 @@ package network.threads;
 
 import java.net.DatagramSocket;
 
-public abstract class NetworkThread implements Runnable{
+public abstract class NetworkThread extends AppThread {
     protected DatagramSocket socket;
-    protected volatile boolean running;
     
     protected NetworkThread(DatagramSocket socket) {
         running = true;
         this.socket = socket;
-    }
-
-    public Thread stop() {        
-        running = false;
-        return Thread.currentThread();
     }
 }

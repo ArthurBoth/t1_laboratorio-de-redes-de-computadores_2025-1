@@ -7,20 +7,24 @@ import java.util.Set;
 
 public final class Constants {
     public static final class Configs {
-        public static final int DEFAULT_PORT       = 9000;
-        public static final int MAX_MESSAGE_SIZE   = 1 << 17;  // 128 KB
-        public static final int MAX_CHUNK_SIZE     = CompilingFunctions.calculateMinimumMaxChunkSize();
-        public static final int SOCKET_TIMEOUT_MS  = 1000;
-        public static final int THREAD_TIMEOUT_MS  = 1000;
-        public static final int NODE_TIMEOUT_SEC   = 5;
-        public static final int TIMEOUT_MULTIPLYER = 3;
+        public static final int DEFAULT_PORT     = 9000;
+        public static final int MAX_MESSAGE_SIZE = 1 << 17;                                            // 128 KB
+        public static final int MAX_CHUNK_SIZE   = CompilingFunctions.calculateMinimumMaxChunkSize();
+
+        public static final int SOCKET_TIMEOUT_MS       = 1000;
+        public static final int THREAD_TIMEOUT_MS       = 1000;
+        public static final int NODE_TIMEOUT_SEC        = 5;
+        public static final int MESSAGE_ACK_TIMEOUT_SEC = 5;
+        public static final int HEARTBEAT_INTERVAL_SEC  = 5;
 
         public static final boolean PRINT_LOGS            = true;
         public static final boolean DEFAULT_NEW_LINE_LOGS = true;
         public static final boolean CLEAR_PREVIOUS_LOGS   = true;
         public static final boolean ALLOW_CUSTOM_IPS      = true;
 
-        public static final String IP_ADDRESS = CompilingFunctions.getIpAddress();
+        public static final InetAddress IP_ADDRESS   = CompilingFunctions.getIpAddress();
+        public static final InetAddress BROADCAST_IP = CompilingFunctions.getBroadcastIp();
+
         public static final String HASHING_ALGORITHM = "SHA-256";
 
         public static final long MAX_FILE_SIZE = 1 << 27; // 128 MB
@@ -52,7 +56,6 @@ public final class Constants {
         public static final String SPACED_MESSAGE_FORMAT  = "\t\t\t\t\t%s: %s";
         public static final String REGULAR_MESSAGE_FORMAT = "%s: %s";
         
-        public static final String BROADCAST_IP      = "255.255.255.255";
         public static final String HEARTBEAT_MESSAGE = "HEARTBEAT";
         public static final String EXIT_MESSAGE      = "EXIT";
 
@@ -66,6 +69,7 @@ public final class Constants {
         public static final String ACK_FORMAT               = "ACK %s";
         public static final String NACK_FORMAT              = "NACK %d %s";
         public static final String UNSUPPORTED_FORMAT       = "UNSUPPORTED: %s";
+        public static final String RESEND_FORMAT            = "RESEND %d";
 
         public static final String HEARTBEAT_LOG_FORMAT   = "(%s) [%s] HEARTBEAT";
         public static final String TALK_LOG_FORMAT        = "(%s) [%s] TALK(%d) : \"%s\"";
@@ -76,11 +80,12 @@ public final class Constants {
         public static final String NACK_LOG_FORMAT        = "(%s) [%s] NACK  : Didn't acknowlege '%d' because \"%s\"";
         public static final String UNSUPPORTED_LOG_FORMAT = "(%s) [%s] Unsupported message: %s";
 
-        public static final String EXIT_SENDING_LOG_FORMAT = "(%s) EXIT";
-        public static final String TALK_SENDING_LOG_FORMAT = "(%s) TALK_SENDING: %s";
-        public static final String FILE_SENDING_LOG_FORMAT = "(%s) FILE_SENDING: %s";
-        public static final String ACK_SENDING_LOG_FORMAT  = "(%s) ACK_SENDING : %d";
-        public static final String NACK_SENDING_LOG_FORMAT = "(%s) NACK_SENDING: %d \"%s\"";
+        public static final String EXIT_REQUEST_LOG_FORMAT   = "(%s) EXIT";
+        public static final String TALK_SENDING_LOG_FORMAT   = "(%s) TALK_SENDING: %s";
+        public static final String FILE_SENDING_LOG_FORMAT   = "(%s) FILE_SENDING: %s";
+        public static final String ACK_SENDING_LOG_FORMAT    = "(%s) ACK_SENDING : %d";
+        public static final String NACK_SENDING_LOG_FORMAT   = "(%s) NACK_SENDING: %d \"%s\"";
+        public static final String RESEND_REQUEST_LOG_FORMAT = "(%s) Message %d timed out, resending...";
 
         public static final String DISCARTED_CHUNK_FORMAT = "(%s) DISCARTED CHUNK: %d (%d bytes)";
 
@@ -123,9 +128,19 @@ public final class Constants {
     }
 
     private static final class CompilingFunctions {
-        private static String getIpAddress() {
+        private static InetAddress getIpAddress() {
             try {
-                return InetAddress.getLocalHost().getHostAddress();
+                return InetAddress.getLocalHost();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
+            return null;
+        }
+
+        private static InetAddress getBroadcastIp() {
+            try {
+                return InetAddress.getByName("255.255.255.255");
             } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(1);

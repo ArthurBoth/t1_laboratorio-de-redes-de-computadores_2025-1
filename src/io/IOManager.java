@@ -14,10 +14,11 @@ import messages.ThreadMessage;
 import messages.internal.InternalMessage;
 import messages.internal.received.InternalReceivedMessage;
 import messages.internal.requested.InternalRequestExitMessage;
-import messages.internal.requested.InternalRequestSendAckMessage;
-import messages.internal.requested.InternalRequestSendFileMessage;
-import messages.internal.requested.InternalRequestSendNAckMessage;
-import messages.internal.requested.InternalRequestSendTalkMessage;
+import messages.internal.requested.InternalRequestResendMessage;
+import messages.internal.requested.send.InternalRequestSendAckMessage;
+import messages.internal.requested.send.InternalRequestSendFileMessage;
+import messages.internal.requested.send.InternalRequestSendNAckMessage;
+import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import utils.Constants;
 import utils.Exceptions.FileSearchException;
 
@@ -82,7 +83,7 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
         terminalThread.interrupt();
         networkSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
-                .sendMessage()
+                .request()
                 .exit()
             );
 
@@ -111,7 +112,7 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
     }
 
     // ****************************************************************************************************
-    // Visitor pattern for IOManager
+    // Implementation of InternalRequestMessageVisitor
 
     @Override
     public void visit(InternalRequestExitMessage message) {
@@ -144,6 +145,12 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
     }
 
     public void visit(InternalReceivedMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
+    }
+
+    @Override
+    public void visit(InternalRequestResendMessage message) {
         message.accept(fileManager);        // logs the message
         networkSenderQueue.offer(message);  // forwards the message
     }

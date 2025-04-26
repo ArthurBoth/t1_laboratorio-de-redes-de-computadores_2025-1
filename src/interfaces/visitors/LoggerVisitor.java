@@ -3,8 +3,8 @@ package interfaces.visitors;
 import messages.internal.InternalMessage;
 import messages.internal.received.InternalReceivedMessage;
 import messages.internal.received.InternalReceivedTalkMessage;
-import messages.internal.requested.InternalRequestSendMessage;
-import messages.internal.requested.InternalRequestSendTalkMessage;
+import messages.internal.requested.send.InternalRequestSendMessage;
+import messages.internal.requested.send.InternalRequestSendTalkMessage;
 
 public interface LoggerVisitor {
     void visit(InternalMessage message);

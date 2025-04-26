@@ -40,12 +40,20 @@ public class ThreadManager {
         return queue;
     }
 
-    public BlockingQueue<InternalMessage> createIO(BlockingQueue<InternalMessage> sender) {
+    public BlockingQueue<InternalMessage> createIo(BlockingQueue<InternalMessage> sender) {
         BlockingQueue<InternalMessage> receiver = new LinkedBlockingDeque<InternalMessage>();
         IoManager                      thread   = new IoManager(receiver, sender, NODES);
 
         threads.add(new Thread(() -> thread.run()));
         return receiver;
+    }
+
+    public BlockingQueue<InternalMessage> createTimer(BlockingQueue<ForeignMessage> udpSender) {
+        BlockingQueue<InternalMessage> handlerSneder = new LinkedBlockingDeque<InternalMessage>();
+        TimerThread                    thread        = new TimerThread(handlerSneder, udpSender, NODES);
+
+        threads.add(new Thread(() -> thread.run()));
+        return handlerSneder;
     }
 
     public void startThreads() {

@@ -1,7 +1,7 @@
 package messages.internal.requested;
 
 import static utils.Constants.Strings.EXIT_MESSAGE;
-import static utils.Constants.Strings.EXIT_SENDING_LOG_FORMAT;
+import static utils.Constants.Strings.EXIT_REQUEST_LOG_FORMAT;
 
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
@@ -36,6 +36,8 @@ public class InternalRequestExitMessage extends InternalRequestMessage {
 
     @Override
     public String getPrettyMessage() {
-        return EXIT_SENDING_LOG_FORMAT.formatted(clazz.getSimpleName());
+        return EXIT_REQUEST_LOG_FORMAT.formatted(
+            clazz.getSimpleName()
+        );
     }
 }

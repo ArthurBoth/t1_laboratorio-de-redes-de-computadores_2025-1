@@ -1,4 +1,4 @@
-package messages.internal.requested;
+package messages.internal.requested.send;
 
 import static utils.Constants.Configs.MAX_CHUNK_SIZE;
 import static utils.Constants.Strings.FILE_FULL_REQUEST_FORMAT;

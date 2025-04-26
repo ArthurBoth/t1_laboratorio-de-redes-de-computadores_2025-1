@@ -74,14 +74,14 @@ public abstract class ForeignMessage extends ThreadMessage {
     }
 
     public interface IdlessMessageSeleciton {
-        ForeignHeartbeatMessage.IpBuilder<ForeignHeartbeatMessage> heartbeat();
+        ForeignHeartbeatMessage heartbeat();
         ForeignAckMessage.IpBuilder<ForeignAckMessage> ack(int ackkedMessageId);
         ForeignNAckMessage.StringSetter nAck(int nonAckkedMessageId);
     }
 
     private static class IdlessBuilder implements IdlessMessageSeleciton {
         @Override
-        public IpBuilder<ForeignHeartbeatMessage> heartbeat() {
+        public ForeignHeartbeatMessage heartbeat() {
             return ForeignHeartbeatMessage.create();
         }
 
