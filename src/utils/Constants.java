@@ -55,21 +55,25 @@ public final class Constants {
         public static final String DATE_TIME_LOG_FORMAT   = "uuuu-MM-dd HH:mm:ss.SSS";
         public static final String SPACED_MESSAGE_FORMAT  = "\t\t\t\t\t%s: %s";
         public static final String REGULAR_MESSAGE_FORMAT = "%s: %s";
-        
-        public static final String HEARTBEAT_MESSAGE = "HEARTBEAT";
-        public static final String EXIT_MESSAGE      = "EXIT";
 
-        public static final String TALK_FORMAT              = "TALK %d %s";
-        public static final String SIMPLE_TALK_FORMAT       = "TALK %s";
-        public static final String FILE_FORMAT              = "FILE %d %s %d";
-        public static final String FILE_REQUEST_FORMAT      = "FILE %s";
-        public static final String FILE_FULL_REQUEST_FORMAT = "FILE %s %d %s";
-        public static final String CHUNK_FORMAT             = "CHUNK %d %d {%s}";
-        public static final String END_FORMAT               = "END %d %s";
-        public static final String ACK_FORMAT               = "ACK %s";
-        public static final String NACK_FORMAT              = "NACK %d %s";
-        public static final String UNSUPPORTED_FORMAT       = "UNSUPPORTED: %s";
-        public static final String RESEND_FORMAT            = "RESEND %d";
+        public static final String EXIT_MESSAGE      = "EXIT";
+        public static final String FULL_FILE_REQUEST = "SEND_FULL_FILE";
+
+        public static final String HEARTBEAT_FORMAT = "HEARTBEAT %s";
+        public static final String TALK_FORMAT      = "TALK %d %s";
+        public static final String FILE_FORMAT      = "FILE %d %s %d";
+        public static final String CHUNK_FORMAT     = "CHUNK %d %d %s";
+        public static final String END_FORMAT       = "END %d %s";
+
+        // Id-less formats
+        public static final String SIMPLE_TALK_FORMAT  = "TALK %s";
+        public static final String SIMPLE_FILE_FORMAT  = "FILE %s %d";
+        public static final String SIMPLE_CHUNK_FORMAT = "CHUNK %d %s";
+        public static final String SIMPLE_END_FORMAT   = "END %s";
+        public static final String ACK_FORMAT          = "ACK %s";
+        public static final String NACK_FORMAT         = "NACK %d %s";
+        public static final String UNSUPPORTED_FORMAT  = "UNSUPPORTED: %s";
+        public static final String RESEND_FORMAT       = "RESEND %d";
 
         public static final String HEARTBEAT_LOG_FORMAT   = "(%s) [%s] HEARTBEAT";
         public static final String TALK_LOG_FORMAT        = "(%s) [%s] TALK(%d) : \"%s\"";
@@ -83,10 +87,13 @@ public final class Constants {
         public static final String EXIT_REQUEST_LOG_FORMAT   = "(%s) EXIT";
         public static final String TALK_SENDING_LOG_FORMAT   = "(%s) TALK_SENDING: %s";
         public static final String FILE_SENDING_LOG_FORMAT   = "(%s) FILE_SENDING: %s";
+        public static final String CHUNK_SENDING_LOG_FORMAT  = "(%s) CHUNK_SENDING: %d (%d bytes)";
+        public static final String END_SENDING_LOG_FORMAT    = "(%s) END_SENDING: %s";
         public static final String ACK_SENDING_LOG_FORMAT    = "(%s) ACK_SENDING : %d";
         public static final String NACK_SENDING_LOG_FORMAT   = "(%s) NACK_SENDING: %d \"%s\"";
         public static final String RESEND_REQUEST_LOG_FORMAT = "(%s) Message %d timed out, resending...";
         public static final String DISCARTED_CHUNK_FORMAT    = "(%s) DISCARTED CHUNK: %d (%d bytes) because %s";
+        public static final String FULL_FILE_REQ_LOG_FORMAT  = "(%s) FULL_FILE_REQUEST: %s";
 
         public static final String IP_PORT_FORMAT = "%s:%d";
 
@@ -162,24 +169,25 @@ public final class Constants {
             return null;
         }
 
+        @SuppressWarnings("unused")
         private static int calculateMinimumMaxChunkSize() {
             final int MIN_CHAR_COUNT = (
-                  1                                           // header
-                + String.valueOf(Integer.MAX_VALUE).length()  // message Id
-                + 1                                           // space
-                + String.valueOf(Integer.MAX_VALUE).length()  // chunk number
-                + 1                                           // space
+                  Character.BYTES  // header
+                + Integer.BYTES    // message Id
+                + Character.BYTES  // space
+                + Integer.BYTES    // chunk number
+                + Character.BYTES  // space
 
             ); 
             
             // UTF_16BE encoding uses 2 bytes per character
             // So we need to divide the max message size by 2 to get the max chunk size
-            final int RESULT = (Configs.MAX_MESSAGE_SIZE - MIN_CHAR_COUNT) / 2;
+            final int RESULT = (Configs.MAX_MESSAGE_SIZE / 2) - MIN_CHAR_COUNT;
             if (RESULT < 0) {
                 throw new IllegalStateException("Max message size is too small to fit a chunk header");
             }
 
-            return ((Configs.MAX_MESSAGE_SIZE - MIN_CHAR_COUNT) / 2); 
+            return RESULT;
         }
 
         private CompilingFunctions() {

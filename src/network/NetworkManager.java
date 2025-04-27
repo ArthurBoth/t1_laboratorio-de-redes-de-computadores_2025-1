@@ -49,6 +49,7 @@ public class NetworkManager {
         listener.setUdpReceiverQueue(udpReceiverQueue);
         listener.setUdpSenderQueue(udpSenderQueue);
         listener.setTimerReceiverQueue(timerReceiverQueue);
+        listener.setup(threadManager.messagesMap());
         
         socket.setBroadcast(true);
         threadManager.startThreads();

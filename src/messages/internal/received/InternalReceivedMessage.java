@@ -45,7 +45,7 @@ public abstract class InternalReceivedMessage extends InternalMessage {
     // Builder pattern for InternalReceivedMessage
 
     public interface MessageSelection {
-        IpSetter<InternalReceivedHeartbeatMessage> heartbeat();
+        InternalReceivedHeartbeatMessage.StringSetter heartbeat();
         IpSetter<InternalReceivedAckMessage> ack(int messageId);
         InternalReceivedNAckMessage.StringSetter nAck(int messageId);
         IpSetter<InternalReceivedUnsupportedMessage> unsupportedMessage(String content);
@@ -59,7 +59,7 @@ public abstract class InternalReceivedMessage extends InternalMessage {
         }
 
         @Override
-        public IpSetter<InternalReceivedHeartbeatMessage> heartbeat() {
+        public InternalReceivedHeartbeatMessage.StringSetter heartbeat() {
             return InternalReceivedHeartbeatMessage.createHeartbeat(clazz);
         }
 

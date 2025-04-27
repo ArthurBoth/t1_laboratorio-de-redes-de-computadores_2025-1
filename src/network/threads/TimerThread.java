@@ -3,7 +3,6 @@ package network.threads;
 import static utils.Constants.Configs.HEARTBEAT_INTERVAL_SEC;
 
 import java.net.InetAddress;
-import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -14,11 +13,11 @@ import messages.internal.InternalMessage;
 import network.NetworkNode;
 
 public class TimerThread extends AppThread {
-    private HashMap<Integer, Integer> messagesWaitingAck;             // messageId -> seconds since sent
+    private ConcurrentHashMap<Integer, Integer> messagesWaitingAck;   // messageId -> seconds since sent
     private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes;  // ip        -> node
 
-    private BlockingQueue<InternalMessage> handlerSenderQueue;  // queue to receive messages from other threads
-    private BlockingQueue<ForeignMessage> udpSenderQueue;       // queue to receive messages from other threads
+    private BlockingQueue<InternalMessage> handlerSenderQueue;
+    private BlockingQueue<ForeignMessage> udpSenderQueue;
 
     private int seconds = 0;
 
@@ -31,7 +30,11 @@ public class TimerThread extends AppThread {
         this.handlerSenderQueue = handlerSenderQueue;
         this.activeNodes        = activeNodes;
 
-        this.messagesWaitingAck = new HashMap<>();
+        this.messagesWaitingAck = new ConcurrentHashMap<>();
+    }
+
+    public ConcurrentHashMap<Integer, Integer> getMessagesMap() {
+        return messagesWaitingAck;
     }
 
     @Override
@@ -52,19 +55,15 @@ public class TimerThread extends AppThread {
             running = false;
             return;
         }
-
         
-        activeNodes.replaceAll((x, seconds) -> seconds - 1);
+        activeNodes.forEach((ip, node) -> {
+            if (node.tickHeartbeat())
+                activeNodes.remove(ip);
+        });
         messagesWaitingAck.replaceAll((x, seconds) -> seconds - 1);
     }
 
     private void checkMaps() {
-        activeNodes.forEach((node, seconds) -> {
-            if (seconds <= 0 ) {
-                activeNodes.remove(node);
-            }
-        });
-
         messagesWaitingAck.forEach((messageId, seconds) -> {
             if (seconds <= 0) {
                 messagesWaitingAck.remove(messageId);

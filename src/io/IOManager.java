@@ -1,6 +1,5 @@
 package io;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +15,10 @@ import messages.internal.received.InternalReceivedMessage;
 import messages.internal.requested.InternalRequestExitMessage;
 import messages.internal.requested.InternalRequestResendMessage;
 import messages.internal.requested.send.InternalRequestSendAckMessage;
+import messages.internal.requested.send.InternalRequestSendChunkMessage;
+import messages.internal.requested.send.InternalRequestSendEndMessage;
 import messages.internal.requested.send.InternalRequestSendFileMessage;
+import messages.internal.requested.send.InternalRequestSendFullFileMessage;
 import messages.internal.requested.send.InternalRequestSendNAckMessage;
 import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import network.NetworkNode;
@@ -91,27 +93,6 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
         running = false;
     }
 
-    private void processSendFile(InternalRequestSendFileMessage message) {
-        File file;
-        String fileName;
-        byte[] fullData;
-        String fileHash;
-
-        try {
-            fileName = message.getFileName();
-            file     = fileManager.getFile(Constants.Configs.Paths.SEND_FOLDER_PATH + fileName);
-            fullData = fileManager.getFileData(file);
-            fileHash = fileManager.getFileHash(file);
-
-            networkSenderQueue.offer(
-                message.fileData(fullData)
-                    .fileHash(fileHash)
-            );
-        } catch (FileException e) {
-            terminal.errorMessage(e.getMessage());
-        }
-    }
-
     // ****************************************************************************************************
     // Implementation of InternalRequestMessageVisitor
 
@@ -129,8 +110,13 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
 
     @Override
     public void visit(InternalRequestSendFileMessage message) {
-        message.accept(fileManager); // logs the message
-        processSendFile(message);
+        try {
+            message.accept(fileManager); // logs the message
+        } catch (FileException e) {
+            terminal.errorMessage(e.getMessage());
+            return;
+        }
+        networkSenderQueue.offer(message);  // forwards the message
     }
 
     @Override
@@ -152,6 +138,22 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
 
     @Override
     public void visit(InternalRequestResendMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
+    }
+
+    public void visit(InternalRequestSendFullFileMessage message) {
+        message.accept(fileManager); // logs the message
+    }
+
+    @Override
+    public void visit(InternalRequestSendChunkMessage message) {
+        message.accept(fileManager);        // logs the message
+        networkSenderQueue.offer(message);  // forwards the message
+    }
+
+    @Override
+    public void visit(InternalRequestSendEndMessage message) {
         message.accept(fileManager);        // logs the message
         networkSenderQueue.offer(message);  // forwards the message
     }

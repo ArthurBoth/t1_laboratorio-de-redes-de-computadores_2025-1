@@ -3,7 +3,6 @@ package io.console;
 import static utils.Constants.Strings.IP_PORT_FORMAT;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,8 +13,6 @@ import messages.internal.InternalMessage;
 import network.NetworkNode;
 import utils.ConsoleLogger;
 import utils.Constants;
-import utils.FileUtils;
-import utils.Constants.Configs;
 
 public class TerminalManager implements Runnable {
     private BlockingQueue<InternalMessage> messageSenderQueue;
@@ -23,6 +20,10 @@ public class TerminalManager implements Runnable {
 
     private volatile boolean running;
     private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
+
+    // used for sending files
+    private volatile boolean waitingManager;
+    private volatile int sendPercentage;
 
     private Scanner scanner;
 
@@ -36,15 +37,13 @@ public class TerminalManager implements Runnable {
 
     @Override
     public void run() {
-        int userResponse;
         running = true;
 
         ConsoleLogger.logWhite("Starting console...");
         while (running) {
             printErrors();
             printMenu();
-            userResponse = getUserInputChoice();
-            processResponse(userResponse);
+            processInput();
         }
         stopConsole();
     }
@@ -63,55 +62,56 @@ public class TerminalManager implements Runnable {
     }
 
     private void printMenu() {
-        // TODO list all nodes on the network (Via a 'devices' command)
         ConsoleLogger.logCyan("Menu:");
-        ConsoleLogger.logYellow("[0] Exit");
-        ConsoleLogger.logYellow("[1] Devices");
-        ConsoleLogger.logYellow("[2] Talk");      // TODO change to 'talk <ip> <message>' format
-        ConsoleLogger.logYellow("[3] sendfile");  // TODO change to 'sendfile <ip> <filename>' format
+        ConsoleLogger.logYellow("Exit");
+        ConsoleLogger.logYellow("Devices");
+        ConsoleLogger.logYellow("Talk");
+        ConsoleLogger.logYellow("sendfile");
         ConsoleLogger.logYellow(">> ", false);
     }
 
-    private int getUserInputChoice() {
-        int response = -1;
-        try {
-            response = Integer.parseInt(scanner.nextLine());
-            if (response == -Integer.MAX_VALUE)
-                return -1; // Protect against killing the scanner
-            return response;
-        } catch (NumberFormatException e) {
-            ConsoleLogger.logRed("Invalid input. Please enter a number.");
-        } catch (IllegalStateException e) {
-            return -Integer.MAX_VALUE; // Scanner is closed
+    private void processInput() {
+        String input;
+        String command;
+
+        input   = scanner.nextLine();
+        input   = input.trim();
+        command = input.split(" ",3)[0];
+
+        if (input.isEmpty()) {
+            ConsoleLogger.logRed("Invalid command. Please try again.");
+            return;
         }
-        return -1;
+        if (command.equalsIgnoreCase("exit")) {
+            exit();
+            sleep();
+            return;
+        }
+        if (command.equalsIgnoreCase("devices")) {
+            processDevices();
+            return;
+        }
+        if (command.equalsIgnoreCase("talk")) {
+            processTalk(input);
+            return;
+        }
+        if (command.equalsIgnoreCase("sendfile")) {
+            processSend(input);
+            return;
+        }
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(Constants.Configs.THREAD_TIMEOUT_MS);
+        } catch (InterruptedException e) {
+            return;
+        }
     }
 
     public void errorMessage(String message) {
         errorMessages.add(message);
-    }
-
-    private void processResponse(int input) {
-        boolean wait = true;
-
-        switch (input) {
-            case 0 -> {
-                exit(false);
-                wait = false;
-            }
-            case 1 -> { processDevices(); }
-            case 2 -> { processTalk(); }
-            case 3 -> { processSend(); }
-            case (-Integer.MAX_VALUE) -> { exit(true); }
-            default -> ConsoleLogger.logRed("Invalid choice. Please try again.");
-        }
-
-        try {
-            if (wait)
-                Thread.sleep(Constants.Configs.THREAD_TIMEOUT_MS);
-        } catch (InterruptedException e) {
-            return;
-        }
+        waitingManager = false;
     }
 
     private void processDevices() {
@@ -134,9 +134,7 @@ public class TerminalManager implements Runnable {
         }
     }
 
-    private void exit(boolean systemExit) {
-        if (systemExit)
-            ConsoleLogger.logRed("Scanner is closed. ", false);
+    private void exit() {
         ConsoleLogger.logWhite("Exiting console...");
         running = false;
         messageSenderQueue.offer(
@@ -151,69 +149,104 @@ public class TerminalManager implements Runnable {
         return Thread.currentThread();
     }
 
-    private void processTalk() {
-        String[] nodes;
-        String node;
-        String message;
-
-        nodes = activeNodes.keySet().stream()
-                .map(InetAddress::getHostAddress)
-                .toArray(String[]::new);
-
-        node = getNodeToSend(nodes);
-        if (node == null)
-            return;
-
-        ConsoleLogger.logYellow("Enter the message to send: ", false);
-        message = scanner.nextLine();
-        if (message.isEmpty()) {
-            ConsoleLogger.logRed("Invalid message. Aborting...");
-            return;
+    /**
+     * Validates a command and returns a node if it exists.
+     * @param args The command arguments, node should be {@code args[1]}
+     * @return The node if it exists, null otherwise.
+     */
+    private NetworkNode validateCommand(String[] args) {
+        NetworkNode node;
+        if (args.length < 3) {
+            ConsoleLogger.logRed("Invalid command. Please try again.");
+            return null;
         }
-
-        ConsoleLogger.logWhite("Sending message to node...");
 
         try {
-            messageSenderQueue.offer(
-                    ThreadMessage.internalMessage(this.getClass())
-                            .request()
-                            .send()
-                            .talk(message)
-                            .to(node));
-        } catch (UnknownHostException e) {
-            ConsoleLogger.logError("Unable to send, message discarted:", e);
+            node = activeNodes.get(InetAddress.getByName(args[1]));
+        } catch (Exception e) {
+            node = null;
         }
+
+        if (node == null) {
+            ConsoleLogger.logRed("Node not found. Aborting...");
+        }
+
+        return node;
     }
 
-    private void processSend() {
-        String[] nodes;
-        String node;
-        String fileName;
+    private void processTalk(String input) {
+        String[]    args    = input.split(" ");
+        NetworkNode node    = validateCommand(args);
+        String      message = args[2];
 
-        nodes = activeNodes.keySet().stream()
-                .map(InetAddress::getHostAddress)
-                .toArray(String[]::new);
+        if (node == null) return;
 
-        node = getNodeToSend(nodes);
-        if (node == null)
-            return;
+        messageSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .send()
+                .talk(message)
+                .to(node.getAddress())
+                .at(node.getPort())
+        );
+    }
 
-        ConsoleLogger.logYellow("Enter the File's name (with extension) to send: ", false);
-        fileName = scanner.nextLine();
-        if (!FileUtils.isValidFileName(fileName)) {
-            ConsoleLogger.logRed("Invalid file name. Aborting...");
-            return;
+    private void processSend(String input) {
+        String[]    args     = input.split(" ");
+        NetworkNode node     = validateCommand(args);
+        String      fileName = args[2];
+
+        if (node == null) return;
+        messageSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .send()
+                .file(fileName)
+                .to(node.getAddress())
+                .at(node.getPort())
+        );
+
+        waitManagerFileAck(); // blocks the console until the file is sent
+    }
+
+    public void updateFileProgress(int progress) {
+        sendPercentage = progress;
+        waitingManager = false;
+    }
+
+    private void waitManagerFileAck() {
+        int prevoiusErrorCount = errorMessages.size();
+            waitingManager     = true;
+
+        while (waitingManager) {
+            try {
+                Thread.sleep(Constants.Configs.THREAD_TIMEOUT_MS);
+            } catch (InterruptedException e) {
+                return;
+            }
         }
 
-        try {
-            messageSenderQueue.offer(
-                    ThreadMessage.internalMessage(this.getClass())
-                            .request()
-                            .send()
-                            .file(fileName)
-                            .to(node));
-        } catch (UnknownHostException e) {
-            ConsoleLogger.logError("Unable to send, message discarted:", e);
+        if (errorMessages.size() > prevoiusErrorCount) {
+            return;
         }
+        displayLoadingBar();
+    }
+
+    private void displayLoadingBar() {
+        String loadingBarFormat;
+        String bar;
+
+        sendPercentage = 0;
+        loadingBarFormat = "\rLoading: [%s] %d%%";
+
+        while(sendPercentage < 100) {
+            while (waitingManager) {} // wait for updates
+            waitingManager = true;
+
+            bar = "=".repeat(sendPercentage) + " ".repeat(100 - sendPercentage);
+            ConsoleLogger.logWhite(loadingBarFormat.formatted(bar, sendPercentage), false);
+        }
+
+        ConsoleLogger.logGreen("\nFile sent successfully!");
     }
 }

@@ -1,7 +1,7 @@
 package utils;
 
 public final class Exceptions {
-    public static class FileException extends Exception {
+    public static class FileException extends RuntimeException {
         public FileException(String message) {
             super(message);
         }

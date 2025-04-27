@@ -5,7 +5,6 @@ import static utils.Constants.MessageHeaders.*;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -13,7 +12,6 @@ import interfaces.visitors.EncoderVisitor;
 import messages.ThreadMessage;
 import messages.foreign.*;
 import messages.internal.InternalMessage;
-import utils.ConsoleLogger;
 
 public class MessageEncoder implements EncoderVisitor {
 
@@ -104,10 +102,10 @@ public class MessageEncoder implements EncoderVisitor {
     @Override
     public byte[] encode(ForeignHeartbeatMessage message) {
         /*
-         * Header    (char)
-         * IpAddress (String)
+         * Header   (char)
+         * NodeName (String)
          */
-        byte[]     ipData     = IP_ADDRESS.getHostAddress().getBytes(StandardCharsets.UTF_16BE);
+        byte[]     ipData     = IP_ADDRESS.getHostName().getBytes(StandardCharsets.UTF_16BE);
         int        bufferSize = Character.BYTES + ipData.length;
         ByteBuffer buffer     = ByteBuffer.allocate(bufferSize);
 
@@ -164,18 +162,20 @@ public class MessageEncoder implements EncoderVisitor {
         header = buffer.getChar();
 
         return switch (header) {
-            case HEARTBEAT_HEADER -> decodeHeartbeat(buffer, packet.getAddress());
-            case TALK_HEADER      -> decodeTalk(buffer, packet.getAddress());
-            case FILE_HEADER      -> decodeFile(buffer, packet.getAddress());
-            case CHUNK_HEADER     -> decodeChunk(buffer, packet.getAddress());
-            case END_HEADER       -> decodeEnd(buffer, packet.getAddress());
-            case ACK_HEADER       -> decodeAck(buffer, packet.getAddress());
-            case NACK_HEADER      -> decodeNAck(buffer, packet.getAddress());
-            default               -> unexpectedHeader(buffer, packet.getAddress());
+            case HEARTBEAT_HEADER -> decodeHeartbeat(buffer, packet.getAddress(), packet.getPort());
+            case TALK_HEADER      -> decodeTalk(buffer, packet.getAddress(), packet.getPort());
+            case FILE_HEADER      -> decodeFile(buffer, packet.getAddress(), packet.getPort());
+            case CHUNK_HEADER     -> decodeChunk(buffer, packet.getAddress(), packet.getPort());
+            case END_HEADER       -> decodeEnd(buffer, packet.getAddress(), packet.getPort());
+            case ACK_HEADER       -> decodeAck(buffer, packet.getAddress(), packet.getPort());
+            case NACK_HEADER      -> decodeNAck(buffer, packet.getAddress(), packet.getPort());
+            default               -> unexpectedHeader(buffer, packet.getAddress(), packet.getPort());
         };
     }
 
-    private InternalMessage decodeAck(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeAck(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
          * AckId  (int)
          */
@@ -184,10 +184,13 @@ public class MessageEncoder implements EncoderVisitor {
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage()
                             .ack(akkedId)
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage decodeChunk(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeChunk(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
          * MessageId (int)
          * SeqNum    (int)
@@ -206,10 +209,13 @@ public class MessageEncoder implements EncoderVisitor {
                             .receivedMessage(messageId)
                             .chunk(chunkData)
                             .sequenceNumber(sequenceNumber)
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage decodeEnd(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeEnd(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
          * MessageId (int)
          * Hash      (String)
@@ -224,10 +230,13 @@ public class MessageEncoder implements EncoderVisitor {
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage(messageId)
                             .end(new String(hashData, StandardCharsets.UTF_16BE))
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage decodeFile(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeFile(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
          * MessageId (int)
          * NameSize  (int)
@@ -249,32 +258,31 @@ public class MessageEncoder implements EncoderVisitor {
                             .receivedMessage(messageId)
                             .file(new String(nameData, StandardCharsets.UTF_16BE))
                             .size(fileSize)
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage decodeHeartbeat(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeHeartbeat(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
-         * IpAddress (String)
+         * NodeName (String)
          */
 
-        byte[] ipData = new byte[buffer.remaining()];
-        buffer.get(ipData);
+        byte[] nodeName = new byte[buffer.remaining()];
+        buffer.get(nodeName);
 
-        try {
-            return ThreadMessage.internalMessage(getClass())
-                                .receivedMessage()
-                                .heartbeat()
-                                .from(new String(ipData, StandardCharsets.UTF_16BE));
-        } catch (UnknownHostException e) {
-            ConsoleLogger.logError("Unknow host, Packet's address", e);
-            return ThreadMessage.internalMessage(getClass())
-                                .receivedMessage()
-                                .heartbeat()
-                                .from(ipAddress);
-        }
+        return ThreadMessage.internalMessage(getClass())
+                            .receivedMessage()
+                            .heartbeat()
+                            .name(new String(nodeName, StandardCharsets.UTF_16BE))
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage decodeNAck(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeNAck(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
          * NAckId (int)
          * Reason (String)
@@ -290,10 +298,13 @@ public class MessageEncoder implements EncoderVisitor {
                             .receivedMessage()
                             .nAck(nAckkedId)
                             .reason(new String(reasonData, StandardCharsets.UTF_16BE))
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage decodeTalk(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage decodeTalk(
+        ByteBuffer buffer, InetAddress ipAddress, int port
+    ) {
         /*
          * MessageId (int)
          * Content   (String)
@@ -308,16 +319,18 @@ public class MessageEncoder implements EncoderVisitor {
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage(messageId)
                             .talk(new String(contentData, StandardCharsets.UTF_16BE))
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 
-    private InternalMessage unexpectedHeader(ByteBuffer buffer, InetAddress ipAddress) {
+    private InternalMessage unexpectedHeader(ByteBuffer buffer, InetAddress ipAddress, int port) {
         byte[] data = new byte[buffer.remaining()];
         buffer.get(data);
 
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage()
                             .unsupportedMessage(new String(data, StandardCharsets.UTF_16BE))
-                            .from(ipAddress);
+                            .from(ipAddress)
+                            .at(port);
     }
 }

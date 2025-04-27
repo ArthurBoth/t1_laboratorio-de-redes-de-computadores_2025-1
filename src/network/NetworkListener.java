@@ -28,13 +28,12 @@ public class NetworkListener implements InternalMessageVisitor {
         this.activeNodes = activeNodes;
     }
 
-    private void setup() {
-        handler = new MessageHandler(udpSenderQueue, ioSenderQueue, activeNodes);
+    public void setup(ConcurrentHashMap<Integer, Integer> messagesMap) {
+        handler = new MessageHandler(udpSenderQueue, ioSenderQueue, activeNodes, messagesMap);
     }
 
     public void startListening() {
         InternalMessage message;
-        setup();
 
         try {
             while (true) {

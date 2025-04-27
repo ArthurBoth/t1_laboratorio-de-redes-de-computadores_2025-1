@@ -1,5 +1,6 @@
 package network.messageHandlers;
 
+
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
@@ -15,10 +16,14 @@ import messages.internal.InternalMessage;
 import messages.internal.received.*;
 import messages.internal.requested.*;
 import messages.internal.requested.send.InternalRequestSendAckMessage;
+import messages.internal.requested.send.InternalRequestSendChunkMessage;
+import messages.internal.requested.send.InternalRequestSendEndMessage;
 import messages.internal.requested.send.InternalRequestSendFileMessage;
+import messages.internal.requested.send.InternalRequestSendFullFileMessage;
 import messages.internal.requested.send.InternalRequestSendNAckMessage;
 import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import network.NetworkNode;
+import utils.Constants;
 import utils.Exceptions.EndExecutionException;
 
 
@@ -30,39 +35,42 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
     private BlockingQueue<ForeignMessage> udpSenderQueue;
     private BlockingQueue<InternalMessage> loggerQueue;
     private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
+    private ConcurrentHashMap<Integer, Integer> messagesMap; // messageId -> seconds since sent
 
-    private HashMap<Integer, ForeignMessage> sentMessages;                  // messageId -> message
-    private HashMap<Integer, InternalRequestSendFileMessage> pendingFiles;  // messageId -> message
+    private HashMap<Integer, ForeignMessage> sentMessages;  // messageId -> message
 
     public MessageHandler(
         BlockingQueue<ForeignMessage> udpSenderQueue,
         BlockingQueue<InternalMessage> loggerQueue,
-        ConcurrentHashMap<InetAddress, NetworkNode> activeNodes
+        ConcurrentHashMap<InetAddress, NetworkNode> activeNodes,
+        ConcurrentHashMap<Integer, Integer> messagesMap
     ) {
         this.udpSenderQueue = udpSenderQueue;
         this.loggerQueue    = loggerQueue;
         this.activeNodes    = activeNodes;
+        this.messagesMap    = messagesMap;
 
         sentMessages = new HashMap<>();
-        pendingFiles = new HashMap<>();
     }
 
     /**
      * Registers the Ip Node to the Network Map, if it's not already registered
      * Resets the timeout timer, if it is
      * @param ip is the InetAddress to have it's timer reset
+     * @param port is the port of the node
+     * @param name is the name of the node
+     * @see NetworkNode
+     * @see NetworkNode#resetHeartbeat()
      */
-    private void registerNode(InetAddress ip) {
-        if (!activeNodes.containsKey(ip)) {
-            activeNodes.put(ip, NetworkNode.of();
-        } else {
-            activeNodes.get(ip).resetHeartbeat();
-        }
+    private void registerNode(InetAddress ip, int port, String name) {
+        activeNodes.putIfAbsent(ip, NetworkNode.of(ip, port, name));
+        activeNodes.get(ip).resetHeartbeat();
     }
 
     private void sendMessage(int messageId, ForeignMessage message) {
         sentMessages.putIfAbsent(messageId, message);
         udpSenderQueue.offer(message);
+        messagesMap.put(messageId, Constants.Configs.MESSAGE_ACK_TIMEOUT_SEC);
     }
 
     // ****************************************************************************************************
@@ -70,38 +78,33 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
 
     @Override
     public void visit(InternalReceivedHeartbeatMessage message) {
-        registerNode(message.getSourceIp());
+        registerNode(message.getSourceIp(), message.getPort(), message.getName());
         loggerQueue.offer(message);
     }
 
     @Override
     public void visit(InternalReceivedTalkMessage message) {
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
     }
 
     @Override
     public void visit(InternalReceivedFileMessage message) {
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
     }
 
     @Override
     public void visit(InternalReceivedChunkMessage message) {
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
     }
 
     @Override
     public void visit(InternalReceivedEndMessage message) {
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
     }
 
     @Override
     public void visit(InternalReceivedAckMessage message) {
         ForeignMessage sentMessage;
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
 
         sentMessage = sentMessages.remove(message.getAcknowledgedId());
@@ -110,16 +113,13 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
 
     @Override
     public void visit(InternalReceivedNAckMessage message) {
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
 
         sentMessages.remove(message.getNonAcknowledgedId());
-        pendingFiles.remove(message.getNonAcknowledgedId());
     }
 
     @Override
     public void visit(InternalReceivedUnsupportedMessage message) {
-        registerNode(message.getSourceIp());
         loggerQueue.offer(message);
     }
 
@@ -168,11 +168,38 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
     @Override
     public void visit(InternalRequestSendFileMessage request) {
         int messageId = idCounter++;
-        pendingFiles.put(messageId, request);
         sendMessage(messageId,
             ThreadMessage.foreignMessage(messageId)
                             .file(request.getFileName())
                             .fileSize(request.getFileSize())
+                            .to(request.getDestinationIp())
+                            .at(request.getPort())
+        );
+    }
+
+    @Override
+    public void visit(InternalRequestSendFullFileMessage message) {
+        throw new IllegalStateException("Full file request should not arrive in the message handler");
+    }
+
+    @Override
+    public void visit(InternalRequestSendChunkMessage request) {
+        int messageId = idCounter++;
+        sendMessage(messageId,
+            ThreadMessage.foreignMessage(messageId)
+                            .chunk(request.getSequenceNumber())
+                            .data(request.getChunk())
+                            .to(request.getDestinationIp())
+                            .at(request.getPort())
+        );
+    }
+
+    @Override
+    public void visit(InternalRequestSendEndMessage request) {
+        int messageId = idCounter++;
+        sendMessage(messageId,
+            ThreadMessage.foreignMessage(messageId)
+                            .end(request.getHash())
                             .to(request.getDestinationIp())
                             .at(request.getPort())
         );
@@ -203,27 +230,19 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
     // ForeignVisitor interface implementation
 
     @Override
-    public void ack(ForeignMessage request) {
+    public void ack(ForeignMessage message) {
         return;
     }
 
     @Override
-    public void ack(ForeignFileMessage request) {
-        InternalRequestSendFileMessage sentMessage;
-        byte[][] fileContent;
-
-        sentMessage = pendingFiles.remove(request.getMessageId());
-        fileContent = sentMessage.getSplitData();
-
-        for (int i = 0; i < fileContent.length; i++) {
-            int messageId = idCounter++;
-            sendMessage(messageId,
-                ThreadMessage.foreignMessage(messageId)
-                                .chunk(i)
-                                .data(fileContent[i])
-                                .to(request.getDestinationIp())
-                                .at(request.getPort())
-            );
-        }
+    public void ack(ForeignFileMessage message) {
+        loggerQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .send()
+                .fullFile(message.getFileName())
+                .to(message.getDestinationIp())
+                .at(message.getPort())
+        );
     }
 }

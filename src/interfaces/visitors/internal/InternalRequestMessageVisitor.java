@@ -1,17 +1,16 @@
 package interfaces.visitors.internal;
 
-import messages.internal.requested.InternalRequestExitMessage;
-import messages.internal.requested.InternalRequestResendMessage;
-import messages.internal.requested.send.InternalRequestSendAckMessage;
-import messages.internal.requested.send.InternalRequestSendFileMessage;
-import messages.internal.requested.send.InternalRequestSendNAckMessage;
-import messages.internal.requested.send.InternalRequestSendTalkMessage;
+import messages.internal.requested.*;
+import messages.internal.requested.send.*;
 
 public interface InternalRequestMessageVisitor {
     void visit(InternalRequestExitMessage message);
     void visit(InternalRequestResendMessage message);
     void visit(InternalRequestSendTalkMessage message);
     void visit(InternalRequestSendFileMessage message);
+    void visit(InternalRequestSendChunkMessage message);
+    void visit(InternalRequestSendEndMessage message);
     void visit(InternalRequestSendAckMessage message);
     void visit(InternalRequestSendNAckMessage message);
+    void visit(InternalRequestSendFullFileMessage message);
 }

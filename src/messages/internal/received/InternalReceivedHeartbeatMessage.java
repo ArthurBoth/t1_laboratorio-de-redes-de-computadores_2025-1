@@ -5,6 +5,11 @@ import static utils.Constants.Strings.HEARTBEAT_LOG_FORMAT;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
 
     // ****************************************************************************************************
     // Visitor pattern for InternalReceivedHeartbeatMessage
@@ -36,12 +41,17 @@ public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
     // ****************************************************************************************************
     // Factory pattern for InternalReceivedHeartbeatMessage
 
-    public static IpSetter<InternalReceivedHeartbeatMessage> createHeartbeat(Class<?> clazz) {
+    public static StringSetter createHeartbeat(Class<?> clazz) {
         return new Builder(clazz);
     }
 
-    private static class Builder extends IpBuilder<InternalReceivedHeartbeatMessage> {
+    public interface StringSetter {
+        IpSetter<InternalReceivedHeartbeatMessage> name(String name);
+    }
+
+    private static class Builder extends IpBuilder<InternalReceivedHeartbeatMessage> implements StringSetter {
         private Class<?> clazz;
+        private String name;
 
         private Builder(Class<?> clazz) {
             this.clazz     = clazz;
@@ -51,10 +61,18 @@ public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
         protected InternalReceivedHeartbeatMessage self() {
             return new InternalReceivedHeartbeatMessage(this);
         }
+
+        @Override
+        public IpSetter<InternalReceivedHeartbeatMessage> name(String name) {
+            this.name = name;
+            return this;
+        }
     }
 
     private InternalReceivedHeartbeatMessage(Builder builder) {
         this.clazz    = builder.clazz;
+        this.name     = builder.name;
+        this.port     = builder.port;
         this.sourceIp = builder.sourceIp;
     }
 }

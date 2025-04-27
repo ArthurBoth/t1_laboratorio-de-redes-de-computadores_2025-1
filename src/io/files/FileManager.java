@@ -1,6 +1,5 @@
 package io.files;
 
-import java.io.File;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -8,14 +7,12 @@ import java.util.concurrent.BlockingQueue;
 
 import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.LoggerVisitor;
-import io.files.filePartition.FileAssembler;
+import io.files.filePartition.*;
 import messages.ThreadMessage;
 import messages.internal.InternalMessage;
-import messages.internal.received.InternalReceivedChunkMessage;
-import messages.internal.received.InternalReceivedEndMessage;
-import messages.internal.received.InternalReceivedFileMessage;
-import messages.internal.received.InternalReceivedMessage;
-import messages.internal.received.InternalReceivedTalkMessage;
+import messages.internal.received.*;
+import messages.internal.requested.send.InternalRequestSendFileMessage;
+import messages.internal.requested.send.InternalRequestSendFullFileMessage;
 import messages.internal.requested.send.InternalRequestSendMessage;
 import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import utils.ConsoleLogger;
@@ -24,31 +21,15 @@ import utils.Exceptions.FileException;
 
 public class FileManager implements FileMessageVisitor, LoggerVisitor {
     private FileLogger logger;
-    private HashMap<InetAddress, FileAssembler> fileMap;  // ip -> File
-    private BlockingQueue<InternalMessage> messageSenderQueue;
+    private HashMap<InetAddress, FileAssembler> receivingFiles;   // ip -> File
+    private HashMap<InetAddress, FileDisassembler> sendingfiles;  // ip -> File
+    private BlockingQueue<InternalMessage> managerSenderQueue;
 
-    public FileManager(BlockingQueue<InternalMessage> messageSenderQueue) {
-        this.messageSenderQueue = messageSenderQueue;
+    public FileManager(BlockingQueue<InternalMessage> managerSenderQueue) {
+        this.managerSenderQueue = managerSenderQueue;
 
-        logger  = new FileLogger();
-        fileMap = new HashMap<InetAddress, FileAssembler>();
-    }
-
-    public File getFile(String fileName) throws FileException {
-        File file = new File(fileName);
-
-        if (!file.exists())
-            throw new FileException("File not found");
-        if (file.isDirectory())
-            throw new FileException("File is a directory");
-        if (!file.canRead())
-            throw new FileException("File is not readable");
-        if (file.length() > Constants.Configs.MAX_FILE_SIZE)
-            throw new FileException("File is too large");
-        if (file.length() == 0)
-            throw new FileException("File is empty");
-
-        return file;
+        logger         = new FileLogger();
+        receivingFiles = new HashMap<InetAddress, FileAssembler>();
     }
     
     // ****************************************************************************************************
@@ -72,7 +53,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
             fileAssembler = FileAssembler.of(fileName, fileSize);
         } catch (NoSuchAlgorithmException e) {
             ConsoleLogger.logError(e);
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -84,8 +65,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
             return;
         }
         
-        if (fileMap.containsKey(message.getSourceIp())) {
-            messageSenderQueue.offer(
+        if (receivingFiles.containsKey(message.getSourceIp())) {
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -98,7 +79,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         }
 
         if (fileAssembler == null) {
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -110,8 +91,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
             return;
         }
 
-        fileMap.put(message.getSourceIp(), fileAssembler);
-        messageSenderQueue.offer(
+        receivingFiles.put(message.getSourceIp(), fileAssembler);
+        managerSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
                 .request()
                 .send()
@@ -133,10 +114,10 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         sequenceNumber = message.getSequenceNumber();
         chunkData      = message.getData();
         sourceIp       = message.getSourceIp();
-        fileAssembler  = fileMap.get(sourceIp);
+        fileAssembler  = receivingFiles.get(sourceIp);
 
         if (fileAssembler == null) {
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -157,7 +138,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
                     sequenceNumber, chunkData.length, fileAssembler.getErrorMessage()
                 )
             );
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -169,7 +150,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
             return;
         }
 
-        messageSenderQueue.offer(
+        managerSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
                 .request()
                 .send()
@@ -189,10 +170,10 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
 
         receivedHash  = message.getFileHash();
         sourceIp      = message.getSourceIp();
-        fileAssembler = fileMap.get(sourceIp);
+        fileAssembler = receivingFiles.get(sourceIp);
 
         if (fileAssembler == null) {
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -209,7 +190,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
                 // Out of order packet, wait for timeout to resend
                 return;
 
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -222,10 +203,10 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
 
         if (!fileAssembler.isComplete()) return;
 
-        fileMap.remove(sourceIp);
+        receivingFiles.remove(sourceIp);
         
         if (fileAssembler.getErrorMessage() == null) {
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -234,7 +215,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
                     .at(message.getPort())
             );
         } else {
-            messageSenderQueue.offer(
+            managerSenderQueue.offer(
                 ThreadMessage.internalMessage(getClass())
                     .request()
                     .send()
@@ -244,6 +225,64 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
                     .at(message.getPort())
             );
         }
+    }
+
+    @Override
+    public void visit(InternalRequestSendFileMessage message) {
+        FileDisassembler fileDisassembler;
+
+        logger.logSent(message);
+        try {
+            fileDisassembler = FileDisassembler.of(message.getFileName());
+        } catch (NoSuchAlgorithmException e) {
+            fileDisassembler = null;
+        }
+
+        if (fileDisassembler == null) {
+            throw new FileException("No such algorithm");
+        }
+
+        message.setFileSize(fileDisassembler.getFileSize());
+        sendingfiles.put(message.getDestinationIp(), fileDisassembler);
+    }
+
+
+    @Override
+    public void visit(InternalRequestSendFullFileMessage message) {
+        FileDisassembler fileDisassembler;
+        byte[] chunkData;
+        int sequenceNumber;
+        InetAddress destinationIp;
+        int port;
+
+        logger.logInternal(message);
+        fileDisassembler = sendingfiles.get(message.getDestinationIp());
+
+        if (fileDisassembler == null) return;
+
+        destinationIp  = message.getDestinationIp();
+        port           = message.getPort();
+        sequenceNumber = 0;
+        while((chunkData = fileDisassembler.readChunk()) != null) {
+            managerSenderQueue.offer(
+                ThreadMessage.internalMessage(getClass())
+                    .request()
+                    .send()
+                    .chunk(sequenceNumber++)
+                    .data(chunkData)
+                    .to(destinationIp)
+                    .at(port)
+            );
+        }
+
+        managerSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .send()
+                .end(fileDisassembler.computeHash())
+                .to(destinationIp)
+                .at(port)
+        );
     }
 
     // **************************************************

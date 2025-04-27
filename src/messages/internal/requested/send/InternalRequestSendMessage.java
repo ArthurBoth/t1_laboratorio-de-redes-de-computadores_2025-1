@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import messages.internal.requested.InternalRequestMessage;
-import messages.internal.requested.send.InternalRequestSendNAckMessage.StringSetter;
 
 public abstract class InternalRequestSendMessage extends InternalRequestMessage {
     protected InetAddress destinationIp;
@@ -24,6 +23,9 @@ public abstract class InternalRequestSendMessage extends InternalRequestMessage 
     public interface MessageSelection {
         IpSetter<InternalRequestSendTalkMessage> talk(String content);
         IpSetter<InternalRequestSendFileMessage> file(String fileName);
+        IpSetter<InternalRequestSendFullFileMessage> fullFile(String fileName);
+        InternalRequestSendChunkMessage.ByteArraySetter chunk(int seqNumber);
+        IpSetter<InternalRequestSendEndMessage> end(String fileHash);
         IpSetter<InternalRequestSendAckMessage> ack(int messageId);
         InternalRequestSendNAckMessage.StringSetter nAck(int messageId);
     }
@@ -46,12 +48,27 @@ public abstract class InternalRequestSendMessage extends InternalRequestMessage 
         }
 
         @Override
+        public IpSetter<InternalRequestSendFullFileMessage> fullFile(String fileName) {
+            return InternalRequestSendFullFileMessage.create(clazz, fileName);
+        }
+
+        @Override
+        public InternalRequestSendChunkMessage.ByteArraySetter chunk(int seqNumber) {
+            return InternalRequestSendChunkMessage.create(clazz, seqNumber);
+        }
+
+        @Override
+        public IpSetter<InternalRequestSendEndMessage> end(String fileHash) {
+            return InternalRequestSendEndMessage.create(clazz, fileHash);
+        }
+
+        @Override
         public IpSetter<InternalRequestSendAckMessage> ack(int messageId) {
             return InternalRequestSendAckMessage.create(clazz, messageId);
         }
 
         @Override
-        public StringSetter nAck(int messageId) {
+        public InternalRequestSendNAckMessage.StringSetter nAck(int messageId) {
             return InternalRequestSendNAckMessage.create(clazz, messageId);
         }
     }

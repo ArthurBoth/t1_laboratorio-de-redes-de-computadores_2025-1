@@ -37,6 +37,12 @@ public class FileAssembler {
         return of(fileName, (long) fileSize);
     }
 
+    /**
+     * Returns an instance of FileAssembler or {@code null} if the file cannot be created or is not writable.
+     * @param fileName the name of the file (with extension) to be created inside the {@code receiveFiles} folder
+     * @return An instance of FileAssembler or {@code null} if the file cannot be created
+     * @throws NoSuchAlgorithmException if the hashing algorithm is not found
+     */
     public static FileAssembler of(String fileName, long fileSize) throws NoSuchAlgorithmException {
         Path filePath = Path.of(RECEIVE_FOLDER_PATH + fileName);
         if (!FileUtils.canCreateFile(filePath.toFile())) return null;
@@ -105,7 +111,7 @@ public class FileAssembler {
 
         isComplete = true;
         String fileHash = hashToString(digestor.digest());
-        if (!fileHash.equals(incomingHash)) {
+        if (!fileHash.equalsIgnoreCase(incomingHash)) {
             errorMessage = Errors.DIFFERENT_HASHES;
             return false;
         }
@@ -113,10 +119,10 @@ public class FileAssembler {
     }
 
     private String hashToString(byte[] hashBytes) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
+            builder.append(String.format("%02X", b));
         }
-        return sb.toString();
+        return builder.toString();
     }
 }

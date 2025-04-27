@@ -38,15 +38,6 @@ public abstract class FileIo {
         }
     }
 
-    public static byte[] readFile(Path path) {
-        try {
-            return Files.readAllBytes(path);
-        } catch (IOException e) {
-            ConsoleLogger.logError("An error occurred. (reading file)", e);
-        }
-        return null;
-    }
-
     public static void writeChunk(Path path, byte[] data) {
         try (
             OutputStream outputStream = new BufferedOutputStream(
@@ -68,6 +59,10 @@ public abstract class FileIo {
             inputStream.skip(offset);
             buffer    = new byte[length];
             bytesRead = inputStream.read(buffer, offset, length);
+
+            if (bytesRead == -1) {
+                return null;
+            }
 
             if (bytesRead < length) {
                 data = new byte[bytesRead];

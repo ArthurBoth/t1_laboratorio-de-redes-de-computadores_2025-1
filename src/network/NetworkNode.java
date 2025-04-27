@@ -27,6 +27,11 @@ public class NetworkNode {
         return secondsSinceHeartbeatMessage;
     }
 
+    /**
+     * Increments the seconds since the last heartbeat message.
+     * Returns {@code true} if the node should timeout (i.e., if it has not received a heartbeat message for too long).
+     * @return {@code true} if the node should timeout, {@code false} otherwise
+     */
     public boolean tickHeartbeat() {
         boolean shouldTimeout;
 
