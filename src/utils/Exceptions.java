@@ -1,12 +1,12 @@
 package utils;
 
 public final class Exceptions {
-    public static class FileSearchException extends Exception {
-        public FileSearchException(String message) {
+    public static class FileException extends Exception {
+        public FileException(String message) {
             super(message);
         }
 
-        public FileSearchException(String message, Throwable cause) {
+        public FileException(String message, Throwable cause) {
             super(message, cause);
         }
     }

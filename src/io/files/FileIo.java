@@ -4,13 +4,12 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 
 import utils.ConsoleLogger;
-import utils.FileUtils;
 
 public abstract class FileIo {
     public static void writeLine(String path, String line) {
@@ -48,18 +47,37 @@ public abstract class FileIo {
         return null;
     }
 
-    public static void writeFile(String fileName, byte[] data) {
-        try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(fileName))) {
+    public static void writeChunk(Path path, byte[] data) {
+        try (
+            OutputStream outputStream = new BufferedOutputStream(
+                new FileOutputStream(path.toFile(), true)
+            )
+        ) {
             outputStream.write(data);
         } catch (IOException e) {
             ConsoleLogger.logError("An error occurred. (writing file)", e);
         }
     }
 
-    public static String hashFile(Path path) throws NoSuchAlgorithmException {
-        byte[] fileBytes = readFile(path);
-        if (fileBytes == null) return null;
-        
-        return FileUtils.getFileHash(fileBytes);
+    public static byte[] readChunk(Path path, int offset, int length) {
+        byte[] buffer;
+        byte[] data;
+        int bytesRead;
+
+        try (InputStream inputStream = Files.newInputStream(path)) {
+            inputStream.skip(offset);
+            buffer    = new byte[length];
+            bytesRead = inputStream.read(buffer, offset, length);
+
+            if (bytesRead < length) {
+                data = new byte[bytesRead];
+                System.arraycopy(buffer, 0, data, 0, bytesRead);
+                return data;
+            }
+            return buffer;
+        } catch (IOException e) {
+            ConsoleLogger.logError("An error occurred. (reading file)", e);
+            return null;
+        }
     }
 }

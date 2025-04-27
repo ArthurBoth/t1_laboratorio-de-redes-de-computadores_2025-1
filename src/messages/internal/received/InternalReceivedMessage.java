@@ -13,11 +13,15 @@ public abstract class InternalReceivedMessage extends InternalMessage {
     //    It should be used to map the messages received from the network to the internal messages of the
     //    system.
     // ****************************************************************************************************
-
     protected InetAddress sourceIp;
+    protected int port;
 
     public InetAddress getSourceIp() {
         return sourceIp;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     // ****************************************************************************************************
@@ -84,22 +88,34 @@ public abstract class InternalReceivedMessage extends InternalMessage {
 
 
     public interface IpSetter<T extends InternalReceivedMessage> {
-        T from(InetAddress sourceIp);
-        T from(String sourceIp) throws UnknownHostException;
+        PortSetter<T> from(InetAddress sourceIp);
+        PortSetter<T> from(String sourceIp) throws UnknownHostException;
     }
 
-    protected static abstract class IpBuilder<T extends InternalReceivedMessage> implements IpSetter<T> {
+    public interface PortSetter<T extends InternalReceivedMessage> {
+        T at(int port);
+    }
+
+    protected static abstract class IpBuilder<T extends InternalReceivedMessage>
+                                implements IpSetter<T>, PortSetter<T> {
         protected InetAddress sourceIp;
+        protected int port;
 
         @Override
-        public final T from(InetAddress sourceIp) {
+        public final PortSetter<T> from(InetAddress sourceIp) {
             this.sourceIp = sourceIp;
-            return self();
+            return this;
         }
 
         @Override
-        public final T from(String sourceIp) throws UnknownHostException {
+        public final PortSetter<T>  from(String sourceIp) throws UnknownHostException {
             this.sourceIp = InetAddress.getByName(sourceIp);
+            return this;
+        }
+
+        @Override
+        public final T at(int port) {
+            this.port = port;
             return self();
         }
 

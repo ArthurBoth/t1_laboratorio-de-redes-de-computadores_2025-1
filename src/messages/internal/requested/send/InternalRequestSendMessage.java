@@ -8,10 +8,16 @@ import messages.internal.requested.send.InternalRequestSendNAckMessage.StringSet
 
 public abstract class InternalRequestSendMessage extends InternalRequestMessage {
     protected InetAddress destinationIp;
+    protected int port;
 
     public InetAddress getDestinationIp() {
         return destinationIp;
     }
+
+    public int getPort() {
+        return port;
+    }
+
     // ****************************************************************************************************
     // Builder pattern for InternalRequestSendMessage
 
@@ -53,27 +59,38 @@ public abstract class InternalRequestSendMessage extends InternalRequestMessage 
     public static Builder build(Class<?> clazz) {
         return new Builder(clazz);
     }
-    
+
     // ****************************************************************************************************
     // Abstract Builder pattern for InternalRequestSendMessage subclasses
 
     public interface IpSetter<T extends InternalRequestMessage> {
-        T to(String destinationIp) throws UnknownHostException;
-        T to(InetAddress destinationIp);
+        PortSetter<T> to(String destinationIp) throws UnknownHostException;
+        PortSetter<T> to(InetAddress destinationIp);
+    }
+    public interface PortSetter<T extends InternalRequestMessage> {
+        T at(int port);
     }
  
-    protected static abstract class IpBuilder<T extends InternalRequestMessage> implements IpSetter<T> {
+    protected static abstract class IpBuilder<T extends InternalRequestMessage>
+                                implements IpSetter<T>, PortSetter<T> {
         protected InetAddress destinationIp;
+        protected int port;
 
         @Override
-        public final T to(String destinationIp) throws UnknownHostException {
+        public final PortSetter<T> to(String destinationIp) throws UnknownHostException {
             this.destinationIp = InetAddress.getByName(destinationIp);
-            return self();
+            return this;
         }
 
         @Override
-        public final T to(InetAddress destinationIp) {
+        public final PortSetter<T> to(InetAddress destinationIp) {
             this.destinationIp = destinationIp;
+            return this;
+        }
+
+        @Override
+        public final T at(int port) {
+            this.port = port;
             return self();
         }
 

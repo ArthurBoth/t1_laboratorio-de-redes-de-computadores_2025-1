@@ -11,10 +11,11 @@ import java.util.concurrent.TimeUnit;
 import messages.ThreadMessage;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
+import network.NetworkNode;
 
 public class TimerThread extends AppThread {
-    private HashMap<Integer, Integer> messagesWaitingAck;         // messageId -> seconds since sent
-    private ConcurrentHashMap<InetAddress, Integer> activeNodes;  // node      -> seconds since last message
+    private HashMap<Integer, Integer> messagesWaitingAck;             // messageId -> seconds since sent
+    private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes;  // ip        -> node
 
     private BlockingQueue<InternalMessage> handlerSenderQueue;  // queue to receive messages from other threads
     private BlockingQueue<ForeignMessage> udpSenderQueue;       // queue to receive messages from other threads
@@ -24,7 +25,7 @@ public class TimerThread extends AppThread {
     public TimerThread(
         BlockingQueue<InternalMessage> handlerSenderQueue,
         BlockingQueue<ForeignMessage> udpSenderQueue,
-        ConcurrentHashMap<InetAddress, Integer> activeNodes
+        ConcurrentHashMap<InetAddress, NetworkNode> activeNodes
     ) {
         this.udpSenderQueue     = udpSenderQueue;
         this.handlerSenderQueue = handlerSenderQueue;

@@ -17,7 +17,7 @@ public class NetworkManager {
 
     private NetworkListener listener;
     private ThreadManager threadManager;
-    private ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
+    private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
 
     public void start() throws SocketException {
         setup();
@@ -34,7 +34,7 @@ public class NetworkManager {
         BlockingQueue<InternalMessage> timerReceiverQueue;
 
         socket        = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
-        activeNodes   = new ConcurrentHashMap<InetAddress, Integer>();
+        activeNodes   = new ConcurrentHashMap<InetAddress, NetworkNode>();
         listener      = new NetworkListener(activeNodes);
         threadManager = new ThreadManager(socket, activeNodes);
 

@@ -16,9 +16,14 @@ public abstract class ForeignMessage extends ThreadMessage {
     //    It should be used to create messages that will be sent over the network.
     // ****************************************************************************************************
     protected InetAddress destinationIp;
+    protected int port;
 
     public final InetAddress getDestinationIp() {
         return destinationIp;
+    }
+
+    public int getPort() {
+        return port;
     }
     
     // ****************************************************************************************************
@@ -108,16 +113,26 @@ public abstract class ForeignMessage extends ThreadMessage {
     // Abstract Builder pattern for ForeignMessage subclasses
 
     public interface IpSetter<T extends ForeignMessage> {
-        T to(InetAddress destinationIp);
+        PortSetter<T> to(InetAddress destinationIp);
     }
 
-    public static abstract class IpBuilder<T extends ForeignMessage> implements IpSetter<T> {
+    public interface PortSetter<T extends ForeignMessage> {
+        T at(int port);
+    }
+
+    public static abstract class IpBuilder<T extends ForeignMessage>
+                            implements IpSetter<T>, PortSetter<T> {
         protected InetAddress destinationIp;
         protected int port;
 
         @Override
-        public final T to(InetAddress destinationIp) {
+        public final PortSetter<T> to(InetAddress destinationIp) {
             this.destinationIp = destinationIp;
+            return this;
+        }
+
+        public final T at(int port) {
+            this.port = port;
             return self();
         }
 

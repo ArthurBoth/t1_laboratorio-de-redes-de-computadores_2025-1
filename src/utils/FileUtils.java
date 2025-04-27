@@ -1,10 +1,39 @@
 package utils;
 
 import java.io.File;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public abstract class FileUtils {
+    /**
+     * Checks if a file name is valid. <br></br>
+     * A file name is valid if it does not contain any forbidden characters,
+     * does not end with a space or a dot, and is not a reserved name. <br></br>
+     * The reserved names are: <br></br>
+     * - CON <br></br>
+     * - PRN <br></br>
+     * - AUX <br></br>
+     * - NUL <br></br>
+     * - COM1 <br></br>
+     * - COM2 <br></br>
+     * - COM3 <br></br>
+     * - COM4 <br></br>
+     * - COM5 <br></br>
+     * - COM6 <br></br>
+     * - COM7 <br></br>
+     * - COM8 <br></br>
+     * - COM9 <br></br>
+     * - LPT1 <br></br>
+     * - LPT2 <br></br>
+     * - LPT3 <br></br>
+     * - LPT4 <br></br>
+     * - LPT5 <br></br>
+     * - LPT6 <br></br>
+     * - LPT7 <br></br>
+     * - LPT8 <br></br>
+     * - LPT9 <br></br>
+     * @param fileName the file name to check
+     * @return true if the file name is valid, false otherwise
+     * @see Constants.ForbiddenFileNames
+     */
     public static boolean isValidFileName(String fileName) {
         String extensionlessFileName;
 
@@ -19,28 +48,19 @@ public abstract class FileUtils {
         return !(Constants.ForbiddenFileNames.RESERVED_NAMES.contains(extensionlessFileName.toUpperCase()));
     }
 
-    public static String problemsCreatingFile(File file) {
-        if (!FileUtils.isValidFileName(file.getName())) return "Invalid file name";
-        if (file.exists()) return "File already exists";
+    /**
+     * Checks if a file can be created. <br></br>
+     * A file can be created if it does not exist and its name is valid. <br></br>
+     * @param file the {@code file} object to check
+     * @return true if the file can be created, false otherwise
+     * @see #isValidFileName(String)
+     * @see Constants.ForbiddenFileNames
+     */
+    public static boolean canCreateFile(File file) {
+        if (!FileUtils.isValidFileName(file.getName())) return false;
+        if (file.exists()) return false;
 
-        return null;
-    }
-
-    private static byte[] hashFile(byte[] fileBytes) throws NoSuchAlgorithmException {
-        MessageDigest digestor = MessageDigest.getInstance(Constants.Configs.HASHING_ALGORITHM);
-        return digestor.digest(fileBytes);
-    } 
-
-    private static String hashToString(byte[] hashBytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-    public static String getFileHash(byte[] data) throws NoSuchAlgorithmException {
-        return hashToString(hashFile(data));
+        return true;
     }
 
     public static String byteArrayToString(byte[] data) {

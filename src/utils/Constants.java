@@ -8,7 +8,7 @@ import java.util.Set;
 public final class Constants {
     public static final class Configs {
         public static final int DEFAULT_PORT     = 9000;
-        public static final int MAX_MESSAGE_SIZE = 1 << 17;                                            // 128 KB
+        public static final int MAX_MESSAGE_SIZE = 1 << 14;                                            // 16 KB
         public static final int MAX_CHUNK_SIZE   = CompilingFunctions.calculateMinimumMaxChunkSize();
 
         public static final int SOCKET_TIMEOUT_MS       = 1000;
@@ -86,13 +86,27 @@ public final class Constants {
         public static final String ACK_SENDING_LOG_FORMAT    = "(%s) ACK_SENDING : %d";
         public static final String NACK_SENDING_LOG_FORMAT   = "(%s) NACK_SENDING: %d \"%s\"";
         public static final String RESEND_REQUEST_LOG_FORMAT = "(%s) Message %d timed out, resending...";
+        public static final String DISCARTED_CHUNK_FORMAT    = "(%s) DISCARTED CHUNK: %d (%d bytes) because %s";
 
-        public static final String DISCARTED_CHUNK_FORMAT = "(%s) DISCARTED CHUNK: %d (%d bytes)";
+        public static final String IP_PORT_FORMAT = "%s:%d";
 
         public static final String IP_ADDRESS_REGEX  = "^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\\.(?!$)|$)){4}$";
 
         private Strings() {
             throw new IllegalStateException("Utility class");
+        }
+
+        public static final class Errors {
+            public static final String COMPLETE_ASSEMBLER    = "File is already complete";
+            public static final String EMPTY_PACKET          = "Empty packet";
+            public static final String FILE_TOO_LARGE        = "File size exceeded";
+            public static final String FILE_ALREADY_COMPLETE = "File is already marked as complete";
+            public static final String DIFFERENT_FILE_SIZES  = "File size is different than expected";
+            public static final String DIFFERENT_HASHES      = "Hashes are different";
+
+            private Errors() {
+                throw new IllegalStateException("Utility class");
+            }
         }
     }
 

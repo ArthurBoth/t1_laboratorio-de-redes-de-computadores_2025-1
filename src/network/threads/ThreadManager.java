@@ -10,15 +10,16 @@ import java.util.concurrent.LinkedBlockingDeque;
 import io.IoManager;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
+import network.NetworkNode;
 import utils.Exceptions.ThreadNotStartedException;
 
 public class ThreadManager {
     private final DatagramSocket SOCKET;
-    private final ConcurrentHashMap<InetAddress, Integer> NODES; // node -> seconds since last message
+    private final ConcurrentHashMap<InetAddress, NetworkNode> NODES;  // ip -> node
     
     private LinkedList<Thread> threads;
 
-    public ThreadManager(DatagramSocket socket, ConcurrentHashMap<InetAddress, Integer> nodes) {
+    public ThreadManager(DatagramSocket socket, ConcurrentHashMap<InetAddress, NetworkNode> nodes) {
         this.SOCKET  = socket;
         this.NODES   = nodes;
         this.threads = new LinkedList<Thread>();

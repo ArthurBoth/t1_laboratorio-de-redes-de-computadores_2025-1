@@ -20,11 +20,11 @@ public class NetworkListener implements InternalMessageVisitor {
     private BlockingQueue<ForeignMessage> udpSenderQueue;
     private BlockingQueue<InternalMessage> timerReceiverQueue;
 
-    ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
+    ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
 
     MessageHandler handler;
 
-    public NetworkListener(ConcurrentHashMap<InetAddress, Integer> activeNodes) {
+    public NetworkListener(ConcurrentHashMap<InetAddress, NetworkNode> activeNodes) {
         this.activeNodes = activeNodes;
     }
 

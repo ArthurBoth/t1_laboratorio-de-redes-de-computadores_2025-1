@@ -1,7 +1,5 @@
 package network.messageHandlers;
 
-import static utils.Constants.Configs.NODE_TIMEOUT_SEC;
-
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
@@ -20,6 +18,7 @@ import messages.internal.requested.send.InternalRequestSendAckMessage;
 import messages.internal.requested.send.InternalRequestSendFileMessage;
 import messages.internal.requested.send.InternalRequestSendNAckMessage;
 import messages.internal.requested.send.InternalRequestSendTalkMessage;
+import network.NetworkNode;
 import utils.Exceptions.EndExecutionException;
 
 
@@ -30,7 +29,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
 
     private BlockingQueue<ForeignMessage> udpSenderQueue;
     private BlockingQueue<InternalMessage> loggerQueue;
-    private ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
+    private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
 
     private HashMap<Integer, ForeignMessage> sentMessages;                  // messageId -> message
     private HashMap<Integer, InternalRequestSendFileMessage> pendingFiles;  // messageId -> message
@@ -38,7 +37,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
     public MessageHandler(
         BlockingQueue<ForeignMessage> udpSenderQueue,
         BlockingQueue<InternalMessage> loggerQueue,
-        ConcurrentHashMap<InetAddress, Integer> activeNodes
+        ConcurrentHashMap<InetAddress, NetworkNode> activeNodes
     ) {
         this.udpSenderQueue = udpSenderQueue;
         this.loggerQueue    = loggerQueue;
@@ -54,7 +53,11 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
      * @param ip is the InetAddress to have it's timer reset
      */
     private void registerNode(InetAddress ip) {
-        activeNodes.compute(ip, (unusedKey, unusedValue) -> NODE_TIMEOUT_SEC);
+        if (!activeNodes.containsKey(ip)) {
+            activeNodes.put(ip, NetworkNode.of();
+        } else {
+            activeNodes.get(ip).resetHeartbeat();
+        }
     }
 
     private void sendMessage(int messageId, ForeignMessage message) {
@@ -158,6 +161,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
             ThreadMessage.foreignMessage(messageId)
                             .talk(request.getContent())
                             .to(request.getDestinationIp())
+                            .at(request.getPort())
         );
     }
 
@@ -170,6 +174,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
                             .file(request.getFileName())
                             .fileSize(request.getFileSize())
                             .to(request.getDestinationIp())
+                            .at(request.getPort())
         );
     }
 
@@ -179,6 +184,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
             ThreadMessage.foreignMessage()
                             .ack(request.getAcknowledgedMessageId())
                             .to(request.getDestinationIp())
+                            .at(request.getPort())
         );
     }
 
@@ -189,6 +195,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
                             .nAck(request.getNonAcknowledgedMessageId())
                             .because(request.getReason())
                             .to(request.getDestinationIp())
+                            .at(request.getPort())
         );
     }
 
@@ -215,6 +222,7 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
                                 .chunk(i)
                                 .data(fileContent[i])
                                 .to(request.getDestinationIp())
+                                .at(request.getPort())
             );
         }
     }

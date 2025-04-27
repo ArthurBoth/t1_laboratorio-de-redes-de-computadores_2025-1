@@ -19,15 +19,16 @@ import messages.internal.requested.send.InternalRequestSendAckMessage;
 import messages.internal.requested.send.InternalRequestSendFileMessage;
 import messages.internal.requested.send.InternalRequestSendNAckMessage;
 import messages.internal.requested.send.InternalRequestSendTalkMessage;
+import network.NetworkNode;
 import utils.Constants;
-import utils.Exceptions.FileSearchException;
+import utils.Exceptions.FileException;
 
 public class IoManager implements Runnable, InternalRequestMessageVisitor {
     private BlockingQueue<InternalMessage> networkSenderQueue;
     private BlockingQueue<InternalMessage> networkReceiverQueue;
 
     private BlockingQueue<InternalMessage> ioReceiverQueue;
-    private ConcurrentHashMap<InetAddress, Integer> activeNodes; // node -> seconds since last message
+    private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes;  // ip -> node
 
     private TerminalManager terminal;
     private FileManager fileManager;
@@ -36,7 +37,7 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
 
     public IoManager(BlockingQueue<InternalMessage> networkSenderQueue,
                      BlockingQueue<InternalMessage> networkReceiverQueue,
-                     ConcurrentHashMap<InetAddress, Integer> activeNodes) {
+                     ConcurrentHashMap<InetAddress, NetworkNode> activeNodes) {
         this.networkSenderQueue   = networkSenderQueue;
         this.networkReceiverQueue = networkReceiverQueue;
         this.activeNodes          = activeNodes;
@@ -106,7 +107,7 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
                 message.fileData(fullData)
                     .fileHash(fileHash)
             );
-        } catch (FileSearchException e) {
+        } catch (FileException e) {
             terminal.errorMessage(e.getMessage());
         }
     }
