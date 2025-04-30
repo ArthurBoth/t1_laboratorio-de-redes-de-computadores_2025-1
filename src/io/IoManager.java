@@ -4,16 +4,20 @@ import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
+import interfaces.visitors.FileMessageVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 import io.console.TerminalManager;
 import io.files.FileManager;
 import messages.ThreadMessage;
 import messages.internal.InternalMessage;
 import messages.internal.received.InternalReceivedMessage;
+import messages.internal.requested.InternalRequestAbortFileSendingMessage;
+import messages.internal.requested.InternalRequestDisplayFailureMessage;
+import messages.internal.requested.InternalRequestDisplaySuccessMessage;
 import messages.internal.requested.InternalRequestExitMessage;
 import messages.internal.requested.InternalRequestResendMessage;
+import messages.internal.requested.InternalRequestUpdateSendStatusMessage;
 import messages.internal.requested.send.InternalRequestSendAckMessage;
 import messages.internal.requested.send.InternalRequestSendChunkMessage;
 import messages.internal.requested.send.InternalRequestSendEndMessage;
@@ -22,7 +26,6 @@ import messages.internal.requested.send.InternalRequestSendFullFileMessage;
 import messages.internal.requested.send.InternalRequestSendNAckMessage;
 import messages.internal.requested.send.InternalRequestSendTalkMessage;
 import network.NetworkNode;
-import utils.Constants;
 import utils.Exceptions.FileException;
 
 public class IoManager implements Runnable, InternalRequestMessageVisitor {
@@ -50,29 +53,26 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
 
     @Override
     public void run() {
-        IoHandler handler = new IoHandler(this);
+        IoHandler handler;
         InternalMessage message;
-        int listening; 
-        
-        listening = 2;
-        running   = true;
+
+        running = true;
+        handler = new IoHandler(this, fileManager);
 
         startConsole();
         while (running) {
-            try {
-                message = networkReceiverQueue.poll(
-                    (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
-                    TimeUnit.MILLISECONDS
-                    );
-                if (message != null) message.accept(handler);
-                message = ioReceiverQueue.poll(
-                    (Constants.Configs.THREAD_TIMEOUT_MS / listening), 
-                    TimeUnit.MILLISECONDS
-                    );
-                if (message != null) message.accept(handler);
-            } catch (InterruptedException e) {
-                return;
-            }
+            message = listen();
+            message.accept(handler);
+        }
+    }
+
+    private InternalMessage listen() {
+        InternalMessage message;
+        while (true) {
+            message = networkReceiverQueue.poll();
+            if (message != null) return message;
+            message = ioReceiverQueue.poll();
+            if (message != null) return message;
         }
     }
 
@@ -98,63 +98,98 @@ public class IoManager implements Runnable, InternalRequestMessageVisitor {
 
     @Override
     public void visit(InternalRequestExitMessage message) {
-        message.accept(fileManager); // logs the message
+        message.accept(fileManager);
         processExit();
     }
 
+    // **************************************************
+    // Log and forward the message
+
     @Override
     public void visit(InternalRequestSendTalkMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
+        message.accept(fileManager);
+        networkSenderQueue.offer(message);
     }
 
     @Override
     public void visit(InternalRequestSendFileMessage message) {
         try {
-            message.accept(fileManager); // logs the message
+            message.accept((FileMessageVisitor) fileManager);
         } catch (FileException e) {
             terminal.errorMessage(e.getMessage());
             return;
         }
-        networkSenderQueue.offer(message);  // forwards the message
+        terminal.setBytesToSend(message.getFileSize());
+        networkSenderQueue.offer(message);
     }
 
     @Override
     public void visit(InternalRequestSendAckMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
+        message.accept(fileManager);
+        networkSenderQueue.offer(message);
     }
 
     @Override
     public void visit(InternalRequestSendNAckMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
+        message.accept(fileManager);
+        networkSenderQueue.offer(message);
     }
 
     public void visit(InternalReceivedMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
-    }
-
-    @Override
-    public void visit(InternalRequestResendMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
-    }
-
-    public void visit(InternalRequestSendFullFileMessage message) {
-        message.accept(fileManager); // logs the message
+        message.accept(fileManager);
+        networkSenderQueue.offer(message);
     }
 
     @Override
     public void visit(InternalRequestSendChunkMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
+        message.accept(fileManager);
+        networkSenderQueue.offer(message);
     }
 
     @Override
     public void visit(InternalRequestSendEndMessage message) {
-        message.accept(fileManager);        // logs the message
-        networkSenderQueue.offer(message);  // forwards the message
+        message.accept(fileManager);
+        networkSenderQueue.offer(message);
+    }
+
+    // **************************************************
+    // Log and update the progress
+
+    public void visit(InternalRequestSendFullFileMessage message) {
+        int sentBytes = 0;
+        message.accept((FileMessageVisitor) fileManager);
+        terminal.updateFileProgress(sentBytes);
+    }
+
+    @Override
+    public void visit(InternalRequestUpdateSendStatusMessage message) {
+        message.accept(fileManager);
+        terminal.updateFileProgress(message.getSize());
+    }
+
+    @Override
+    public void visit(InternalRequestDisplaySuccessMessage message) {
+        message.accept(fileManager);
+        terminal.setEndMessage(message.getMessage());
+    }
+
+    @Override
+    public void visit(InternalRequestDisplayFailureMessage message) {
+        message.accept(fileManager);
+        terminal.setEndMessage(message.getMessage());
+    }
+
+    @Override
+    public void visit(InternalRequestAbortFileSendingMessage message) {
+        message.accept(fileManager);
+        terminal.errorMessage(message.getMessage());
+    }
+
+    // **************************************************
+    // Log only
+
+    @Override
+    public void visit(InternalRequestResendMessage message) {
+        message.accept(fileManager);
     }
 }

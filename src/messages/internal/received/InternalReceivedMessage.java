@@ -1,7 +1,6 @@
 package messages.internal.received;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
@@ -34,10 +33,7 @@ public abstract class InternalReceivedMessage extends InternalMessage {
     // ****************************************************************************************************
     // Visitor pattern for InternalReceivedMessage
 
-    @Override
-    public final void accept(InternalMessageVisitor visitor) {
-        visitor.visit(this);
-    }
+    public abstract void accept(InternalMessageVisitor visitor);
 
     public abstract void accept(InternalReceivedMessageVisitor visitor);
 
@@ -89,7 +85,6 @@ public abstract class InternalReceivedMessage extends InternalMessage {
 
     public interface IpSetter<T extends InternalReceivedMessage> {
         PortSetter<T> from(InetAddress sourceIp);
-        PortSetter<T> from(String sourceIp) throws UnknownHostException;
     }
 
     public interface PortSetter<T extends InternalReceivedMessage> {
@@ -104,12 +99,6 @@ public abstract class InternalReceivedMessage extends InternalMessage {
         @Override
         public final PortSetter<T> from(InetAddress sourceIp) {
             this.sourceIp = sourceIp;
-            return this;
-        }
-
-        @Override
-        public final PortSetter<T>  from(String sourceIp) throws UnknownHostException {
-            this.sourceIp = InetAddress.getByName(sourceIp);
             return this;
         }
 

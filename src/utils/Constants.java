@@ -8,7 +8,7 @@ import java.util.Set;
 public final class Constants {
     public static final class Configs {
         public static final int DEFAULT_PORT     = 9000;
-        public static final int MAX_MESSAGE_SIZE = 1 << 14;                                            // 16 KB
+        public static final int MAX_MESSAGE_SIZE = 1 << 10;                                            // 1 KB
         public static final int MAX_CHUNK_SIZE   = CompilingFunctions.calculateMinimumMaxChunkSize();
 
         public static final int SOCKET_TIMEOUT_MS       = 1000;
@@ -17,7 +17,7 @@ public final class Constants {
         public static final int MESSAGE_ACK_TIMEOUT_SEC = 5;
         public static final int HEARTBEAT_INTERVAL_SEC  = 5;
 
-        public static final boolean PRINT_LOGS            = true;
+        public static final boolean PRINT_LOGS            = false;
         public static final boolean DEFAULT_NEW_LINE_LOGS = true;
         public static final boolean CLEAR_PREVIOUS_LOGS   = true;
         public static final boolean ALLOW_CUSTOM_IPS      = true;
@@ -26,6 +26,7 @@ public final class Constants {
         public static final InetAddress BROADCAST_IP = CompilingFunctions.getBroadcastIp();
 
         public static final String HASHING_ALGORITHM = "SHA-256";
+        public static final Charset CHAR_SET         = StandardCharsets.UTF_16BE;
 
         public static final long MAX_FILE_SIZE = 1 << 27; // 128 MB
 
@@ -53,11 +54,15 @@ public final class Constants {
         
     public static final class Strings {
         public static final String DATE_TIME_LOG_FORMAT   = "uuuu-MM-dd HH:mm:ss.SSS";
-        public static final String SPACED_MESSAGE_FORMAT  = "\t\t\t\t\t%s: %s";
+        public static final String SPACED_MESSAGE_FORMAT  = "\t\t%s: %s";
         public static final String REGULAR_MESSAGE_FORMAT = "%s: %s";
 
-        public static final String EXIT_MESSAGE      = "EXIT";
-        public static final String FULL_FILE_REQUEST = "SEND_FULL_FILE";
+        public static final String EXIT_MESSAGE            = "EXIT";
+        public static final String FULL_FILE_REQUEST       = "SEND FULL FILE";
+        public static final String UPDATE_STATUS_MESSAGE   = "CHUNK RECEIVED";
+        public static final String DISPLAY_SUCCESS_REQUEST = "File was received successfully!";
+        public static final String DISPLAY_FAILURE_REQUEST = "File was not received successfully!";
+        public static final String ABORT_FILE_REQUEST      = "Node Nacked the file sending request";
 
         public static final String HEARTBEAT_FORMAT = "HEARTBEAT %s";
         public static final String TALK_FORMAT      = "TALK %d %s";
@@ -84,20 +89,27 @@ public final class Constants {
         public static final String NACK_LOG_FORMAT        = "(%s) [%s] NACK  : Didn't acknowlege '%d' because \"%s\"";
         public static final String UNSUPPORTED_LOG_FORMAT = "(%s) [%s] Unsupported message: %s";
 
-        public static final String EXIT_REQUEST_LOG_FORMAT   = "(%s) EXIT";
-        public static final String TALK_SENDING_LOG_FORMAT   = "(%s) TALK_SENDING: %s";
-        public static final String FILE_SENDING_LOG_FORMAT   = "(%s) FILE_SENDING: %s";
-        public static final String CHUNK_SENDING_LOG_FORMAT  = "(%s) CHUNK_SENDING: %d (%d bytes)";
-        public static final String END_SENDING_LOG_FORMAT    = "(%s) END_SENDING: %s";
-        public static final String ACK_SENDING_LOG_FORMAT    = "(%s) ACK_SENDING : %d";
-        public static final String NACK_SENDING_LOG_FORMAT   = "(%s) NACK_SENDING: %d \"%s\"";
-        public static final String RESEND_REQUEST_LOG_FORMAT = "(%s) Message %d timed out, resending...";
-        public static final String DISCARTED_CHUNK_FORMAT    = "(%s) DISCARTED CHUNK: %d (%d bytes) because %s";
-        public static final String FULL_FILE_REQ_LOG_FORMAT  = "(%s) FULL_FILE_REQUEST: %s";
+        public static final String EXIT_REQUEST_LOG_FORMAT    = "(%s) EXIT";
+        public static final String TALK_SENDING_LOG_FORMAT    = "(%s) TALK_SENDING: %s";
+        public static final String FILE_SENDING_LOG_FORMAT    = "(%s) FILE_SENDING: %s";
+        public static final String CHUNK_SENDING_LOG_FORMAT   = "(%s) CHUNK_SENDING: %d (%d bytes)";
+        public static final String END_SENDING_LOG_FORMAT     = "(%s) END_SENDING: %s";
+        public static final String ACK_SENDING_LOG_FORMAT     = "(%s) ACK_SENDING : %d";
+        public static final String NACK_SENDING_LOG_FORMAT    = "(%s) NACK_SENDING: %d \"%s\"";
+        public static final String RESEND_REQUEST_LOG_FORMAT  = "(%s) Message %d timed out, resending...";
+        public static final String DISCARTED_CHUNK_FORMAT     = "(%s) DISCARTED CHUNK: %d (%d bytes) because %s";
+        public static final String FULL_FILE_REQ_LOG_FORMAT   = "(%s) FULL_FILE_REQUEST: %s";
+        public static final String UPDATE_STATUS_LOG_FORMAT   = "(%s) %d BYTES_RECEIVED";
+        public static final String DISPLAY_SUCCESS_LOG_FORMAT = "(%s) SUCCESS";
+        public static final String DISPLAY_FAILURE_LOG_FORMAT = "(%s) FAILURE";
+        public static final String ABORT_FILE_SEND_LOG_FORMAT = "(%s) ABORT FILE SENDING REQUEST";
 
-        public static final String IP_PORT_FORMAT = "%s:%d";
+        public static final String IP_PORT_FORMAT   = "%s:%d";
+        public static final String IP_REGEX         = "((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\\.(?!$)|$)){4}";
+        public static final String IP_ADDRESS_REGEX = "^%s$".formatted(IP_REGEX);
+        public static final String IP_PORT_REGEX    = "^%s:%s$".formatted(IP_REGEX, "\\d{1,5}");
 
-        public static final String IP_ADDRESS_REGEX  = "^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\\.(?!$)|$)){4}$";
+        public  static final String CUSTOM_IP_NAME_FORMAT = "NetworkNode_%d";
 
         private Strings() {
             throw new IllegalStateException("Utility class");

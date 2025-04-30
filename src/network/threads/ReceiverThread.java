@@ -5,6 +5,7 @@ import static utils.Constants.Configs.PRINT_LOGS;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.concurrent.BlockingQueue;
 
 import messages.internal.InternalMessage;
@@ -30,10 +31,15 @@ public class ReceiverThread extends NetworkThread {
             try {
                 packet          = waitForPacket();
                 receivedMessage = encoder.decodePacket(packet);
+                if (PRINT_LOGS) ConsoleLogger.logPurple(receivedMessage.getMessage());
                 messageQueue.put(receivedMessage);
+            } catch (SocketException e) {
+                ConsoleLogger.logRed("Socket has been closed. Stopping ReceiverThread.");
+                return;
             } catch (IOException e) {
                 ConsoleLogger.logError("Error while receiving message", e);
                 ConsoleLogger.logRed("Discarding packet.");
+                return;
             } catch (InterruptedException e) {
                 return;
             }
@@ -41,8 +47,8 @@ public class ReceiverThread extends NetworkThread {
     }
 
     private DatagramPacket waitForPacket() throws IOException, InterruptedException {
-        byte[]           data = new byte[Constants.Configs.MAX_MESSAGE_SIZE];
-        DatagramPacket packet = new DatagramPacket(data, data.length);
+        byte[]         buffer = new byte[Constants.Configs.MAX_MESSAGE_SIZE];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
         socket.receive(packet);
         return packet;

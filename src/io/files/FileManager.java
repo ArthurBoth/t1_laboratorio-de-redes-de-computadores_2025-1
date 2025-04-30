@@ -30,6 +30,31 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
 
         logger         = new FileLogger();
         receivingFiles = new HashMap<InetAddress, FileAssembler>();
+        sendingfiles   = new HashMap<InetAddress, FileDisassembler>();
+    }
+
+    private void sendAck(InternalReceivedIdMessage message) {
+        managerSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .send()
+                .ack(message.getMessageId())
+                .to(message.getSourceIp())
+                .at(message.getPort())
+        );
+    }
+
+    private void sendNAck(InternalReceivedIdMessage message, String reason) {
+        managerSenderQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .send()
+                .nAck(message.getMessageId())
+                .because(reason)
+                .to(message.getSourceIp())
+                .at(message.getPort())
+        );
+
     }
     
     // ****************************************************************************************************
@@ -43,6 +68,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         String fileName;
         long fileSize;
         FileAssembler fileAssembler;
+        String nAckReason;
         
         logger.logReceived(message);
 
@@ -53,53 +79,25 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
             fileAssembler = FileAssembler.of(fileName, fileSize);
         } catch (NoSuchAlgorithmException e) {
             ConsoleLogger.logError(e);
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because("Error creating file assembler")
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = "Error creating file assembler";
+            sendNAck(message, nAckReason);
             return;
         }
         
         if (receivingFiles.containsKey(message.getSourceIp())) {
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because("Already receiving a file from that ip")
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = "Already receiving a file from that ip";
+            sendNAck(message, nAckReason);
             return;
         }
 
         if (fileAssembler == null) {
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because("Invalid FileName or FileSize")
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = "Invalid FileName or FileSize";
+            sendNAck(message, nAckReason);
             return;
         }
 
         receivingFiles.put(message.getSourceIp(), fileAssembler);
-        managerSenderQueue.offer(
-            ThreadMessage.internalMessage(getClass())
-                .request()
-                .send()
-                .ack(message.getMessageId())
-                .to(message.getSourceIp())
-                .at(message.getPort())
-        );
+        sendAck(message);
     }
 
     @Override
@@ -108,6 +106,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         byte[] chunkData;
         InetAddress sourceIp;
         FileAssembler fileAssembler;
+        String nAckReason;
 
         logger.logReceived(message);
 
@@ -117,15 +116,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         fileAssembler  = receivingFiles.get(sourceIp);
 
         if (fileAssembler == null) {
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because("Not receiving a file from that ip")
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = "Not receiving a file from that ip";
+            sendNAck(message, nAckReason);
             return;
         }
         if (!fileAssembler.addPacket(sequenceNumber, chunkData)) {
@@ -138,26 +130,12 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
                     sequenceNumber, chunkData.length, fileAssembler.getErrorMessage()
                 )
             );
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because(fileAssembler.getErrorMessage())
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = fileAssembler.getErrorMessage();
+            sendNAck(message, nAckReason);
             return;
         }
 
-        managerSenderQueue.offer(
-            ThreadMessage.internalMessage(getClass())
-                .request()
-                .send()
-                .ack(message.getMessageId())
-                .to(message.getSourceIp())
-                .at(message.getPort())
-        );
+        sendAck(message);
     }
 
     @Override
@@ -165,6 +143,7 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         String receivedHash;
         InetAddress sourceIp;
         FileAssembler fileAssembler;
+        String nAckReason;
 
         logger.logReceived(message);
 
@@ -173,15 +152,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         fileAssembler = receivingFiles.get(sourceIp);
 
         if (fileAssembler == null) {
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because("Not receiving a file from that ip")
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = "Not receiving a file from that ip";
+            sendNAck(message, nAckReason);
             return;
         }
         
@@ -190,15 +162,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
                 // Out of order packet, wait for timeout to resend
                 return;
 
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because(fileAssembler.getErrorMessage())
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = fileAssembler.getErrorMessage();
+            sendNAck(message, nAckReason);
         }
 
         if (!fileAssembler.isComplete()) return;
@@ -206,24 +171,10 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         receivingFiles.remove(sourceIp);
         
         if (fileAssembler.getErrorMessage() == null) {
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .ack(message.getMessageId())
-                    .to(sourceIp)
-                    .at(message.getPort())
-            );
+            sendAck(message);
         } else {
-            managerSenderQueue.offer(
-                ThreadMessage.internalMessage(getClass())
-                    .request()
-                    .send()
-                    .nAck(message.getMessageId())
-                    .because(fileAssembler.getErrorMessage())
-                    .to(message.getSourceIp())
-                    .at(message.getPort())
-            );
+            nAckReason = fileAssembler.getErrorMessage();
+            sendNAck(message, nAckReason);
         }
     }
 
@@ -235,11 +186,11 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
         try {
             fileDisassembler = FileDisassembler.of(message.getFileName());
         } catch (NoSuchAlgorithmException e) {
-            fileDisassembler = null;
+            throw new FileException("No such algorithm");
         }
 
         if (fileDisassembler == null) {
-            throw new FileException("No such algorithm");
+            throw new FileException("Encountered a problem when creating the file disassembler");
         }
 
         message.setFileSize(fileDisassembler.getFileSize());
@@ -286,12 +237,16 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
     }
 
     // **************************************************
-    // log only
+    // log and ack
 
     @Override
-    public void visit(InternalMessage message) {
-        logger.logInternal(message);
+    public void visit(InternalReceivedTalkMessage message) {
+        logger.logReceivedTalk(message);
+        sendAck(message);
     }
+
+    // **************************************************
+    // log only
 
     @Override
     public void visit(InternalReceivedMessage message) {
@@ -299,8 +254,8 @@ public class FileManager implements FileMessageVisitor, LoggerVisitor {
     }
 
     @Override
-    public void visit(InternalReceivedTalkMessage message) {
-        logger.logReceivedTalk(message);
+    public void visit(InternalMessage message) {
+        logger.logInternal(message);
     }
 
     @Override

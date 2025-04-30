@@ -3,6 +3,8 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.FILE_SENDING_LOG_FORMAT;
 import static utils.Constants.Strings.SIMPLE_FILE_FORMAT;
 
+import interfaces.visitors.FileMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestSendFileMessage extends InternalRequestSendMessage {
@@ -26,6 +28,15 @@ public class InternalRequestSendFileMessage extends InternalRequestSendMessage {
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public void accept(FileMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -76,5 +87,6 @@ public class InternalRequestSendFileMessage extends InternalRequestSendMessage {
         this.destinationIp = builder.destinationIp;
         this.fileName      = builder.fileName;
         this.fileSize      = builder.fileSize;
+        this.port          = builder.port;
     }
 }

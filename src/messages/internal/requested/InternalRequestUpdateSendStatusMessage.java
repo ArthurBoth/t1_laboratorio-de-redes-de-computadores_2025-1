@@ -1,31 +1,32 @@
 package messages.internal.requested;
 
-import static utils.Constants.Strings.RESEND_FORMAT;
-import static utils.Constants.Strings.RESEND_REQUEST_LOG_FORMAT;
+import static utils.Constants.Strings.UPDATE_STATUS_LOG_FORMAT;
+import static utils.Constants.Strings.UPDATE_STATUS_MESSAGE;
 
 import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
-public class InternalRequestResendMessage extends InternalRequestMessage {
-    private int resendMessageId;
+public class InternalRequestUpdateSendStatusMessage extends InternalRequestMessage {
+    long size;
 
-    public int getResendId() {
-        return resendMessageId;
+    public long getSize() {
+        return size;
     }
-
+    
     // ****************************************************************************************************
-    // Factory pattern for InternalSentNAckMessage
+    // Factory pattern for InternalRequestUpdateSendStatusMessage
 
-    public static InternalRequestResendMessage build(Class<?> clazz, int resendMessageId) {
-        return new InternalRequestResendMessage(clazz, resendMessageId);
+    protected static InternalRequestUpdateSendStatusMessage build(Class<?> clazz, long size) {
+        return new InternalRequestUpdateSendStatusMessage(clazz, size);
     }
-    private InternalRequestResendMessage(Class<?> clazz, int resendMessageId) {
-        this.resendMessageId = resendMessageId;
+
+    private InternalRequestUpdateSendStatusMessage(Class<?> clazz, long size) {
         this.clazz = clazz;
+        this.size  = size;
     }
 
     // ****************************************************************************************************
-    // Visitor pattern for InternalExitMessage
+    // Visitor pattern for InternalRequestUpdateSendStatusMessage
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
@@ -42,14 +43,14 @@ public class InternalRequestResendMessage extends InternalRequestMessage {
 
     @Override
     public String getMessage() {
-        return RESEND_FORMAT.formatted(resendMessageId);
+        return UPDATE_STATUS_MESSAGE;
     }
 
     @Override
     public String getPrettyMessage() {
-        return RESEND_REQUEST_LOG_FORMAT.formatted(
+        return UPDATE_STATUS_LOG_FORMAT.formatted(
             clazz.getSimpleName(),
-            resendMessageId
+            size
         );
     }
 }

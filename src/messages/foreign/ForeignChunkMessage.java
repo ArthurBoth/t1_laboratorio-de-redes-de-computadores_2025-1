@@ -1,6 +1,7 @@
 package messages.foreign;
 
 import interfaces.visitors.EncoderVisitor;
+import interfaces.visitors.foreign.ForeignVisitor;
 
 public class ForeignChunkMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -25,6 +26,11 @@ public class ForeignChunkMessage extends ForeignMessage {
     @Override
     public byte[] encode(EncoderVisitor visitor) {
         return visitor.encode(this);
+    }
+
+    @Override
+    public void ackcept(ForeignVisitor visitor) {
+        visitor.ack(this);
     }
     
     // ****************************************************************************************************
@@ -64,5 +70,7 @@ public class ForeignChunkMessage extends ForeignMessage {
         this.MESSAGE_ID     = builder.MESSAGE_ID;
         this.sequenceNumber = builder.sequenceNumber;
         this.chunkData      = builder.chunkData;
+        this.destinationIp  = builder.destinationIp;
+        this.port           = builder.port;
     }
 }

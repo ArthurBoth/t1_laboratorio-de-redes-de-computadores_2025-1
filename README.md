@@ -19,13 +19,19 @@ They are:
 ## Message format
 
 Messages will always have their first byte as the header symbol, followed by the message content.
+The message is encodeed in bytes, and must be decoded in the same way
 
-The content varies depending on the message type.
+The content varies depending on the message type, however all messages are encoded based on simple Java types.
+The content is encoded in the following way:
+
+- `Characters` and `Strings` are encoded as UTF_16BE bytes.
+- `Integers` are signed and encoded as 4 bytes, in big endian format.
+- `Longs` are signed and encoded as 8 bytes, in big endian format.
 
 ### HEARTBEAT
 
 The HEARTBEAT message is used to check if the connection is alive.
-It's content is the machine's IP address and they're sent every few seconds.
+It's content is the machine's name in the network (`String`) and they're sent every few seconds.
 
 example:
 
@@ -36,26 +42,27 @@ example:
 ### TALK
 
 The TALK message is used to send a written message to another machine.
-It's content is an ID, followed by a space and the message itself.
-
-The message is sent as a string, and the content is encoded in UTF-8.
+It's content is an ID, followed by a string, which is the 'talk content' (`String`) itself.
 
 example:
 
 ```PlainText
-¶1 Hello, world!
+¶1Hello, world!
 ```
 
 ### FILE
 
 The FILE message is used to request sending a file to another machine.
-It's content is an ID, followed by a space and the file name and size.
+It's content is an ID, followed by an `Integer` (which is the size of the incoming file name in bytes),
+followed by the file name (`String`) and the file size (`Long`).
 
 example:
 
 ```PlainText
-├2 file.txt 1024
+├2|16file.txt1024
 ```
+
+(Note that an actual message does not have a `|`, it was added to aid in visual distinction)
 
 ### CHUNK
 

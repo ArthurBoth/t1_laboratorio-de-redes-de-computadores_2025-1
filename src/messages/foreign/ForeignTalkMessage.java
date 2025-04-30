@@ -51,5 +51,6 @@ public class ForeignTalkMessage extends ForeignMessage {
         this.MESSAGE_ID     = builder.MESSAGE_ID;
         this.destinationIp  = builder.destinationIp;
         this.messageContent = builder.messageContent;
+        this.port           = builder.port;
     }
 }

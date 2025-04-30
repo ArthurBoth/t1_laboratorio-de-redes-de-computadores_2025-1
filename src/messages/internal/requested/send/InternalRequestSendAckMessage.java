@@ -3,6 +3,7 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.ACK_FORMAT;
 import static utils.Constants.Strings.ACK_SENDING_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestSendAckMessage extends InternalRequestSendMessage {
@@ -17,6 +18,11 @@ public class InternalRequestSendAckMessage extends InternalRequestSendMessage {
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -64,5 +70,6 @@ public class InternalRequestSendAckMessage extends InternalRequestSendMessage {
         this.clazz         = builder.clazz;
         this.destinationIp = builder.destinationIp;
         this.ackkedId      = builder.ackkedId;
+        this.port          = builder.port;
     }
 }

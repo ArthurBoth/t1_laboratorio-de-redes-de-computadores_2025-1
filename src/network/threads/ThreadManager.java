@@ -60,11 +60,10 @@ public class ThreadManager {
     }
 
     public void startThreads() {
-        threads.stream()
-               .filter(x -> x == null)
-               .findFirst()
-               .ifPresent(x -> { throw new ThreadNotStartedException("Thread object not created"); });
-    
+        if (threads.stream().anyMatch(x -> x == null)) {
+            throw new ThreadNotStartedException("Thread object not created");
+        }
+
         threads.forEach(Thread::start);
     }
 

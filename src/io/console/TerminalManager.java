@@ -7,12 +7,14 @@ import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import messages.ThreadMessage;
 import messages.internal.InternalMessage;
 import network.NetworkNode;
 import utils.ConsoleLogger;
 import utils.Constants;
+import utils.Constants.Configs;
 
 public class TerminalManager implements Runnable {
     private BlockingQueue<InternalMessage> messageSenderQueue;
@@ -22,17 +24,21 @@ public class TerminalManager implements Runnable {
     private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
 
     // used for sending files
-    private volatile boolean waitingManager;
-    private volatile int sendPercentage;
+    private BlockingQueue<Boolean> waitingManager;
+    private volatile long bytesToSend;
+    private volatile long sentBytes;
+    private volatile String endMessage;
 
     private Scanner scanner;
 
     public TerminalManager(BlockingQueue<InternalMessage> messageSenderQueue,
             ConcurrentHashMap<InetAddress, NetworkNode> activeNodes) {
         this.messageSenderQueue = messageSenderQueue;
-        scanner = new Scanner(System.in);
-        errorMessages = new ConcurrentLinkedQueue<String>();
-        this.activeNodes = activeNodes;
+        this.activeNodes        = activeNodes;
+
+        scanner        = new Scanner(System.in);
+        errorMessages  = new ConcurrentLinkedQueue<String>();
+        waitingManager = new LinkedBlockingQueue<Boolean>();
     }
 
     @Override
@@ -71,17 +77,15 @@ public class TerminalManager implements Runnable {
     }
 
     private void processInput() {
+        String[] args;
         String input;
         String command;
 
         input   = scanner.nextLine();
         input   = input.trim();
-        command = input.split(" ",3)[0];
+        args    = input.split(" ", 3);
+        command = args[0];
 
-        if (input.isEmpty()) {
-            ConsoleLogger.logRed("Invalid command. Please try again.");
-            return;
-        }
         if (command.equalsIgnoreCase("exit")) {
             exit();
             sleep();
@@ -91,14 +95,16 @@ public class TerminalManager implements Runnable {
             processDevices();
             return;
         }
-        if (command.equalsIgnoreCase("talk")) {
-            processTalk(input);
+        if (command.equalsIgnoreCase("talk") && args.length == 3) {
+            processTalk(args);
             return;
         }
-        if (command.equalsIgnoreCase("sendfile")) {
-            processSend(input);
+        if (command.equalsIgnoreCase("sendfile") && args.length == 3) {
+            processSend(args);
             return;
         }
+
+        ConsoleLogger.logRed("Invalid command. Please try again.");
     }
 
     private void sleep() {
@@ -111,7 +117,7 @@ public class TerminalManager implements Runnable {
 
     public void errorMessage(String message) {
         errorMessages.add(message);
-        waitingManager = false;
+        waitingManager.add(false);
     }
 
     private void processDevices() {
@@ -124,13 +130,15 @@ public class TerminalManager implements Runnable {
         ConsoleLogger.logCyan("Active nodes:");
         for (int i = 0; i < nodes.length; i++) {
             node = nodes[i];
-            ConsoleLogger.logWhite("Node %d:%n\tName: ".formatted(i));
+            ConsoleLogger.logWhite("Node %d:%n\tName: ".formatted(i), false);
             ConsoleLogger.logYellow(node.getName());
             ConsoleLogger.logWhite("\tAddress: ", false);
             ConsoleLogger.logYellow(
                 IP_PORT_FORMAT.formatted("\t" + node.getAddress().getHostAddress(), node.getPort())
             );
-            ConsoleLogger.logWhite("\t%d seconds since last message", false);
+            ConsoleLogger.logWhite(
+                "\t%d seconds since last message".formatted(node.getSecondsSinceHeartbeatMessage())
+            );
         }
     }
 
@@ -156,6 +164,8 @@ public class TerminalManager implements Runnable {
      */
     private NetworkNode validateCommand(String[] args) {
         NetworkNode node;
+        String[] ipSplit;
+        
         if (args.length < 3) {
             ConsoleLogger.logRed("Invalid command. Please try again.");
             return null;
@@ -163,6 +173,17 @@ public class TerminalManager implements Runnable {
 
         try {
             node = activeNodes.get(InetAddress.getByName(args[1]));
+        } catch (Exception e) {
+            node = null;
+        }
+        try {
+            if ((node == null) && (Configs.ALLOW_CUSTOM_IPS)) {
+                ipSplit = args[1].split(":");
+
+                node = NetworkNode.of(
+                    InetAddress.getByName(ipSplit[0]), Integer.parseInt(ipSplit[1])
+                );
+            }
         } catch (Exception e) {
             node = null;
         }
@@ -174,13 +195,14 @@ public class TerminalManager implements Runnable {
         return node;
     }
 
-    private void processTalk(String input) {
-        String[]    args    = input.split(" ");
-        NetworkNode node    = validateCommand(args);
-        String      message = args[2];
+    private void processTalk(String[] args) {
+        NetworkNode node;
+        String message;
 
+        node = validateCommand(args);
         if (node == null) return;
-
+        
+        message = args[2];
         messageSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
                 .request()
@@ -191,12 +213,15 @@ public class TerminalManager implements Runnable {
         );
     }
 
-    private void processSend(String input) {
-        String[]    args     = input.split(" ");
-        NetworkNode node     = validateCommand(args);
-        String      fileName = args[2];
-
+    private void processSend(String[] args) {
+        NetworkNode node;
+        String fileName;
+        
+        node = validateCommand(args);
         if (node == null) return;
+        
+        fileName = args[2];
+        
         messageSenderQueue.offer(
             ThreadMessage.internalMessage(getClass())
                 .request()
@@ -209,44 +234,60 @@ public class TerminalManager implements Runnable {
         waitManagerFileAck(); // blocks the console until the file is sent
     }
 
-    public void updateFileProgress(int progress) {
-        sendPercentage = progress;
-        waitingManager = false;
+    public void updateFileProgress(long chunkSize) {
+        sentBytes      += chunkSize;
+        waitingManager.add(false);
+    }
+
+    public void setBytesToSend(long bytesToSend) {
+        this.bytesToSend = bytesToSend;
+    }
+
+    public void setEndMessage(String endMessage) {
+        this.endMessage = endMessage;
+        waitingManager.add(false);
     }
 
     private void waitManagerFileAck() {
         int prevoiusErrorCount = errorMessages.size();
-            waitingManager     = true;
 
-        while (waitingManager) {
-            try {
-                Thread.sleep(Constants.Configs.THREAD_TIMEOUT_MS);
-            } catch (InterruptedException e) {
-                return;
-            }
+        try {
+            waitingManager.take();
+        } catch (InterruptedException e) {
+            return;
         }
 
         if (errorMessages.size() > prevoiusErrorCount) {
             return;
         }
-        displayLoadingBar();
+
+        try {
+            displayLoadingBar();
+        } catch (InterruptedException e) {
+            return;
+        }
     }
 
-    private void displayLoadingBar() {
+    private void displayLoadingBar() throws InterruptedException {
         String loadingBarFormat;
         String bar;
+        int sendPercentage;
 
-        sendPercentage = 0;
+        sentBytes        = 0;
+        sendPercentage   = 0;
         loadingBarFormat = "\rLoading: [%s] %d%%";
 
         while(sendPercentage < 100) {
-            while (waitingManager) {} // wait for updates
-            waitingManager = true;
+            waitingManager.take(); // wait for updates
+
+            sendPercentage = (int) (sentBytes * 100 / bytesToSend);
 
             bar = "=".repeat(sendPercentage) + " ".repeat(100 - sendPercentage);
             ConsoleLogger.logWhite(loadingBarFormat.formatted(bar, sendPercentage), false);
         }
 
-        ConsoleLogger.logGreen("\nFile sent successfully!");
+        waitingManager.take(); // wait for ack to END
+
+        ConsoleLogger.logWhite("\n" + endMessage);
     }
 }

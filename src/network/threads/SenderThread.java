@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import messages.foreign.ForeignMessage;
 import utils.ConsoleLogger;
 import utils.Constants;
+import utils.FileUtils;
 
 public class SenderThread extends NetworkThread {
     private BlockingQueue<ForeignMessage> messageQueue;
@@ -47,11 +48,14 @@ public class SenderThread extends NetworkThread {
 
         try {
             data    = message.encode(encoder);
-            port    = socket.getPort();
+            port    = message.getPort();
             address = message.getDestinationIp();
             packet  = new DatagramPacket(data, data.length, address, port);
 
             socket.send(packet);
+            if (PRINT_LOGS) ConsoleLogger.logBlue("Sent message to %s:%d".formatted(address.getHostName(), port));
+            if (PRINT_LOGS) ConsoleLogger.logBlue(FileUtils.byteArrayToString(data));
+            if (PRINT_LOGS) ConsoleLogger.logBlue("(%d bytes)".formatted(packet.getLength()));
         } catch (IOException e) {
             ConsoleLogger.logError("Failed to send message", e);   
         }

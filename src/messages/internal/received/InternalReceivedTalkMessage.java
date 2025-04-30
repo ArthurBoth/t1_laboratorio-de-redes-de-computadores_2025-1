@@ -3,6 +3,8 @@ package messages.internal.received;
 import static utils.Constants.Strings.TALK_FORMAT;
 import static utils.Constants.Strings.TALK_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
@@ -17,6 +19,16 @@ public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
 
     @Override
     public void accept(InternalReceivedMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -70,5 +82,6 @@ public class InternalReceivedTalkMessage extends InternalReceivedIdMessage {
         this.messageId      = builder.messageId;
         this.sourceIp       = builder.sourceIp;
         this.messageContent = builder.messageContent;
+        this.port           = builder.port;
     }
 }

@@ -3,9 +3,9 @@ package messages.internal.received;
 import static utils.Constants.Strings.CHUNK_FORMAT;
 import static utils.Constants.Strings.CHUNK_LOG_FORMAT;
 
-import java.net.InetAddress;
-
 import interfaces.visitors.FileMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 import utils.FileUtils;
 
@@ -31,6 +31,16 @@ public class InternalReceivedChunkMessage extends InternalReceivedFileRelated {
 
     @Override
     public void accept(FileMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -74,7 +84,6 @@ public class InternalReceivedChunkMessage extends InternalReceivedFileRelated {
         private int messageId;
         private byte[] chunkData;
         private int sequenceNumber;
-        private InetAddress sourceIp;
 
         private Builder(Class<?> clazz, int messageId, byte[] chunkData) {
             this.clazz     = clazz;
@@ -100,5 +109,6 @@ public class InternalReceivedChunkMessage extends InternalReceivedFileRelated {
         this.chunkData      = builder.chunkData;
         this.sequenceNumber = builder.sequenceNumber;
         this.sourceIp       = builder.sourceIp;
+        this.port           = builder.port;
     }
 }

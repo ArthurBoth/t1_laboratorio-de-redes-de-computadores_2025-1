@@ -1,6 +1,7 @@
 package messages.foreign;
 
 import interfaces.visitors.EncoderVisitor;
+import interfaces.visitors.foreign.ForeignVisitor;
 
 public class ForeignEndMessage extends ForeignMessage {
     private final int MESSAGE_ID;
@@ -20,6 +21,16 @@ public class ForeignEndMessage extends ForeignMessage {
     @Override
     public byte[] encode(EncoderVisitor visitor) {
         return visitor.encode(this);
+    }
+
+    @Override
+    public void ackcept(ForeignVisitor visitor) {
+        visitor.ack(this);
+    }
+
+    @Override
+    public void nackcept(ForeignVisitor visitor) {
+        visitor.nack(this);
     }
 
     // ****************************************************************************************************
@@ -45,7 +56,9 @@ public class ForeignEndMessage extends ForeignMessage {
     }
 
     private ForeignEndMessage(Builder builder) {
-        this.MESSAGE_ID = builder.MESSAGE_ID;
-        this.fileHash   = builder.fileHash;
+        this.MESSAGE_ID    = builder.MESSAGE_ID;
+        this.fileHash      = builder.fileHash;
+        this.destinationIp = builder.destinationIp;
+        this.port          = builder.port;
     }
 }

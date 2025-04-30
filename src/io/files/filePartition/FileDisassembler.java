@@ -1,6 +1,6 @@
 package io.files.filePartition;
 
-import static utils.Constants.Configs.Paths.RECEIVE_FOLDER_PATH;
+import static utils.Constants.Configs.Paths.SEND_FOLDER_PATH;
 
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -32,7 +32,7 @@ public class FileDisassembler {
      * @throws NoSuchAlgorithmException if the hashing algorithm is not found
      */
     public static FileDisassembler of(String fileName) throws NoSuchAlgorithmException {
-        Path filePath = Path.of(RECEIVE_FOLDER_PATH + fileName);
+        Path filePath = Path.of(SEND_FOLDER_PATH + fileName);
         if (!filePath.toFile().exists()) return null;
         if (!filePath.toFile().isFile()) return null;
         if (!filePath.toFile().canRead()) return null;

@@ -3,6 +3,7 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.NACK_FORMAT;
 import static utils.Constants.Strings.NACK_SENDING_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestSendNAckMessage extends InternalRequestSendMessage {
@@ -22,6 +23,11 @@ public class InternalRequestSendNAckMessage extends InternalRequestSendMessage {
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -83,5 +89,6 @@ public class InternalRequestSendNAckMessage extends InternalRequestSendMessage {
         this.destinationIp = builder.destinationIp;
         this.nonAckkedId   = builder.nonAckkedId;
         this.reason        = builder.reason;
+        this.port          = builder.port;
     }
 }

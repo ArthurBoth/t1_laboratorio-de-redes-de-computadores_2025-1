@@ -1,31 +1,26 @@
 package messages.internal.requested;
 
-import static utils.Constants.Strings.RESEND_FORMAT;
-import static utils.Constants.Strings.RESEND_REQUEST_LOG_FORMAT;
+import static utils.Constants.Strings.DISPLAY_FAILURE_LOG_FORMAT;
+import static utils.Constants.Strings.DISPLAY_FAILURE_REQUEST;
 
 import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
-public class InternalRequestResendMessage extends InternalRequestMessage {
-    private int resendMessageId;
-
-    public int getResendId() {
-        return resendMessageId;
-    }
+public class InternalRequestDisplayFailureMessage extends InternalRequestMessage {
 
     // ****************************************************************************************************
-    // Factory pattern for InternalSentNAckMessage
+    // Factory pattern for InternalRequestDisplayFailureMessage
 
-    public static InternalRequestResendMessage build(Class<?> clazz, int resendMessageId) {
-        return new InternalRequestResendMessage(clazz, resendMessageId);
+    protected static InternalRequestDisplayFailureMessage build(Class<?> clazz) {
+        return new InternalRequestDisplayFailureMessage(clazz);
     }
-    private InternalRequestResendMessage(Class<?> clazz, int resendMessageId) {
-        this.resendMessageId = resendMessageId;
+
+    private InternalRequestDisplayFailureMessage(Class<?> clazz) {
         this.clazz = clazz;
     }
 
     // ****************************************************************************************************
-    // Visitor pattern for InternalExitMessage
+    // Visitor pattern for InternalRequestDisplayFailureMessage
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
@@ -42,14 +37,14 @@ public class InternalRequestResendMessage extends InternalRequestMessage {
 
     @Override
     public String getMessage() {
-        return RESEND_FORMAT.formatted(resendMessageId);
+        return DISPLAY_FAILURE_REQUEST;
     }
 
     @Override
     public String getPrettyMessage() {
-        return RESEND_REQUEST_LOG_FORMAT.formatted(
-            clazz.getSimpleName(),
-            resendMessageId
+        return DISPLAY_FAILURE_LOG_FORMAT.formatted(
+            clazz.getSimpleName()
         );
     }
+    
 }

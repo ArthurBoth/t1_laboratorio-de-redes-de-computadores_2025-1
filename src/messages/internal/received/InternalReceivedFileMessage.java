@@ -4,6 +4,8 @@ import static utils.Constants.Strings.FILE_FORMAT;
 import static utils.Constants.Strings.FILE_LOG_FORMAT;
 
 import interfaces.visitors.FileMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
@@ -28,6 +30,16 @@ public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
 
     @Override
     public void accept(FileMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -95,5 +107,6 @@ public class InternalReceivedFileMessage extends InternalReceivedFileRelated {
         this.sourceIp  = builder.sourceIp;
         this.fileName  = builder.fileName;
         this.fileSize  = builder.fileSize;
+        this.port      = builder.port;
     }
 }

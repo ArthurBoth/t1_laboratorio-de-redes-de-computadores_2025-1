@@ -66,8 +66,8 @@ public abstract class FileUtils {
     public static String byteArrayToString(byte[] data) {
         StringBuilder sb = new StringBuilder("{");
         for (int i = 0; i < data.length; i++) {
-            sb.append((char) (data[i] & 0xFF));
-            if (i == (data.length - 1)) sb.append(", ");
+            sb.append("%02X".formatted(data[i]));
+            if (i != (data.length - 1)) sb.append(", ");
         }
         sb.append("}");
         return sb.toString();

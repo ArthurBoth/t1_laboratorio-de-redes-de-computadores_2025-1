@@ -29,8 +29,13 @@ public class ForeignFileMessage extends ForeignMessage {
     }
 
     @Override
-    public void accept(ForeignVisitor visitor) {
+    public void ackcept(ForeignVisitor visitor) {
         visitor.ack(this);
+    }
+
+    @Override
+    public void nackcept(ForeignVisitor visitor) {
+        visitor.nack(this);
     }
     
     // ****************************************************************************************************
@@ -67,9 +72,10 @@ public class ForeignFileMessage extends ForeignMessage {
     }
 
     private ForeignFileMessage(Builder builder) {
-        this.MESSAGE_ID       = builder.MESSAGE_ID;
-        this.fileName         = builder.fileName;
-        this.fileSize         = builder.fileSize;
-        this.destinationIp    = builder.destinationIp;
+        this.MESSAGE_ID    = builder.MESSAGE_ID;
+        this.fileName      = builder.fileName;
+        this.fileSize      = builder.fileSize;
+        this.destinationIp = builder.destinationIp;
+        this.port          = builder.port;
     }
 }

@@ -2,6 +2,8 @@ package messages.internal.received;
 
 import static utils.Constants.Strings.HEARTBEAT_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
@@ -16,6 +18,16 @@ public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
 
     @Override
     public void accept(InternalReceivedMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -74,5 +86,6 @@ public class InternalReceivedHeartbeatMessage extends InternalReceivedMessage {
         this.name     = builder.name;
         this.port     = builder.port;
         this.sourceIp = builder.sourceIp;
+        this.port     = builder.port;
     }
 }

@@ -29,6 +29,9 @@ public class FileLogger {
         FileIo.writeLine(Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE, "*--".repeat(30) + '*');
         FileIo.writeLine(Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE, "*--".repeat(30) + '*');
         FileIo.writeLine(Paths.LOG_FOLDER_PATH + Paths.INTERNAL_LOGS_FILE, "*--".repeat(30) + '*');
+        FileIo.writeLine(Paths.LOG_FOLDER_PATH + Paths.RECEIVED_LOGS_FILE, "*--".repeat(30) + '*');
+        FileIo.writeLine(Paths.LOG_FOLDER_PATH + Paths.SENT_LOGS_FILE, "*--".repeat(30) + '*');
+        FileIo.writeLine(Paths.LOG_FOLDER_PATH + Paths.TALK_LOGS_FILE, "*--".repeat(30) + '*');
     }
 
     private void clearLogs() {
@@ -39,6 +42,9 @@ public class FileLogger {
         FileIo.clearFile(Paths.LOG_FOLDER_PATH + Paths.PRETTY_LOGS_FILE);
         FileIo.clearFile(Paths.LOG_FOLDER_PATH + Paths.ACTUAL_LOGS_FILE);
         FileIo.clearFile(Paths.LOG_FOLDER_PATH + Paths.INTERNAL_LOGS_FILE);
+        FileIo.clearFile(Paths.LOG_FOLDER_PATH + Paths.RECEIVED_LOGS_FILE);
+        FileIo.clearFile(Paths.LOG_FOLDER_PATH + Paths.SENT_LOGS_FILE);
+        FileIo.clearFile(Paths.LOG_FOLDER_PATH + Paths.TALK_LOGS_FILE);
     }
 
     public void logSpaced(String message, String filePath) {

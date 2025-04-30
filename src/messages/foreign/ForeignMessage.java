@@ -36,8 +36,12 @@ public abstract class ForeignMessage extends ThreadMessage {
         visitor.visit(this);
     }
 
-    public void accept(ForeignVisitor visitor) {
+    public void ackcept(ForeignVisitor visitor) {
         visitor.ack(this);
+    }
+
+    public void nackcept(ForeignVisitor visitor) {
+        visitor.nack(this);
     }
 
     // ****************************************************************************************************

@@ -4,6 +4,8 @@ import static utils.Constants.Strings.END_FORMAT;
 import static utils.Constants.Strings.END_LOG_FORMAT;
 
 import interfaces.visitors.FileMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
@@ -23,6 +25,16 @@ public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
 
     @Override
     public void accept(FileMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -75,5 +87,6 @@ public class InternalReceivedEndMessage extends InternalReceivedFileRelated {
         this.messageId = builder.messageId;
         this.sourceIp  = builder.sourceIp;
         this.fileHash  = builder.fileHash;
+        this.port      = builder.port;
     }
 }

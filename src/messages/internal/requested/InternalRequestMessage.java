@@ -29,6 +29,10 @@ public abstract class InternalRequestMessage extends InternalMessage {
         InternalRequestExitMessage exit();
         InternalRequestResendMessage resend(int messageId);
         InternalRequestSendMessage.MessageSelection send();
+        InternalRequestUpdateSendStatusMessage updateSendStatus(long bytes);
+        InternalRequestDisplaySuccessMessage displaySuccess();
+        InternalRequestDisplayFailureMessage displayFailure();
+        InternalRequestAbortFileSendingMessage abortFileSending();
     }
 
     private static final class Builder implements MessageSelection {
@@ -51,6 +55,26 @@ public abstract class InternalRequestMessage extends InternalMessage {
         @Override
         public messages.internal.requested.send.InternalRequestSendMessage.MessageSelection send() {
             return InternalRequestSendMessage.build(clazz);
+        }
+
+        @Override
+        public InternalRequestUpdateSendStatusMessage updateSendStatus(long bytes) {
+            return InternalRequestUpdateSendStatusMessage.build(clazz, bytes);
+        }
+
+        @Override
+        public InternalRequestDisplaySuccessMessage displaySuccess() {
+            return InternalRequestDisplaySuccessMessage.build(clazz);
+        }
+
+        @Override
+        public InternalRequestDisplayFailureMessage displayFailure() {
+            return InternalRequestDisplayFailureMessage.build(clazz);
+        }
+
+        @Override
+        public InternalRequestAbortFileSendingMessage abortFileSending() {
+            return InternalRequestAbortFileSendingMessage.build(clazz);
         }
     }
 

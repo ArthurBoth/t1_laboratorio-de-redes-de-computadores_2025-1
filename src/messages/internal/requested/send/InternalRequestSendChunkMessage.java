@@ -3,6 +3,7 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.CHUNK_SENDING_LOG_FORMAT;
 import static utils.Constants.Strings.SIMPLE_CHUNK_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 import utils.FileUtils;
 
@@ -23,6 +24,11 @@ public class InternalRequestSendChunkMessage extends InternalRequestSendMessage 
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -80,8 +86,10 @@ public class InternalRequestSendChunkMessage extends InternalRequestSendMessage 
     }
 
     private InternalRequestSendChunkMessage(Builder builder) {
-        this.clazz     = builder.clazz;
-        this.seqNumber = builder.seqNumber;
-        this.chunk     = builder.chunk;
+        this.clazz         = builder.clazz;
+        this.seqNumber     = builder.seqNumber;
+        this.chunk         = builder.chunk;
+        this.destinationIp = builder.destinationIp;
+        this.port          = builder.port;
     }
 }

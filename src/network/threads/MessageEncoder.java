@@ -1,17 +1,22 @@
 package network.threads;
 
+import static utils.Constants.Configs.DEFAULT_PORT;
 import static utils.Constants.Configs.IP_ADDRESS;
+import static utils.Constants.Configs.PRINT_LOGS;
 import static utils.Constants.MessageHeaders.*;
 
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import interfaces.visitors.EncoderVisitor;
 import messages.ThreadMessage;
 import messages.foreign.*;
 import messages.internal.InternalMessage;
+import utils.ConsoleLogger;
+import utils.Constants.Configs;
+import utils.FileUtils;
 
 public class MessageEncoder implements EncoderVisitor {
 
@@ -66,7 +71,7 @@ public class MessageEncoder implements EncoderVisitor {
          * MessageId (int)
          * Hash      (String)
          */
-        byte[]     hashData   = message.getFileHash().getBytes(StandardCharsets.UTF_16BE);
+        byte[]     hashData   = message.getFileHash().getBytes(Configs.CHAR_SET);
         int        bufferSize = Character.BYTES + Integer.BYTES + hashData.length;
         ByteBuffer buffer     = ByteBuffer.allocate(bufferSize);
 
@@ -86,7 +91,7 @@ public class MessageEncoder implements EncoderVisitor {
          * Name      (String)
          * Size      (long)
          */
-        byte[]     nameData   = message.getFileName().getBytes(StandardCharsets.UTF_16BE);
+        byte[]     nameData   = message.getFileName().getBytes(Configs.CHAR_SET);
         int        bufferSize = Character.BYTES + Integer.BYTES + Integer.BYTES + nameData.length + Long.BYTES;
         ByteBuffer buffer     = ByteBuffer.allocate(bufferSize);
 
@@ -104,13 +109,15 @@ public class MessageEncoder implements EncoderVisitor {
         /*
          * Header   (char)
          * NodeName (String)
+         * NodePort (int)
          */
-        byte[]     ipData     = IP_ADDRESS.getHostName().getBytes(StandardCharsets.UTF_16BE);
-        int        bufferSize = Character.BYTES + ipData.length;
+        byte[]     ipData     = IP_ADDRESS.getHostName().getBytes(Configs.CHAR_SET);
+        int        bufferSize = Character.BYTES + ipData.length + Integer.BYTES;
         ByteBuffer buffer     = ByteBuffer.allocate(bufferSize);
 
         buffer.putChar(HEARTBEAT_HEADER);
         buffer.put(ipData);
+        buffer.putInt(DEFAULT_PORT);
 
         return buffer.array();
     }
@@ -122,7 +129,7 @@ public class MessageEncoder implements EncoderVisitor {
          * NAckId (int)
          * Reason (String)
          */
-        byte[]     reasonData = message.getReason().getBytes();
+        byte[]     reasonData = message.getReason().getBytes(Configs.CHAR_SET);
         int        bufferSize = Character.BYTES + Integer.BYTES + reasonData.length;
         ByteBuffer buffer     = ByteBuffer.allocate(bufferSize);
 
@@ -140,7 +147,7 @@ public class MessageEncoder implements EncoderVisitor {
          * MessageId (int)
          * Content   (String)
          */
-        byte[]     contentData = message.getContent().getBytes();
+        byte[]     contentData = message.getContent().getBytes(Configs.CHAR_SET);
         int        bufferSize  = Character.BYTES + Integer.BYTES + contentData.length;
         ByteBuffer buffer      = ByteBuffer.allocate(bufferSize);
 
@@ -155,20 +162,25 @@ public class MessageEncoder implements EncoderVisitor {
     // Message decoding
 
     public InternalMessage decodePacket(DatagramPacket packet) {
+        byte[] data;
         ByteBuffer buffer;
         char header;
         
-        buffer = ByteBuffer.wrap(packet.getData());
+        data = Arrays.copyOf(packet.getData(), packet.getLength());
+        if (PRINT_LOGS) ConsoleLogger.logPurple(FileUtils.byteArrayToString(data));
+        if (PRINT_LOGS) ConsoleLogger.logPurple("(%d bytes)".formatted(packet.getLength()));
+
+        buffer = ByteBuffer.wrap(data);
         header = buffer.getChar();
 
         return switch (header) {
-            case HEARTBEAT_HEADER -> decodeHeartbeat(buffer, packet.getAddress(), packet.getPort());
-            case TALK_HEADER      -> decodeTalk(buffer, packet.getAddress(), packet.getPort());
-            case FILE_HEADER      -> decodeFile(buffer, packet.getAddress(), packet.getPort());
-            case CHUNK_HEADER     -> decodeChunk(buffer, packet.getAddress(), packet.getPort());
-            case END_HEADER       -> decodeEnd(buffer, packet.getAddress(), packet.getPort());
-            case ACK_HEADER       -> decodeAck(buffer, packet.getAddress(), packet.getPort());
-            case NACK_HEADER      -> decodeNAck(buffer, packet.getAddress(), packet.getPort());
+            case HEARTBEAT_HEADER -> decodeHeartbeat( buffer, packet.getAddress(), packet.getPort());
+            case TALK_HEADER      -> decodeTalk(      buffer, packet.getAddress(), packet.getPort());
+            case FILE_HEADER      -> decodeFile(      buffer, packet.getAddress(), packet.getPort());
+            case CHUNK_HEADER     -> decodeChunk(     buffer, packet.getAddress(), packet.getPort());
+            case END_HEADER       -> decodeEnd(       buffer, packet.getAddress(), packet.getPort());
+            case ACK_HEADER       -> decodeAck(       buffer, packet.getAddress(), packet.getPort());
+            case NACK_HEADER      -> decodeNAck(      buffer, packet.getAddress(), packet.getPort());
             default               -> unexpectedHeader(buffer, packet.getAddress(), packet.getPort());
         };
     }
@@ -229,7 +241,7 @@ public class MessageEncoder implements EncoderVisitor {
 
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage(messageId)
-                            .end(new String(hashData, StandardCharsets.UTF_16BE))
+                            .end(new String(hashData, Configs.CHAR_SET))
                             .from(ipAddress)
                             .at(port);
     }
@@ -256,7 +268,7 @@ public class MessageEncoder implements EncoderVisitor {
 
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage(messageId)
-                            .file(new String(nameData, StandardCharsets.UTF_16BE))
+                            .file(new String(nameData, Configs.CHAR_SET))
                             .size(fileSize)
                             .from(ipAddress)
                             .at(port);
@@ -275,7 +287,7 @@ public class MessageEncoder implements EncoderVisitor {
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage()
                             .heartbeat()
-                            .name(new String(nodeName, StandardCharsets.UTF_16BE))
+                            .name(new String(nodeName, Configs.CHAR_SET))
                             .from(ipAddress)
                             .at(port);
     }
@@ -297,7 +309,7 @@ public class MessageEncoder implements EncoderVisitor {
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage()
                             .nAck(nAckkedId)
-                            .reason(new String(reasonData, StandardCharsets.UTF_16BE))
+                            .reason(new String(reasonData, Configs.CHAR_SET))
                             .from(ipAddress)
                             .at(port);
     }
@@ -318,7 +330,7 @@ public class MessageEncoder implements EncoderVisitor {
 
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage(messageId)
-                            .talk(new String(contentData, StandardCharsets.UTF_16BE))
+                            .talk(new String(contentData, Configs.CHAR_SET))
                             .from(ipAddress)
                             .at(port);
     }
@@ -329,7 +341,7 @@ public class MessageEncoder implements EncoderVisitor {
 
         return ThreadMessage.internalMessage(getClass())
                             .receivedMessage()
-                            .unsupportedMessage(new String(data, StandardCharsets.UTF_16BE))
+                            .unsupportedMessage(new String(data, Configs.CHAR_SET))
                             .from(ipAddress)
                             .at(port);
     }

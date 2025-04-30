@@ -3,6 +3,8 @@ package messages.internal.received;
 import static utils.Constants.Strings.ACK_FORMAT;
 import static utils.Constants.Strings.ACK_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedAckMessage extends InternalReceivedMessage {
@@ -17,6 +19,16 @@ public class InternalReceivedAckMessage extends InternalReceivedMessage {
 
     @Override
     public void accept(InternalReceivedMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -65,5 +77,6 @@ public class InternalReceivedAckMessage extends InternalReceivedMessage {
         this.clazz     = builder.clazz;
         this.sourceIp  = builder.sourceIp;
         this.messageId = builder.messageId;
+        this.port      = builder.port;
     }
 }

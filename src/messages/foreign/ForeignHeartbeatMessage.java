@@ -1,6 +1,7 @@
 package messages.foreign;
 
 import static utils.Constants.Configs.BROADCAST_IP;
+import static utils.Constants.Configs.DEFAULT_PORT;
 
 import interfaces.visitors.EncoderVisitor;
 
@@ -23,5 +24,6 @@ public class ForeignHeartbeatMessage extends ForeignMessage {
 
     private ForeignHeartbeatMessage() {
         this.destinationIp = BROADCAST_IP;
+        this.port          = DEFAULT_PORT;
     }
 }

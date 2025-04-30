@@ -3,6 +3,7 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.SIMPLE_TALK_FORMAT;
 import static utils.Constants.Strings.TALK_SENDING_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestSendTalkMessage extends InternalRequestSendMessage {
@@ -17,6 +18,11 @@ public class InternalRequestSendTalkMessage extends InternalRequestSendMessage {
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -65,5 +71,6 @@ public class InternalRequestSendTalkMessage extends InternalRequestSendMessage {
         this.clazz         = builder.clazz;
         this.destinationIp = builder.destinationIp;
         this.content       = builder.content;
+        this.port          = builder.port;
     }
 }

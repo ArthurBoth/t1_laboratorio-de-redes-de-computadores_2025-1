@@ -19,11 +19,7 @@ public abstract class InternalMessage extends ThreadMessage implements Loggable 
     // Visitor pattern for InternalMessage
 
     public abstract void accept(InternalMessageVisitor visitor);
-
-    @Override
-    public void accept(LoggerVisitor visitor) {
-        visitor.visit(this);
-    }
+    public abstract void accept(LoggerVisitor visitor);
 
     @Override
     public void accept(MessageVisitor visitor) {

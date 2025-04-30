@@ -3,6 +3,7 @@ package messages.internal.requested;
 import static utils.Constants.Strings.EXIT_MESSAGE;
 import static utils.Constants.Strings.EXIT_REQUEST_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestExitMessage extends InternalRequestMessage {
@@ -23,6 +24,11 @@ public class InternalRequestExitMessage extends InternalRequestMessage {
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
         visitor.visit(this);
     }
 

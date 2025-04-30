@@ -3,6 +3,8 @@ package messages.internal.received;
 import static utils.Constants.Strings.NACK_FORMAT;
 import static utils.Constants.Strings.NACK_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 public class InternalReceivedNAckMessage extends InternalReceivedMessage {
@@ -22,6 +24,16 @@ public class InternalReceivedNAckMessage extends InternalReceivedMessage {
 
     @Override
     public void accept(InternalReceivedMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -84,5 +96,6 @@ public class InternalReceivedNAckMessage extends InternalReceivedMessage {
         this.sourceIp  = builder.sourceIp;
         this.reason    = builder.reason;
         this.messageId = builder.messageId;
+        this.port      = builder.port;
     }
 }

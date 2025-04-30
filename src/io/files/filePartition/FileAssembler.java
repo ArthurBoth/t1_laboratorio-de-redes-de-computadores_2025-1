@@ -25,7 +25,7 @@ public class FileAssembler {
         this.FILE_PATH  = filePath;
         this.FINAL_SIZE = fileSize;
 
-        this.seqNumber    = -1;
+        this.seqNumber    = 0;
         this.currentSize  = 0;
         this.isComplete   = false;
         this.errorMessage = null;
@@ -80,13 +80,17 @@ public class FileAssembler {
             errorMessage = Errors.FILE_TOO_LARGE;
             return false;
         }
-        if (seqNumber != this.seqNumber + 1) {
+        if (seqNumber > this.seqNumber + 1) {
             errorMessage = null; // Out of order packet
             return false;
         }
+        if (seqNumber < this.seqNumber) {
+            errorMessage = null; // Duplicated packet
+            return true; // Ack to prevent resending
+        }
 
         currentSize += data.length;
-        seqNumber++;
+        this.seqNumber++;
         digestor.update(data);
         FileIo.writeChunk(FILE_PATH, data);
         return true;

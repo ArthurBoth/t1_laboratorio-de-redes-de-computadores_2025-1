@@ -10,6 +10,8 @@ import interfaces.visitors.foreign.ForeignVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 import messages.ThreadMessage;
+import messages.foreign.ForeignChunkMessage;
+import messages.foreign.ForeignEndMessage;
 import messages.foreign.ForeignFileMessage;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
@@ -34,8 +36,8 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
 
     private BlockingQueue<ForeignMessage> udpSenderQueue;
     private BlockingQueue<InternalMessage> loggerQueue;
-    private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip -> node
-    private ConcurrentHashMap<Integer, Integer> messagesMap; // messageId -> seconds since sent
+    private ConcurrentHashMap<InetAddress, NetworkNode> activeNodes; // ip        -> node
+    private ConcurrentHashMap<Integer, Integer> messagesMap;         // messageId -> seconds since sent
 
     private HashMap<Integer, ForeignMessage> sentMessages;  // messageId -> message
 
@@ -63,6 +65,9 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
      * @see NetworkNode#resetHeartbeat()
      */
     private void registerNode(InetAddress ip, int port, String name) {
+        activeNodes.computeIfPresent(
+            ip, (key, node) -> (node.ARTIFICIAL_NODE) ? NetworkNode.of(ip, port, name) : node 
+        );
         activeNodes.putIfAbsent(ip, NetworkNode.of(ip, port, name));
         activeNodes.get(ip).resetHeartbeat();
     }
@@ -107,15 +112,19 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
         ForeignMessage sentMessage;
         loggerQueue.offer(message);
 
+        messagesMap.remove(message.getAcknowledgedId());
         sentMessage = sentMessages.remove(message.getAcknowledgedId());
-        if (sentMessage != null) sentMessage.accept(this);
+        if (sentMessage != null) sentMessage.ackcept(this);
     }
 
     @Override
     public void visit(InternalReceivedNAckMessage message) {
+        ForeignMessage sentMessage;
         loggerQueue.offer(message);
 
-        sentMessages.remove(message.getNonAcknowledgedId());
+        messagesMap.remove(message.getNonAcknowledgedId());
+        sentMessage = sentMessages.remove(message.getNonAcknowledgedId());
+        if (sentMessage != null) sentMessage.nackcept(this);
     }
 
     @Override
@@ -143,15 +152,14 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
         int messageId;
         ForeignMessage sentMessage;
 
-        loggerQueue.offer(message);
-
-        sentMessage = sentMessages.remove(message.getResendId());
+        messageId   = message.getResendId();
+        sentMessage = sentMessages.remove(messageId);
         if (sentMessage == null) {
             return;
         }
 
-        messageId   = idCounter++;
-        sentMessages.put(messageId, sentMessage);
+        loggerQueue.offer(message);
+        sendMessage(messageId, sentMessage);
     }
 
     @Override
@@ -175,11 +183,6 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
                             .to(request.getDestinationIp())
                             .at(request.getPort())
         );
-    }
-
-    @Override
-    public void visit(InternalRequestSendFullFileMessage message) {
-        throw new IllegalStateException("Full file request should not arrive in the message handler");
     }
 
     @Override
@@ -244,5 +247,75 @@ public class MessageHandler implements InternalReceivedMessageVisitor,
                 .to(message.getDestinationIp())
                 .at(message.getPort())
         );
+    }
+
+    @Override
+    public void ack(ForeignChunkMessage message) {
+        loggerQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .updateSendStatus(message.getData().length)
+        );
+    }
+
+    @Override
+    public void ack(ForeignEndMessage message) {
+        loggerQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .displaySuccess()
+        );
+    }
+
+    @Override
+    public void nack(ForeignMessage message) {
+        return;
+    }
+
+    @Override
+    public void nack(ForeignFileMessage message) {
+        loggerQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .abortFileSending()
+        );
+    }
+
+    @Override
+    public void nack(ForeignEndMessage message) {
+        loggerQueue.offer(
+            ThreadMessage.internalMessage(getClass())
+                .request()
+                .displayFailure()
+        );
+    }
+
+    // ****************************************************************************************************
+    // IllegalStateException
+    // These methods should never be called, as these messages should be handled elsewhere
+
+    @Override
+    public void visit(InternalRequestSendFullFileMessage message) {
+        throw new IllegalStateException("RequestFullFileMessage should not arrive in the message handler");
+    }
+
+    @Override
+    public void visit(InternalRequestUpdateSendStatusMessage message) {
+        throw new IllegalStateException("UpdateSendStatusMessage should not arrive in the message handler");
+    }
+
+    @Override
+    public void visit(InternalRequestDisplaySuccessMessage message) {
+        throw new IllegalStateException("DisplaySuccessMessage should not arrive in the message handler");
+    }
+
+    @Override
+    public void visit(InternalRequestDisplayFailureMessage message) {
+        throw new IllegalStateException("DisplayFailureMessage should not arrive in the message handler");
+    }
+
+    @Override
+    public void visit(InternalRequestAbortFileSendingMessage message) {
+        throw new IllegalStateException("AbortFileSendingMessage should not arrive in the message handler");
     }
 }

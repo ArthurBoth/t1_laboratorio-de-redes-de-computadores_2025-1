@@ -41,7 +41,7 @@ public class NetworkListener implements InternalMessageVisitor {
                 message.accept(this);
             }
         } catch (EndExecutionException e) {
-            return;
+            throw e;
         } catch (Exception e) {
             ConsoleLogger.logError(e);
         }

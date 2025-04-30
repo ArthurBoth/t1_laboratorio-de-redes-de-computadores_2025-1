@@ -10,7 +10,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 import network.threads.ThreadManager;
-import utils.Constants;
+import utils.ConsoleLogger;
+import utils.Constants.Configs;
+import utils.Exceptions.EndExecutionException;
 
 public class NetworkManager {
     private DatagramSocket socket;
@@ -21,7 +23,19 @@ public class NetworkManager {
 
     public void start() throws SocketException {
         setup();
-        listener.startListening();
+        try {
+            listener.startListening();
+        } catch (EndExecutionException e) {
+            // EndExecutionException is thrown when the program is terminated
+            // and is not an error, so we don't need to log it
+        } catch (Exception e) {
+            ConsoleLogger.logError(e);
+        } finally {
+            cleanup();
+        }
+    }
+
+    private void cleanup() {
         threadManager.stopThreads();
         socket.close();
     }
@@ -33,7 +47,7 @@ public class NetworkManager {
         BlockingQueue<ForeignMessage> udpSenderQueue;
         BlockingQueue<InternalMessage> timerReceiverQueue;
 
-        socket        = new DatagramSocket(Constants.Configs.DEFAULT_PORT);
+        socket        = new DatagramSocket(Configs.DEFAULT_PORT, Configs.IP_ADDRESS);
         activeNodes   = new ConcurrentHashMap<InetAddress, NetworkNode>();
         listener      = new NetworkListener(activeNodes);
         threadManager = new ThreadManager(socket, activeNodes);

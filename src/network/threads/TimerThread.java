@@ -1,6 +1,7 @@
 package network.threads;
 
 import static utils.Constants.Configs.HEARTBEAT_INTERVAL_SEC;
+import static utils.Constants.Configs.PRINT_LOGS;
 
 import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
@@ -11,6 +12,7 @@ import messages.ThreadMessage;
 import messages.foreign.ForeignMessage;
 import messages.internal.InternalMessage;
 import network.NetworkNode;
+import utils.ConsoleLogger;
 
 public class TimerThread extends AppThread {
     private ConcurrentHashMap<Integer, Integer> messagesWaitingAck;   // messageId -> seconds since sent
@@ -39,6 +41,8 @@ public class TimerThread extends AppThread {
 
     @Override
     public void run() {
+        if (PRINT_LOGS) ConsoleLogger.logYellow("TimerThread started.");
+        running = true;
         while (running) {
             clockTick();
             checkMaps();
@@ -60,12 +64,13 @@ public class TimerThread extends AppThread {
             if (node.tickHeartbeat())
                 activeNodes.remove(ip);
         });
-        messagesWaitingAck.replaceAll((x, seconds) -> seconds - 1);
+        messagesWaitingAck.replaceAll((x, seconds) -> seconds - ONE_SECOND);
     }
 
     private void checkMaps() {
         messagesWaitingAck.forEach((messageId, seconds) -> {
             if (seconds <= 0) {
+                if (PRINT_LOGS) ConsoleLogger.logRed("Message " + messageId + " timed out.");
                 messagesWaitingAck.remove(messageId);
                 handlerSenderQueue.offer(
                     ThreadMessage.internalMessage(getClass())

@@ -1,6 +1,7 @@
 package io.files;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,11 +40,13 @@ public abstract class FileIo {
     }
 
     public static void writeChunk(Path path, byte[] data) {
+        File file = path.toFile();
         try (
             OutputStream outputStream = new BufferedOutputStream(
-                new FileOutputStream(path.toFile(), true)
+                new FileOutputStream(file, true)
             )
         ) {
+            file.createNewFile();
             outputStream.write(data);
         } catch (IOException e) {
             ConsoleLogger.logError("An error occurred. (writing file)", e);
@@ -58,7 +61,7 @@ public abstract class FileIo {
         try (InputStream inputStream = Files.newInputStream(path)) {
             inputStream.skip(offset);
             buffer    = new byte[length];
-            bytesRead = inputStream.read(buffer, offset, length);
+            bytesRead = inputStream.read(buffer, 0, length);
 
             if (bytesRead == -1) {
                 return null;

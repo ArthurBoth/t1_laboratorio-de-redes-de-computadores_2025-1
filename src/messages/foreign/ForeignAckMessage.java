@@ -40,5 +40,6 @@ public class ForeignAckMessage extends ForeignMessage {
     private ForeignAckMessage(Builder builder) {
         this.ACKKED_MESSAGE_ID = builder.ACKKED_MESSAGE_ID;
         this.destinationIp     = builder.destinationIp;
+        this.port              = builder.port;
     }
 }

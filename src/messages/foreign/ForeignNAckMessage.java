@@ -54,5 +54,6 @@ public class ForeignNAckMessage extends ForeignMessage {
         this.NON_ACKKED_MESSAGE_ID = builder.NON_ACKKED_MESSAGE_ID;
         this.destinationIp         = builder.destinationIp;
         this.reason                = builder.reason;
+        this.port                  = builder.port;
     }
 }

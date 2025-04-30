@@ -3,6 +3,7 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.END_SENDING_LOG_FORMAT;
 import static utils.Constants.Strings.SIMPLE_END_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestSendEndMessage extends InternalRequestSendMessage {
@@ -17,6 +18,11 @@ public class InternalRequestSendEndMessage extends InternalRequestSendMessage {
 
     @Override
     public void accept(InternalRequestMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -61,7 +67,9 @@ public class InternalRequestSendEndMessage extends InternalRequestSendMessage {
     }
 
     private InternalRequestSendEndMessage(Builder builder) {
-        this.clazz    = builder.clazz;
-        this.fileHash = builder.fileHash;
+        this.clazz         = builder.clazz;
+        this.fileHash      = builder.fileHash;
+        this.destinationIp = builder.destinationIp;
+        this.port          = builder.port;
     }
 }

@@ -25,3 +25,9 @@ replay_pid*
 
 # Personal notes about the project
 Notes.txt
+
+# Sent and received files (except for the example SendFile.txt)
+.SEND/*
+.RECEIVE/*
+!.SEND/.gitkeep
+!.RECEIVE/.gitkeep

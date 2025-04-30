@@ -3,6 +3,8 @@ package messages.internal.requested.send;
 import static utils.Constants.Strings.FULL_FILE_REQUEST;
 import static utils.Constants.Strings.FULL_FILE_REQ_LOG_FORMAT;
 
+import interfaces.visitors.FileMessageVisitor;
+import interfaces.visitors.LoggerVisitor;
 import interfaces.visitors.internal.InternalRequestMessageVisitor;
 
 public class InternalRequestSendFullFileMessage extends InternalRequestSendMessage {
@@ -20,6 +22,15 @@ public class InternalRequestSendFullFileMessage extends InternalRequestSendMessa
         visitor.visit(this);
     }
 
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    public void accept(FileMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
     // ****************************************************************************************************
     // Loggable interface implementation
 
@@ -31,7 +42,8 @@ public class InternalRequestSendFullFileMessage extends InternalRequestSendMessa
     @Override
     public String getPrettyMessage() {
         return FULL_FILE_REQ_LOG_FORMAT.formatted(
-            clazz.getSimpleName()
+            clazz.getSimpleName(),
+            fileName
         );
     }
 
@@ -58,7 +70,9 @@ public class InternalRequestSendFullFileMessage extends InternalRequestSendMessa
     }
 
     private InternalRequestSendFullFileMessage(Builder builder) {
-        this.clazz    = builder.clazz;
-        this.fileName = builder.fileName;
+        this.clazz         = builder.clazz;
+        this.fileName      = builder.fileName;
+        this.destinationIp = builder.destinationIp;
+        this.port          = builder.port;
     }
 }

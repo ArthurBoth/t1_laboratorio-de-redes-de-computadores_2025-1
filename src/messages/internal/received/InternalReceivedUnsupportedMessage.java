@@ -3,6 +3,8 @@ package messages.internal.received;
 import static utils.Constants.Strings.UNSUPPORTED_FORMAT;
 import static utils.Constants.Strings.UNSUPPORTED_LOG_FORMAT;
 
+import interfaces.visitors.LoggerVisitor;
+import interfaces.visitors.internal.InternalMessageVisitor;
 import interfaces.visitors.internal.InternalReceivedMessageVisitor;
 
 
@@ -14,6 +16,16 @@ public class InternalReceivedUnsupportedMessage extends InternalReceivedMessage 
 
     @Override
     public void accept(InternalReceivedMessageVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(LoggerVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public void accept(InternalMessageVisitor visitor) {
         visitor.visit(this);
     }
 
@@ -64,5 +76,6 @@ public class InternalReceivedUnsupportedMessage extends InternalReceivedMessage 
         this.clazz     = builder.clazz;
         this.sourceIp  = builder.sourceIp;
         this.content   = builder.content;
+        this.port      = builder.port;
     }
 }

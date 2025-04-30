@@ -5,6 +5,11 @@ import messages.internal.requested.send.*;
 
 public interface InternalRequestMessageVisitor {
     void visit(InternalRequestExitMessage message);
+    void visit(InternalRequestUpdateSendStatusMessage message);
+    void visit(InternalRequestDisplaySuccessMessage message);
+    void visit(InternalRequestDisplayFailureMessage message);
+    void visit(InternalRequestAbortFileSendingMessage message);
+
     void visit(InternalRequestResendMessage message);
     void visit(InternalRequestSendTalkMessage message);
     void visit(InternalRequestSendFileMessage message);
